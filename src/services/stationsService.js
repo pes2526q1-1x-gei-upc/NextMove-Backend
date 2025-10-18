@@ -64,9 +64,9 @@ export default class StationsService {
     return data[0] || null;
   }
 
-  async searchStationsByLocation(lat, lon, radius = 5000) {
+  async searchStationsByLocation(lat, lon, radius = 500) {
     const payload = {
-      query: `SELECT * WHERE within_circle(location, ${lat}, ${lon}, ${radius})`,
+      query: `SELECT * WHERE within_circle(geocoded_column, ${lat}, ${lon}, ${radius})`,
     };
 
     return await this.makeRequest(payload);
