@@ -1,0 +1,35 @@
+# src/graphql/typeDefs/stations.graphql
+type Station {
+  id: ID!
+  name: String
+  municipality: String
+  region: String
+  province: String
+  address: String
+  postalCode: String
+  latitude: Float
+  longitude: Float
+  type: String
+  power: Float
+  chargingPoints: Int
+  access: String
+  schedule: String
+  connectionType: String
+}
+
+type StationsResponse {
+  stations: [Station!]!
+  total: Int!
+}
+
+input LocationInput {
+  latitude: Float!
+  longitude: Float!
+  radius: Int
+}
+
+extend type Query {
+  stations(limit: Int, pageNumber: Int): StationsResponse!
+  station(id: ID!): Station
+  nearbyStations(location: LocationInput!): [Station!]!
+}
