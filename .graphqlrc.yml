@@ -1,0 +1,3 @@
+schema: 
+  - './src/graphql/typeDefs/*.graphql'
+  - './src/graphql/typeDefs/**/*.graphql'
