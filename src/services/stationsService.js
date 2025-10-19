@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import {calculateDistance}  from '../utils/maths.js';
 
 const ICAEN_WFS_URL = 'https://xarxarecarrega.icaen.gencat.cat/ows/wfs';
 
@@ -68,7 +69,7 @@ export default class StationsService {
     const nearby = stations
       .map(station => {
         const [stationLon, stationLat] = station.geometry.coordinates;
-        const distance = this.calculateDistance(lat, lon, stationLat, stationLon);
+        const distance = calculateDistance(lat, lon, stationLat, stationLon);
         return { ...station, distance };
       })
       .filter(station => station.distance <= radiusKm)
@@ -98,18 +99,7 @@ export default class StationsService {
     });
   }
 
-  // TODO: I think this is wrong, needs review
-  calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c * 1000;
-  }
+
 
   getCachedStations() {
     return {
