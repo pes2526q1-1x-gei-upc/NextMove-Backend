@@ -1,43 +1,116 @@
-// src/graphql/resolvers/stationsResolvers.js
-import  StationsService  from '../../services/stationsService.js';
+import StationsService from '../../services/stationsService.js';
 import { GraphQLError } from 'graphql';
 
 const stationsService = new StationsService();
 
-// This helper function maps raw station data from the API to the GraphQL EVStation type
-const mapStationData = (rawData) => {
-  if (!rawData) {
+const parseConnectorStatus = (statusCode) => {
+  switch (statusCode) {
+    case "1":
+      return "AVAILABLE";
+    case "0":
+      return "OCCUPIED";
+    case "-":
+    default:
+      return "UNAVAILABLE";
+  }
+};
+
+// Mapeo de tipo de conector
+const parseConnectorType = (tipusCode) => {
+  switch (tipusCode?.toUpperCase()) {
+    case "F": // Fast AC
+    case "M": // Mennekes/Type2
+      return "MENNEKES";
+    default:
+      return "MENNEKES";
+  }
+};
+
+// Map feature to GQL output type Station
+const mapStationData = (feature) => {
+  if (!feature || !feature.properties) {
     return null;
   }
 
+  const props = feature.properties;
+  const [longitude, latitude] = feature.geometry?.coordinates || [null, null];
+
+
+  const connectors = [];
+  // CCS type connectors
+  if (props.estatccs !== "-" && props.potenciaccs !== "-") {
+    connectors.push({
+      type: "CCS",
+      powerKw: parseFloat(props.potenciaccs) || 0,
+      status: parseConnectorStatus(props.estatccs),
+      statusCode: props.estatccs,
+    });
+  }
+
+  // CHAdeMO
+  if (props.estatcha !== "-" && props.potenciacha !== "-") {
+    connectors.push({
+      type: "CHADEMO",
+      powerKw: parseFloat(props.potenciacha) || 0,
+      status: parseConnectorStatus(props.estatcha),
+      statusCode: props.estatcha,
+    });
+  }
+
+  // Mennekes 1
+  if (props.estatmnk1 !== "-" && props.potenciamnk1 !== "-") {
+    connectors.push({
+      type: parseConnectorType(props.tipusmnk1),
+      powerKw: parseFloat(props.potenciamnk1) || 0,
+      status: parseConnectorStatus(props.estatmnk1),
+      statusCode: props.estatmnk1,
+    });
+  }
+
+  // Mennekes 2
+  if (props.estatmnk2 !== "-" && props.potenciamnk2 !== "-") {
+    connectors.push({
+      type: parseConnectorType(props.tipusmnk2),
+      powerKw: parseFloat(props.potenciamnk2) || 0,
+      status: parseConnectorStatus(props.estatmnk2),
+      statusCode: props.estatmnk2,
+    });
+  }
+
+  // Schuko 
+  if (props.shucko === "1") {
+    connectors.push({
+      type: "SCHUKO",
+      powerKw: 3.7, // IDK standard schuko power
+      status: "AVAILABLE", // I am assuming this is true?
+      statusCode: "1",
+    });
+  }
+
   return {
-    id: rawData.id || rawData._id,
-    name: rawData.nom_estacio || rawData.denominaci || null,
-    municipality: rawData.municipi || null,
-    region: rawData.comarca || null,
-    province: rawData.provincia || null,
-    address: rawData.adreca || rawData.direccio || null,
-    postalCode: rawData.codi_postal || null,
-    latitude: rawData.latitud ? parseFloat(rawData.latitud) : null,
-    longitude: rawData.longitud ? parseFloat(rawData.longitud) : null,
-    type: rawData.tipus || null,
-    power: rawData.potencia ? parseFloat(rawData.potencia) : null,
-    chargingPoints: rawData.num_punts ? parseInt(rawData.num_punts) : null,
-    access: rawData.acces || null,
-    schedule: rawData.horari || null,
-    connectionType: rawData.tipus_connexio || null,
+    id: props.id,
+    name: props.nom || "Sin nombre",
+    address: props.carrer || null,
+    city: props.ciutat || null,
+    coordinates: { latitude, longitude },
+    connectors: connectors,
+    accessType: props.tipus_acces || null,
+    isSuperFast: props.superrapid === "1" || props.superrapid === "2",
+    lastUpdated: props.data || null,
+    distance: feature.distance || null,
   };
 };
 
-const EVStationResolvers = {
+const StationsResolvers = {
   Query: {
-    stations: async (_,) => {
+    stations: async () => {
       try {
-        const data = await stationsService.fetchAllStations();
+        const features = await stationsService.fetchAllStations();
+        const stations = features.map(mapStationData).filter(Boolean);
 
         return {
-          stations: data.map(mapStationData).filter(Boolean),
-          total: data.length,
+          stations: stations,
+          total: stations.length,
         };
       } catch (error) {
         console.error('Error in stations resolver:', error);
@@ -52,8 +125,15 @@ const EVStationResolvers = {
 
     station: async (_, { id }) => {
       try {
-        const data = await stationsService.getStationById(id);
-        return mapStationData(data);
+        const feature = await stationsService.getStationById(id);
+        
+        if (!feature) {
+          throw new GraphQLError('Station not found', {
+            extensions: { code: 'NOT_FOUND' },
+          });
+        }
+        
+        return mapStationData(feature);
       } catch (error) {
         console.error('Error in station resolver:', error);
         throw new GraphQLError('Failed to fetch station', {
@@ -67,15 +147,15 @@ const EVStationResolvers = {
 
     nearbyStations: async (_, { location }) => {
       try {
-        const { latitude, longitude, radius = 5000 } = location;
-        
-        const data = await stationsService.searchStationsByLocation(
+        const { coordinates, radiusKm = 5 } = location;
+        const { latitude, longitude } = coordinates;
+        const features = await stationsService.searchStationsByLocation(
           latitude,
           longitude,
-          radius
+          radiusKm
         );
 
-        return data.map(mapStationData).filter(Boolean);
+        return features.map(mapStationData).filter(Boolean);
       } catch (error) {
         console.error('Error in nearbyStations resolver:', error);
         throw new GraphQLError('Failed to search nearby stations', {
@@ -86,7 +166,37 @@ const EVStationResolvers = {
         });
       }
     },
+
+    stationsInBounds: async (_, { bounds }) => {
+      try {
+        const features = await stationsService.getStationsInBounds(bounds);
+        return features.map(mapStationData).filter(Boolean);
+      } catch (error) {
+        console.error('Error in stationsInBounds resolver:', error);
+        throw new GraphQLError('Failed to fetch stations in bounds', {
+          extensions: { 
+            code: 'INTERNAL_SERVER_ERROR',
+            originalError: error.message,
+          },
+        });
+      }
+    },
+
+    stationsByCity: async (_, { city }) => {
+      try {
+        const features = await stationsService.getStationsByCity(city);
+        return features.map(mapStationData).filter(Boolean);
+      } catch (error) {
+        console.error('Error in stationsByCity resolver:', error);
+        throw new GraphQLError('Failed to fetch stations by city', {
+          extensions: { 
+            code: 'INTERNAL_SERVER_ERROR',
+            originalError: error.message,
+          },
+        });
+      }
+    },
   },
 };
 
-export default EVStationResolvers;
+export default StationsResolvers;

@@ -11,3 +11,13 @@ type Mutation {
 type Subscription {
   _empty: String
 }
+
+type Coordinates {
+  latitude: Float!
+  longitude: Float!
+}
+
+input CoordinatesInput {
+  latitude: Float!
+  longitude: Float!
+}

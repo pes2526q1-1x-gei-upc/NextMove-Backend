@@ -1,20 +1,41 @@
-# src/graphql/typeDefs/stations.graphql
 type Station {
   id: ID!
-  name: String
-  municipality: String
-  region: String
-  province: String
+  name: String!
   address: String
-  postalCode: String
-  latitude: Float
-  longitude: Float
-  type: String
-  power: Float
-  chargingPoints: Int
-  access: String
-  schedule: String
-  connectionType: String
+  city: String
+  coordinates: Coordinates!
+  
+  # Available connectors
+  connectors: [Connector!]!
+
+  # Metadata
+  accessType: String
+  isSuperFast: Boolean
+  lastUpdated: String
+  
+  # Optional distance field for nearby queries
+  distance: Float
+}
+
+type Connector {
+  type: ConnectorType!
+  powerKw: Float!
+  status: ConnectorStatus!
+  statusCode: String!
+}
+
+
+enum ConnectorType {
+  CCS      
+  CHADEMO  
+  MENNEKES 
+  SCHUKO   
+}
+
+enum ConnectorStatus {
+  AVAILABLE    
+  OCCUPIED     
+  UNAVAILABLE  
 }
 
 type StationsResponse {
@@ -23,13 +44,21 @@ type StationsResponse {
 }
 
 input LocationInput {
-  latitude: Float!
-  longitude: Float!
-  radius: Int
+  coordinates: CoordinatesInput!
+  radiusKm: Float
+}
+
+input BoundsInput {
+  north: Float!
+  south: Float!
+  east: Float!
+  west: Float!
 }
 
 extend type Query {
-  stations(limit: Int, pageNumber: Int): StationsResponse!
+  stations: StationsResponse!
   station(id: ID!): Station
   nearbyStations(location: LocationInput!): [Station!]!
+  stationsInBounds(bounds: BoundsInput!): [Station!]!
+  stationsByCity(city: String!): [Station!]!
 }

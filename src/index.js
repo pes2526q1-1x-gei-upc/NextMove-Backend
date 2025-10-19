@@ -76,13 +76,21 @@ app.get('/api/test/cached', (req, res) => {
       message: 'No data in cache. Use /api/test/fetch-all first',
     });
   }
+});
+
+app.get('/api/test/realtime', (req, res) => {
+  const data = stationsService.getStationsWithRealTimeStatus();
+
+  if (!data) {
+    return res.json({
+      success: false,
+      message: 'No real-time data available',
+    });
+  }
 
   res.json({
+    content: data,
     success: true,
-    cached: true,
-    count: cached.count,
-    lastFetch: cached.lastFetch,
-    sample: cached.stations.slice(0, 3),
   });
 });
 
