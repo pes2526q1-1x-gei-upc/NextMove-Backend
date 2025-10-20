@@ -1,5 +1,5 @@
 // src/workers/stationsSyncWorker.js
-import StationsService from '../services/stationsService.js';
+import StationsService from '../services/EVstationsService.js';
 
 /**
  * Background worker that periodically fetches station data from the external API.

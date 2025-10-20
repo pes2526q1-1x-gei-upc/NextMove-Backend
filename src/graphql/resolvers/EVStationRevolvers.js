@@ -1,4 +1,4 @@
-import StationsService from '../../services/stationsService.js';
+import StationsService from '../../services/EVstationsService.js';
 import { GraphQLError } from 'graphql';
 
 const stationsService = new StationsService();

@@ -4,8 +4,8 @@ import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/express';
 import { ruruHTML } from 'ruru/server';
 import schema from './graphql/schema.js';
-import StationsService from './services/stationsService.js';
-import syncWorker from './workers/stationsSyncWorker.js';
+import StationsService from './services/EVstationsService.js';
+import syncWorker from './workers/EVstationsSyncWorker.js';
 
 const stationsService = new StationsService();
 const app = express();
