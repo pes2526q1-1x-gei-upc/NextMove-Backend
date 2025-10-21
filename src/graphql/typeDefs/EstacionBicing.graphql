@@ -1,0 +1,47 @@
+#Definición de objeto Estación de Bicing,
+# en graphQL no hay herencias, todo al mismo obejto!
+
+#DATOS DE GPS
+type GPS {
+    lat: Float! 
+    lon: Float!
+}
+
+#Enumaration de estado de las estaciones: mirar artibutos 
+enum EstadoEstacion {
+    OPERATIVA
+    SOLO_ANCLAJE
+    SOLO_ALQUILER
+    FUERA_DE_SERVICIO
+}
+
+#He decido no aplanar más la estructura para que se asemeje más al diagrama
+type EstacionBicing {
+    #Atributos Estáticos
+    
+    id: ID!
+    nombre: String!
+    direccion: String!
+    coordenadas: GPS!
+    plazasTotales: Int! "capacity"
+    estacionCargaElectrica: Boolean!
+
+    #Atributos dinámicos
+
+    sePuedenAlquilarBicis: Boolean!
+    sePuedeAnclarBicis: Boolean!
+
+    plazasOcupadas: Int!
+    anclajesDisponibles: Int!
+    estado: EstadoEstacion!
+
+    #podemos desglosarlo: 
+
+    bicisMecanicasDisponibles: Int!
+    bicisElectricasDisponibles: Int!
+}
+
+type Query {
+    getEstacionesDeBicing: [EstacionBicing!]!, 
+    getEstacionDeBicing(id: ID!): EstacionBicing
+}

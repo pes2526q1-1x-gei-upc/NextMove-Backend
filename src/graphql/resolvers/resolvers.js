@@ -1,6 +1,9 @@
 // src/graphql/resolvers/resolvers.js
 import { userResolvers } from './userResolvers.js';
 import  EVStationResolvers  from './EVStationRevolvers.js';
+import { estacionDeBiciResolver } from './estacionDeBiciResolver.js';
+import { userResolvers } from './userResolvers.js';
+import {estacionDeBicingResolver} from './EstacionDeBicingResolver.js'; 
 
 export const resolvers = {
   Query: {
@@ -10,6 +13,8 @@ export const resolvers = {
     stations: EVStationResolvers.Query.stations,
     station: EVStationResolvers.Query.station,
     nearbyStations: EVStationResolvers.Query.nearbyStations,
+    getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
+    getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
