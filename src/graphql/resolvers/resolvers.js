@@ -1,9 +1,8 @@
 // src/graphql/resolvers/resolvers.js
 import { userResolvers } from './userResolvers.js';
-import  EVStationResolvers  from './EVStationRevolvers.js';
-import { estacionDeBiciResolver } from './estacionDeBiciResolver.js';
-import { userResolvers } from './userResolvers.js';
-import {estacionDeBicingResolver} from './EstacionDeBicingResolver.js'; 
+import  EVStationResolvers from './EVStationRevolvers.js';
+import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js'; 
+
 
 export const resolvers = {
   Query: {
