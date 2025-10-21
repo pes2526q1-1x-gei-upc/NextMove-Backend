@@ -1,4 +1,3 @@
-// src/graphql/resolvers/resolvers.js
 import { userResolvers } from './userResolvers.js';
 import  EVStationResolvers  from './EVStationRevolvers.js';
 

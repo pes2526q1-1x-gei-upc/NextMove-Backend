@@ -1,4 +1,3 @@
-// src/graphql/schema.js
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { loadFilesSync } from '@graphql-tools/load-files';
 import { mergeTypeDefs } from '@graphql-tools/merge';

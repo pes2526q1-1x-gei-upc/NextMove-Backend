@@ -62,3 +62,4 @@ extend type Query {
   stationsInBounds(bounds: BoundsInput!): [Station!]!
   stationsByCity(city: String!): [Station!]!
 }
+

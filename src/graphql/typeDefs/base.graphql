@@ -1,4 +1,3 @@
-# src/graphql/typeDefs/base.graphql
 type Query {
   hello: String
   _empty: String
