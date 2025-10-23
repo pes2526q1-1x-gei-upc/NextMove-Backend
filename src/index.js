@@ -6,6 +6,7 @@ import { ruruHTML } from 'ruru/server';
 import schema from './graphql/schema.js';
 import StationsService from './services/EVstationsService.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
+import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 
 const stationsService = new StationsService();
 const app = express();
@@ -186,7 +187,7 @@ app.post('/api/worker/interval', (req, res) => {
   });
 });
 
-// Start server and worker
+// Start server and workers
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
   console.log(`GraphQL Playground: http://localhost:${PORT}/api/gql/playground`);
@@ -202,18 +203,23 @@ app.listen(PORT, () => {
   console.log(`  POST ${PORT}/api/worker/interval    - Update sync interval (body: {minutes: 5})`);
   
   console.log('\n');
+  // Inicia el worker de las estaciones de vehículos eléctricos
   syncWorker.start();
+  // Inicia el nuevo worker de las estaciones de Bicing
+  bicingSyncWorker.start();
 });
 
 // Graceful shutdown - stops worker before process exit
 process.on('SIGTERM', () => {
   console.log('\nSIGTERM received, shutting down gracefully');
   syncWorker.stop();
+  bicingSyncWorker.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('\nSIGINT received, shutting down gracefully');
   syncWorker.stop();
+  bicingSyncWorker.stop(); 
   process.exit(0);
 });

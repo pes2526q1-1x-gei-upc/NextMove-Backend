@@ -1,16 +1,27 @@
 //Resolver de EstacionDeBicing
-//Importamos el servicio que hemos creado que es el que tiene la lógica para obtener los datos de la estación
-import * as EstacionBicinigService from "../../services/EstacionBicinigService.js";
+
+//Importamos el worker que mantiene la caché de estaciones de bicing. 
+import EstacionDeBicingSyncWorker from "../../workers/EstacionDeBicingSyncWorker.js";
 
 export const estacionDeBicingResolver = {
     Query: {
         //método para obtener todas las estaciones de bicing fusionadas.
         getEstacionesDeBicing: async () => {
-            return await EstacionBicinigService.getEstacionesFusionadas();
+            return await EstacionDeBicingSyncWorker.getEstacionesCache();
         },
         //método para obtener una estación de bicing por su IDSS
         getEstacionDeBicing: async (_, {id}) => { 
-            return  EstacionBicinigService.getEstacionFusionada(id); 
+            const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache();
+            const estacionEncontrada = estaciones.find(estacion => estacion.id == id); 
+            //verificamos que la estación existe antes de ser retornada. 
+            if(!estacionEncontrada || estacionEncontrada == null) {
+                console.log("NO EXISTE LA ESTACIÓN CON ID: " + id);
+                return null; 
+            }
+            else {
+                console.log("RESOLVER BICING: Estación encontrada con ID: " + id);
+                return estacionEncontrada;
+            }
         }
     }
 }; 

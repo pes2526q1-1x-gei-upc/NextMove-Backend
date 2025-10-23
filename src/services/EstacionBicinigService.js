@@ -1,4 +1,5 @@
 import 'dotenv/config';
+
 //TOKEN de acceso a la API (leído desde .env)
 const TOKEN_DE_ACCESO_API = process.env.TOKEN_DE_ACCESO;
 
@@ -114,34 +115,4 @@ export async function getEstacionesFusionadas() {
     }
 }
 
-//función para obtener una estación por su ID
-export async function getEstacionFusionada(id) {
-    const estacionesFusionadas = await getEstacionesFusionadas(); 
-    if(!estacionesFusionadas) {
-        console.log("No se han podido obtener las estaciones.");
-        return null;    
-    }
-    else {
-        //en caso de que sí hayan estaciones fusionadas, miramos de que exista la que nos precisan. 
-        const estacionFusionadaEncontrada = estacionesFusionadas.find(estacion => estacion.id == id); 
-        if(!estacionFusionadaEncontrada) {
-            console.log("NO EXISTE LA ESTACIÓN CON ID: " + id);
-            return null; 
-        }
-        else return estacionFusionadaEncontrada;
-    }
-}
-
-//función para probar que la llamada a la API funciona correctamente
-async function probar() {
-    const datosFusionados = await getEstacionesFusionadas();
-    if(!datosFusionados) {
-        console.log("No se han podido obtener los datos fusionados.");
-    }
-    else {
-        console.log("Datos fusionados obtenidos correctamente:");
-        console.log(datosFusionados);
-    }
-}
-
-//probar(); 
+ 
