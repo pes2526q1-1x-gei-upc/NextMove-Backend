@@ -16,6 +16,7 @@ export async function createContext(req, res) {
     try {
       user = await authService.verifyToken(token);
     } catch (error) {
+      throw error;
     }
   }
   

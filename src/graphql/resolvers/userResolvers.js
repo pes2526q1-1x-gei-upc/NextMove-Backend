@@ -7,7 +7,7 @@ const users = [
 
 export const userResolvers = {
   Query: {
-    me: async (_, _, context) => {
+    me: async (context) => {
       try {
 
         if (!context.user) {
