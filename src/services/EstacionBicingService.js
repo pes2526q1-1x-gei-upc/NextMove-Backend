@@ -1,3 +1,4 @@
+//service bicing
 import 'dotenv/config';
 import { calculateDistance } from '../utils/maths.js'
 import EstacionDeBicingSyncWorker from '../workers/EstacionDeBicingSyncWorker.js';
