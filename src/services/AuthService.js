@@ -1,7 +1,4 @@
 import admin from 'firebase-admin';
-// import temporal_config from './temporal_config.json'
-// import temporal_config from './temporal_config.json' assert { type: 'json' };
-
 let instance = null;
 
 class AuthService {
