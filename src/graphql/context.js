@@ -11,7 +11,7 @@ export async function createContext(req, res) {
   const authHeader = req?.headers?.authorization;
   const token = authService.extractToken(authHeader);
   let user = null;
-  
+  // console.log(token);
   if (token) {
     try {
       user = await authService.verifyToken(token);

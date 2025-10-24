@@ -17,7 +17,7 @@ export const resolvers = {
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
-    updateUser: userResolvers.Mutation.updateUser,
-    deleteUser: userResolvers.Mutation.deleteUser,
+    updateMe: userResolvers.Mutation.updateMe,
+    deleteMe: userResolvers.Mutation.deleteMe
   },
 };
