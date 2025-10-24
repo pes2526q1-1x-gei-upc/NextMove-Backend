@@ -5,7 +5,7 @@ import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js';
 
 export const resolvers = {
   Query: {
-    hello: () => 'Hello world!',
+    me: userResolvers.Query.me,
     User: userResolvers.Query.User,
     Users: userResolvers.Query.Users,
     stations: EVStationResolvers.Query.stations,
@@ -16,7 +16,7 @@ export const resolvers = {
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
-    updateUser: userResolvers.Mutation.updateUser,
-    deleteUser: userResolvers.Mutation.deleteUser,
+    updateMe: userResolvers.Mutation.updateMe,
+    deleteMe: userResolvers.Mutation.deleteMe
   },
 };
