@@ -1,4 +1,4 @@
-import { getEstacionesFusionadas } from '../services/EstacionBicinigService.js';
+import { getEstacionesFusionadas } from '../services/EstacionBicingService.js';
 
 /** 
  * Worker que en segundo plano sincroniza hace fetch a la API de Bicing y actualiza las estaciones en la base de datos
