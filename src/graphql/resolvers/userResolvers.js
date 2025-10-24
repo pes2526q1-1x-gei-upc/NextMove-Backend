@@ -7,14 +7,17 @@ const users = [
 
 export const userResolvers = {
   Query: {
-    me: async (context) => {
+    me: async (_, __, context) => {
       try {
-
+        
+        // El usuario ya está verificado en el context
         if (!context.user) {
           throw new Error('No autenticado');
         }
 
         const user = context.user;
+
+
         const userResponse = {
           id: user.uid,
           nombre: user.displayName || user.name || 'Usuario de prueba',
@@ -25,6 +28,7 @@ export const userResolvers = {
         return userResponse;
         
       } catch (err) {
+        console.error('Mensaje:', err.message);
         throw err;
       }
     },
