@@ -1,4 +1,7 @@
 import 'dotenv/config';
+import { calculateDistance } from '../utils/maths.js'
+import EstacionDeBicingSyncWorker from '../workers/EstacionDeBicingSyncWorker.js';
+
 
 //TOKEN de acceso a la API (leído desde .env)
 const TOKEN_DE_ACCESO_API = process.env.TOKEN_DE_ACCESO;
@@ -98,7 +101,7 @@ export async function getEstacionesFusionadas() {
                  }      
              }
         })
-        .filter(estacion => estacion !== null); //filtramos las estaciones nulas.)
+        .filter(estacion => estacion !== null); //filtramos las estaciones nulas para que no aparezcan.)
         return estacionesFusionadas; //retorna el array fusionado.  PODEMOS FILTRAR PARA SUPRIMIR NULLS SI QUEREMOS.
 
     } catch (error) {
@@ -116,4 +119,85 @@ export async function getEstacionesFusionadas() {
     }
 }
 
- 
+//No generamos una dependencia circular porque únicamente usamos el worker para obtener las estaciones de bici cacheadas
+export async function getEstacionFusionada(id) {
+    console.log("Servicio EstacionBicinigService: getEstacionFusionada ID: " + id);
+    const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+    if(!estaciones || estaciones === null) {
+        console.log("SERVICE BICING: No tenemos estaciones de bicing en caché"); 
+        return null; 
+    }
+    //en este caso sí tenemos estaciones de bicing. 
+    console.log("SERVICE BICING: Tenemos estaciones de bicing, un total de: " + estaciones.length); 
+    //buscamos si existe o no la estación en concreto. 
+    const estacionExistente = estaciones.find(estacion => estacion.id == id); 
+    if(!estacionExistente || estacionExistente === null) {
+        console.log("SERVICE BICING: La estación con id " + id + " no existe"); 
+        return null; 
+    }
+    else {
+        console.log("SERVICE BICING: La estación con id: " + id + " existe!!!"); 
+        return estacionExistente;
+    }
+}
+
+
+//Método que retorna las estaciones cacheadas en el worker: 
+export async function getEstacionesCache() {
+    const estacionesCache = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+    if(!estacionesCache || estacionesCache === null) {
+        console.log("SERVICE BICING: Las estaciones cacheadas retornan null!"); 
+        return null; 
+    }
+    else {
+        console.log("SERVICE BICING: Tengo este número de estaciones de bicing cacheadas: " + estacionesCache.lenght); 
+        return estacionesCache;
+    }
+} 
+
+function coordenadasValidas(lat, lon) {
+    //miramos que no sean vaías
+    if(lat === null || lon === null) return false; 
+    //en caso de ser no nulos, verificamos que sean números: 
+    if(typeof lat !== 'number' || typeof lon !== 'number') return false; 
+    else {
+        //miramos sus rangos: 
+        if(lat < -90 || lat > 90) return false; 
+        if(lon < -180 || lon > 180) return false; 
+        return true; 
+    }
+}
+
+//Método para obtener las estaciones ordenadas por distancia: 
+export async function getEstacionesBicingCercanas(location) {
+    //en primer lugar vamos a verificar que las coordenadas son válidas:
+    const {lat, lon, radiusKm = 5} = location; 
+    if(coordenadasValidas(lat, lon)) {
+        const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+        if(!estaciones || estaciones === null) {
+            console.log("SERVICE BICING: No tenemos estaciones cacheadas para ser ordenadas"); 
+            return [];
+        }
+        //calculamos la distancia y filtramos por radio. Mapeamos el resultado. 
+        const estacionesCercanas = estaciones
+        .map(estacion => {
+            const distance = calculateDistance(lat, lon, estacion.coordenadas.lat, estacion.coordenadas.lon); 
+            //retornamos la estación original  con la distancia añadida: 
+            return {
+                ...estacion,
+                distanciaKm: distance
+            }; 
+        })
+        //solo falta filtrar para obtener las estaciones que estén dentro de ese perímetro: 
+        .filter(estacion => estacion.distanciaKm >= 0) 
+        //ordenamos las estaciones en orden ascedente: 
+        .sort((a, b) => a.distanciaKm - b.distanciaKm); 
+        console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
+        return estacionesCercanas; 
+    }
+    //en caso de no ser coordenadas válidas:
+    return null;
+}
+
+
+//getEstacionesBicingCercanas({lat: 41.123, lon: 121.12}); 
