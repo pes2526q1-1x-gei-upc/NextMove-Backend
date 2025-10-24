@@ -30,8 +30,8 @@ function calcularEstadoEstacion(estacionEstado) {
 }
 
 //FUNCIÓN PARA CALCULAR LAS PLAZAS OCUPADAS DE UNA ESTACIÓN:
-function calcularPlazasOcupadas(anclajesLibres, plazasTotales) {
-    return plazasTotales - anclajesLibres;
+function calcularPlazasOcupadas(anclajesDisponibles, plazasTotales) {
+    return plazasTotales - anclajesDisponibles;
 }
 
 //FUNCIÓN PARA OBTENER Y FUSIONAR LOS DATOS DE LAS ESTACIONES DE BICING:
@@ -76,20 +76,21 @@ export async function getEstacionesFusionadas() {
                 return null; 
             }
             else {
-                //datos estáticos (proceden de estacionesInfo): 
                 return {
+                    //datos estáticos (proceden de estacionesInfo):
                     id: existeEstacionMapa.station_id,
                     nombre: existeEstacionMapa.name,
                     direccion: existeEstacionMapa.address,
                     coordenadas: {
-                        latitud: existeEstacionMapa.lat,
-                        longitud: existeEstacionMapa.lon
+                        lat: existeEstacionMapa.lat,
+                        lon: existeEstacionMapa.lon
                     },
                     plazasTotales: existeEstacionMapa.capacity,
+                    estacionCargaElectrica: existeEstacionMapa.physical_configuration === "ELECTRICBIKESTATION",
                     //datos dinámicos (proceden de estacionesEstado):
                     sePuedenAlquilarBicis: estacionEstado.is_renting === 1,
                     sePuedeAnclarBicis: estacionEstado.is_returning === 1,
-                    anclajesLibres: estacionEstado.num_docks_available,
+                    anclajesDisponibles: estacionEstado.num_docks_available,
                     plazasOcupadas: calcularPlazasOcupadas(estacionEstado.num_docks_available, existeEstacionMapa.capacity),
                     bicisMecanicasDisponibles: estacionEstado.num_bikes_available_types.mechanical,
                     bicisElectricasDisponibles: estacionEstado.num_bikes_available_types.ebike,
