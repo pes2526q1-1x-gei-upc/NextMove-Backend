@@ -32,7 +32,7 @@ type EstacionBicing {
     sePuedeAnclarBicis: Boolean!
 
     plazasOcupadas: Int!
-    anclajesLibres: Int!
+    anclajesDisponibles: Int!
     estado: EstadoEstacion!
 
     #podemos desglosarlo: 

@@ -30,8 +30,8 @@ function calcularEstadoEstacion(estacionEstado) {
 }
 
 //FUNCIÓN PARA CALCULAR LAS PLAZAS OCUPADAS DE UNA ESTACIÓN:
-function calcularPlazasOcupadas(anclajesLibres, plazasTotales) {
-    return plazasTotales - anclajesLibres;
+function calcularPlazasOcupadas(anclajesDisponibles, plazasTotales) {
+    return plazasTotales - anclajesDisponibles;
 }
 
 //FUNCIÓN PARA OBTENER Y FUSIONAR LOS DATOS DE LAS ESTACIONES DE BICING:
