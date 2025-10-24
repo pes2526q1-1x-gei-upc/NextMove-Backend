@@ -1,6 +1,7 @@
 import { userResolvers } from './userResolvers.js';
 import  EVStationResolvers from './EVStationRevolvers.js';
 import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js'; 
+import { getEstacionesBicingCercanas } from '../../services/EstacionBicingService.js';
 
 
 export const resolvers = {
@@ -12,7 +13,8 @@ export const resolvers = {
     station: EVStationResolvers.Query.station,
     nearbyStations: EVStationResolvers.Query.nearbyStations,
     getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
-    getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing
+    getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
+    getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
