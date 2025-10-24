@@ -4,15 +4,17 @@ import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/express';
 import { ruruHTML } from 'ruru/server';
 import schema from './graphql/schema.js';
+import { createContext } from './graphql/context.js';
 import StationsService from './services/EVstationsService.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
+import AuthService from './services/AuthService.js';
 
 const stationsService = new StationsService();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url} ${req.headers.authorization}`);
   next();
 });
 
@@ -35,6 +37,7 @@ app.all(
   },
   createHandler({
     schema: schema,
+    context: (req, res) => createContext(req, res),
   }),
 );
 
@@ -187,19 +190,19 @@ app.post('/api/worker/interval', (req, res) => {
 });
 
 // Start server and worker
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on http://localhost:${PORT}`);
   console.log(`GraphQL Playground: http://localhost:${PORT}/api/gql/playground`);
-  console.log('\nTest endpoints:');
-  console.log(`  GET  ${PORT}/api/test/fetch-all     - Fetch all stations from API`);
-  console.log(`  GET  ${PORT}/api/test/cached        - View cached data`);
-  console.log(`  POST ${PORT}/api/test/clear-cache   - Clear memory cache`);
-  console.log('\nWorker endpoints:');
-  console.log(`  GET  ${PORT}/api/worker/stats       - View worker statistics`);
-  console.log(`  POST ${PORT}/api/worker/start       - Start sync worker`);
-  console.log(`  POST ${PORT}/api/worker/stop        - Stop sync worker`);
-  console.log(`  POST ${PORT}/api/worker/sync-now    - Force immediate sync`);
-  console.log(`  POST ${PORT}/api/worker/interval    - Update sync interval (body: {minutes: 5})`);
+  // console.log('\nTest endpoints:');
+  // console.log(`  GET  ${PORT}/api/test/fetch-all     - Fetch all stations from API`);
+  // console.log(`  GET  ${PORT}/api/test/cached        - View cached data`);
+  // console.log(`  POST ${PORT}/api/test/clear-cache   - Clear memory cache`);
+  // console.log('\nWorker endpoints:');
+  // console.log(`  GET  ${PORT}/api/worker/stats       - View worker statistics`);
+  // console.log(`  POST ${PORT}/api/worker/start       - Start sync worker`);
+  // console.log(`  POST ${PORT}/api/worker/stop        - Stop sync worker`);
+  // console.log(`  POST ${PORT}/api/worker/sync-now    - Force immediate sync`);
+  // console.log(`  POST ${PORT}/api/worker/interval    - Update sync interval (body: {minutes: 5})`);
   
   console.log('\n');
   syncWorker.start();

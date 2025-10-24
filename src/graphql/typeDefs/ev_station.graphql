@@ -61,5 +61,6 @@ extend type Query {
   nearbyStations(location: LocationInput!): [Station!]!
   stationsInBounds(bounds: BoundsInput!): [Station!]!
   stationsByCity(city: String!): [Station!]!
+  stationsByAdress(address: String!): [Station!]!
 }
 

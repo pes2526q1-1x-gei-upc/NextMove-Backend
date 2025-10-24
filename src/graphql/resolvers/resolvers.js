@@ -6,6 +6,7 @@ import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js';
 export const resolvers = {
   Query: {
     hello: () => 'Hello world!',
+    me: userResolvers.Query.me,
     User: userResolvers.Query.User,
     Users: userResolvers.Query.Users,
     stations: EVStationResolvers.Query.stations,

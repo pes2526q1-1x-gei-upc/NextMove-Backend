@@ -6,9 +6,9 @@ type User {
 }
 
 extend type Query {
-  Hello: String
+  me: User!
   User(id: ID!): User
-  Users: [User!]!
+  Users: [User!]! 
 }
 
 extend type Mutation {
