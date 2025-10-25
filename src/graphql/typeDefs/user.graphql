@@ -14,5 +14,6 @@ extend type Query {
 extend type Mutation {
   createUser(nombre: String!, email: String!, password: String!): User!
   updateUser(id: ID!, nombre: String, email: String): User
+  updateMe(nombre: String, email: String): User!  # <-- AÑADE ESTA LÍNEA
   deleteUser(id: ID!): Boolean!
 }
