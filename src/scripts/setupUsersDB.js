@@ -12,61 +12,44 @@ async function setupUsersDatabase() {
       DROP TABLE IF EXISTS amigos CASCADE;
       DROP TABLE IF EXISTS users CASCADE;
       DROP TYPE IF EXISTS preferido CASCADE;
+      DROP TYPE IF EXISTS mode CASCADE;
     `);
     
     console.log('✅ Tablas antiguas eliminadas');
     console.log('🔨 Creando estructura de usuarios...');
     
+    // Crear enum Mode (CAR, BIKE)
     await client.query(`
-      CREATE TYPE preferido AS ENUM('electrico','bici');
-      
+      CREATE TYPE mode AS ENUM('CAR', 'BIKE');
+    `);
+    
+    // Crear tabla users con estructura compatible con GraphQL
+    await client.query(`
       CREATE TABLE users (
-        id VARCHAR(20) PRIMARY KEY,
+        email VARCHAR(150) PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        mail VARCHAR(150) NOT NULL UNIQUE,
-        photo VARCHAR(100),
-        fecha_nacimiento DATE NOT NULL,
-        fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
-        preferido preferido NOT NULL,
-        CHECK (fecha_registro >= fecha_nacimiento)
+        photo VARCHAR(255),
+        birth_date VARCHAR(50),
+        phone_number VARCHAR(20),
+        preferred_mode mode NOT NULL,
+        bio_description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
       
-      CREATE TABLE amigos(
-        id1 VARCHAR(20),
-        id2 VARCHAR(20),
-        PRIMARY KEY(id1, id2),
-        FOREIGN KEY (id1) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (id2) REFERENCES users(id) ON DELETE CASCADE,
-        CHECK (id1 < id2)
-      );
-      
-      CREATE TABLE bloqueados(
-        id1 VARCHAR(20),
-        id2 VARCHAR(20),
-        PRIMARY KEY(id1, id2),
-        FOREIGN KEY (id1) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (id2) REFERENCES users(id) ON DELETE CASCADE,
-        CHECK (id1 <> id2)
-      );
-      
-      CREATE INDEX idx_users_mail ON users(mail);
-      CREATE INDEX idx_amigos_id1 ON amigos(id1);
-      CREATE INDEX idx_amigos_id2 ON amigos(id2);
+      CREATE INDEX idx_users_email ON users(email);
+      CREATE INDEX idx_users_created_at ON users(created_at DESC);
     `);
     
     console.log('✅ Tablas de usuarios creadas');
     
     // Datos de prueba
     await client.query(`
-      INSERT INTO users (id, name, mail, fecha_nacimiento, preferido) 
+      INSERT INTO users (email, name, preferred_mode, bio_description, birth_date, phone_number) 
       VALUES 
-        ('user1', 'Eric Moreno', 'eric@test.com', '2000-01-01', 'electrico'),
-        ('user2', 'Test User', 'test@test.com', '1995-05-05', 'bici'),
-        ('user3', 'Ana García', 'ana@test.com', '1998-03-10', 'electrico')
-      ON CONFLICT (id) DO NOTHING;
-      
-      INSERT INTO amigos (id1, id2) VALUES ('user1', 'user2')
-      ON CONFLICT DO NOTHING;
+        ('juan@example.com', 'Juan Pérez', 'CAR', 'Usuario de prueba 1', '1990-05-15', '123456789'),
+        ('maria@example.com', 'María García', 'BIKE', 'Usuario de prueba 2', '1995-08-20', '987654321'),
+        ('ana@test.com', 'Ana García', 'CAR', 'Usuario de prueba 3', '1998-03-10', '555666777')
+      ON CONFLICT (email) DO NOTHING;
     `);
     
     console.log('✅ Datos de prueba insertados');
