@@ -45,10 +45,8 @@ export const userResolvers = {
   },
   
   Mutation: {
-    createUser: async (_, { input }) => {
+    createUser: async (_, { name, email, preferredMode }) => {
       try {
-        const { email, name, preferredMode } = input;
-        
         const existingUser = await usersRepo.getUserByEmail(email);
         if (existingUser) {
           throw new Error(`Usuario con email ${email} ya existe`);
@@ -67,18 +65,59 @@ export const userResolvers = {
       }
     },
     
-    updateMe: async (_, { changingData }, context) => {
+    updateMe: async (_, { email, name, preferredMode }, context) => {
       try {
         if (!context.user) {
           throw new Error('No autenticado');
         }
         
-        const email = context.user.email;
+        const userEmail = context.user.email;
         
+        const user = await usersRepo.getUserByEmail(userEmail);
+        if (!user) {
+          throw new Error('Usuario no encontrado');
+        }
+        
+        const changingData = {};
+        if (name) changingData.name = name;
+        if (preferredMode) changingData.preferredMode = preferredMode;
+        
+        const updatedUser = await usersRepo.updateUser(userEmail, changingData);
+        
+        return updatedUser;
+      } catch (error) {
+        console.error('Error actualizando usuario:', error);
+        throw error;
+      }
+    },
+    
+    deleteMe: async (_, { email }, context) => {
+      try {
+        if (!context.user) {
+          throw new Error('No autenticado');
+        }
+        
+        const userEmail = context.user.email;
+        const deleted = await usersRepo.deleteUser(userEmail);
+        
+        return deleted;
+      } catch (error) {
+        console.error('Error eliminando usuario:', error);
+        return false;
+      }
+    },
+    
+    // ✅ NUEVOS RESOLVERS QUE FALTAN
+    updateUser: async (_, { email, name, preferredMode }) => {
+      try {
         const user = await usersRepo.getUserByEmail(email);
         if (!user) {
           throw new Error('Usuario no encontrado');
         }
+        
+        const changingData = {};
+        if (name) changingData.name = name;
+        if (preferredMode) changingData.preferredMode = preferredMode;
         
         const updatedUser = await usersRepo.updateUser(email, changingData);
         
@@ -89,32 +128,9 @@ export const userResolvers = {
       }
     },
     
-    // ✅ AGREGAR ESTE RESOLVER
-    updateUser: async (_, { email, changingData }) => {
+    deleteUser: async (_, { email }) => {
       try {
-        const user = await usersRepo.getUserByEmail(email);
-        if (!user) {
-          throw new Error('Usuario no encontrado');
-        }
-        
-        const updatedUser = await usersRepo.updateUser(email, changingData);
-        
-        return updatedUser;
-      } catch (error) {
-        console.error('Error actualizando usuario:', error);
-        throw error;
-      }
-    },
-    
-    deleteMe: async (_, __, context) => {
-      try {
-        if (!context.user) {
-          throw new Error('No autenticado');
-        }
-        
-        const email = context.user.email;
         const deleted = await usersRepo.deleteUser(email);
-        
         return deleted;
       } catch (error) {
         console.error('Error eliminando usuario:', error);
