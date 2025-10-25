@@ -7,6 +7,11 @@ type GPS {
     lon: Float!
 }
 
+input Location {
+    lat: Float!
+    lon: Float!
+}
+
 #Enumaration de estado de las estaciones: mirar artibutos 
 enum EstadoEstacion {
     OPERATIVA
@@ -39,9 +44,13 @@ type EstacionBicing {
 
     bicisMecanicasDisponibles: Int!
     bicisElectricasDisponibles: Int!
+
+    #valor de distancia: 
+    distanciaKm: Float! #determinada en el service
 }
 
 type Query {
     getEstacionesDeBicing: [EstacionBicing!]!, 
     getEstacionDeBicing(id: ID!): EstacionBicing
+    getEstacionesDeBicingCercanas(location: Location!): [EstacionBicing]
 }

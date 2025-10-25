@@ -1,4 +1,8 @@
+//service bicing
 import 'dotenv/config';
+import { calculateDistance } from '../utils/maths.js'
+import EstacionDeBicingSyncWorker from '../workers/EstacionDeBicingSyncWorker.js';
+
 
 //TOKEN de acceso a la API (leído desde .env)
 const TOKEN_DE_ACCESO_API = process.env.TOKEN_DE_ACCESO;
@@ -98,7 +102,7 @@ export async function getEstacionesFusionadas() {
                  }      
              }
         })
-        .filter(estacion => estacion !== null); //filtramos las estaciones nulas.)
+        .filter(estacion => estacion !== null); //filtramos las estaciones nulas para que no aparezcan.)
         return estacionesFusionadas; //retorna el array fusionado.  PODEMOS FILTRAR PARA SUPRIMIR NULLS SI QUEREMOS.
 
     } catch (error) {
@@ -116,4 +120,63 @@ export async function getEstacionesFusionadas() {
     }
 }
 
- 
+//No generamos una dependencia circular porque únicamente usamos el worker para obtener las estaciones de bici cacheadas
+export async function getEstacionFusionada(id) {
+    console.log("Servicio EstacionBicinigService: getEstacionFusionada ID: " + id);
+    const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+    if(!estaciones || estaciones === null) {
+        console.log("SERVICE BICING: No tenemos estaciones de bicing en caché"); 
+        return null; 
+    }
+    //en este caso sí tenemos estaciones de bicing. 
+    console.log("SERVICE BICING: Tenemos estaciones de bicing, un total de: " + estaciones.length); 
+    //buscamos si existe o no la estación en concreto. 
+    const estacionExistente = estaciones.find(estacion => estacion.id == id); 
+    if(!estacionExistente || estacionExistente === null) {
+        console.log("SERVICE BICING: La estación con id " + id + " no existe"); 
+        return null; 
+    }
+    else {
+        console.log("SERVICE BICING: La estación con id: " + id + " existe!!!"); 
+        return estacionExistente;
+    }
+}
+
+
+//Método que retorna las estaciones cacheadas en el worker: 
+export async function getEstacionesCache() {
+    const estacionesCache = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+    if(!estacionesCache || estacionesCache === null) {
+        console.log("SERVICE BICING: Las estaciones cacheadas retornan null!"); 
+        return null; 
+    }
+    else {
+        console.log("SERVICE BICING: Tengo este número de estaciones de bicing cacheadas: " + estacionesCache.lenght); 
+        return estacionesCache;
+    }
+} 
+
+//Método para obtener las estaciones ordenadas por distancia: 
+  export async function getEstacionesBicingCercanas(location) {
+    const {lat, lon} = location;
+    const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+    if(!estaciones || estaciones === null) {
+        console.log("SERVICE BICING: No tenemos estaciones cacheadas para ser ordenadas"); 
+        return [];
+    }
+    const estacionesCercanas = estaciones
+    .map(estacion => {
+        // Asegúrate de que calculateDistance recibe los parámetros en el orden correcto
+        const distance = calculateDistance(lat, lon, estacion.coordenadas.lat, estacion.coordenadas.lon); 
+        return {
+            ...estacion,
+            distanciaKm: distance
+        }; 
+    })
+    .filter(estacion => estacion.distanciaKm <= 5) 
+    .sort((a, b) => a.distanciaKm - b.distanciaKm); 
+    
+    console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
+    return estacionesCercanas; 
+}
+
