@@ -7,6 +7,7 @@ import schema from './graphql/schema.js';
 import { createContext } from './graphql/context.js';
 import StationsService from './services/EVstationsService.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
+import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 import AuthService from './services/AuthService.js';
 
 const stationsService = new StationsService();
@@ -205,18 +206,23 @@ app.listen(PORT, '0.0.0.0', () => {
   // console.log(`  POST ${PORT}/api/worker/interval    - Update sync interval (body: {minutes: 5})`);
   
   console.log('\n');
+  // Inicia el worker de las estaciones de vehículos eléctricos
   syncWorker.start();
+  // Inicia el nuevo worker de las estaciones de Bicing
+  bicingSyncWorker.start();
 });
 
 // Graceful shutdown - stops worker before process exit
 process.on('SIGTERM', () => {
   console.log('\nSIGTERM received, shutting down gracefully');
   syncWorker.stop();
+  bicingSyncWorker.stop();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('\nSIGINT received, shutting down gracefully');
   syncWorker.stop();
+  bicingSyncWorker.stop(); 
   process.exit(0);
 });

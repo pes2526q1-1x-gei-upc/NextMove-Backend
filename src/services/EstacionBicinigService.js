@@ -1,4 +1,5 @@
 import 'dotenv/config';
+
 //TOKEN de acceso a la API (leído desde .env)
 const TOKEN_DE_ACCESO_API = process.env.TOKEN_DE_ACCESO;
 
@@ -29,8 +30,8 @@ function calcularEstadoEstacion(estacionEstado) {
 }
 
 //FUNCIÓN PARA CALCULAR LAS PLAZAS OCUPADAS DE UNA ESTACIÓN:
-function calcularPlazasOcupadas(anclajesLibres, plazasTotales) {
-    return plazasTotales - anclajesLibres;
+function calcularPlazasOcupadas(anclajesDisponibles, plazasTotales) {
+    return plazasTotales - anclajesDisponibles;
 }
 
 //FUNCIÓN PARA OBTENER Y FUSIONAR LOS DATOS DE LAS ESTACIONES DE BICING:
@@ -75,20 +76,21 @@ export async function getEstacionesFusionadas() {
                 return null; 
             }
             else {
-                //datos estáticos (proceden de estacionesInfo): 
                 return {
+                    //datos estáticos (proceden de estacionesInfo):
                     id: existeEstacionMapa.station_id,
                     nombre: existeEstacionMapa.name,
                     direccion: existeEstacionMapa.address,
                     coordenadas: {
-                        latitud: existeEstacionMapa.lat,
-                        longitud: existeEstacionMapa.lon
+                        lat: existeEstacionMapa.lat,
+                        lon: existeEstacionMapa.lon
                     },
                     plazasTotales: existeEstacionMapa.capacity,
+                    estacionCargaElectrica: existeEstacionMapa.physical_configuration === "ELECTRICBIKESTATION",
                     //datos dinámicos (proceden de estacionesEstado):
                     sePuedenAlquilarBicis: estacionEstado.is_renting === 1,
                     sePuedeAnclarBicis: estacionEstado.is_returning === 1,
-                    anclajesLibres: estacionEstado.num_docks_available,
+                    anclajesDisponibles: estacionEstado.num_docks_available,
                     plazasOcupadas: calcularPlazasOcupadas(estacionEstado.num_docks_available, existeEstacionMapa.capacity),
                     bicisMecanicasDisponibles: estacionEstado.num_bikes_available_types.mechanical,
                     bicisElectricasDisponibles: estacionEstado.num_bikes_available_types.ebike,
@@ -114,34 +116,4 @@ export async function getEstacionesFusionadas() {
     }
 }
 
-//función para obtener una estación por su ID
-export async function getEstacionFusionada(id) {
-    const estacionesFusionadas = await getEstacionesFusionadas(); 
-    if(!estacionesFusionadas) {
-        console.log("No se han podido obtener las estaciones.");
-        return null;    
-    }
-    else {
-        //en caso de que sí hayan estaciones fusionadas, miramos de que exista la que nos precisan. 
-        const estacionFusionadaEncontrada = estacionesFusionadas.find(estacion => estacion.id == id); 
-        if(!estacionFusionadaEncontrada) {
-            console.log("NO EXISTE LA ESTACIÓN CON ID: " + id);
-            return null; 
-        }
-        else return estacionFusionadaEncontrada;
-    }
-}
-
-//función para probar que la llamada a la API funciona correctamente
-async function probar() {
-    const datosFusionados = await getEstacionesFusionadas();
-    if(!datosFusionados) {
-        console.log("No se han podido obtener los datos fusionados.");
-    }
-    else {
-        console.log("Datos fusionados obtenidos correctamente:");
-        console.log(datosFusionados);
-    }
-}
-
-//probar(); 
+ 
