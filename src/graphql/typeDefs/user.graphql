@@ -16,4 +16,5 @@ extend type Mutation {
   updateUser(id: ID!, nombre: String, email: String): User
   updateMe(nombre: String, email: String): User!  # <-- AÑADE ESTA LÍNEA
   deleteUser(id: ID!): Boolean!
+  deleteMe: Boolean!
 }
