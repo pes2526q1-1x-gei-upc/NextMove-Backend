@@ -13,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "pg": "^8.13.1",
     "@graphql-tools/graphql-file-loader": "^8.1.2",
     "@graphql-tools/load": "^8.1.2",
     "@graphql-tools/load-files": "^7.0.1",
@@ -23,10 +22,12 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "firebase-admin": "^13.5.0",
     "graphql": "^16.11.0",
     "graphql-http": "^1.22.4",
     "graphql-tag": "^2.12.6",
     "node-fetch": "^3.3.2",
+    "pg": "^8.13.1",
     "ruru": "^2.0.0-beta.30"
   },
   "devDependencies": {
