@@ -56,25 +56,10 @@ input BoundsInput {
 }
 
 extend type Query {
-  """
-    Returns all the stations avaiable in the system including their live status
-  """
   stations: StationsResponse!
-  """
-    Returns a specific station given his unique id
-  """
   station(id: ID!): Station
-  """
-    Given a coordinate (in this order: latitude, longitude) and a radius (in km)
-    return all stations that are within that radius
-  """
   nearbyStations(location: LocationInput!): [Station!]!
-  
-  """ 
-    These queries are not implemented yet
-  """
   stationsInBounds(bounds: BoundsInput!): [Station!]!
   stationsByCity(city: String!): [Station!]!
-  stationsByAdress(address: String!): [Station!]!
 }
 
