@@ -44,6 +44,9 @@ type EstacionBicing {
 
     bicisMecanicasDisponibles: Int!
     bicisElectricasDisponibles: Int!
+
+    #valor de distancia: 
+    distanciaKm: Float! #determinada en el service
 }
 
 type Query {

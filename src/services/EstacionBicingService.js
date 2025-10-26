@@ -1,3 +1,4 @@
+//service bicing
 import 'dotenv/config';
 import { calculateDistance } from '../utils/maths.js'
 import EstacionDeBicingSyncWorker from '../workers/EstacionDeBicingSyncWorker.js';
@@ -155,49 +156,27 @@ export async function getEstacionesCache() {
     }
 } 
 
-function coordenadasValidas(lat, lon) {
-    //miramos que no sean vaías
-    if(lat === null || lon === null) return false; 
-    //en caso de ser no nulos, verificamos que sean números: 
-    if(typeof lat !== 'number' || typeof lon !== 'number') return false; 
-    else {
-        //miramos sus rangos: 
-        if(lat < -90 || lat > 90) return false; 
-        if(lon < -180 || lon > 180) return false; 
-        return true; 
-    }
-}
-
 //Método para obtener las estaciones ordenadas por distancia: 
-export async function getEstacionesBicingCercanas(location) {
-    //en primer lugar vamos a verificar que las coordenadas son válidas:
-    const {lat, lon, radiusKm = 5} = location; 
-    if(coordenadasValidas(lat, lon)) {
-        const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
-        if(!estaciones || estaciones === null) {
-            console.log("SERVICE BICING: No tenemos estaciones cacheadas para ser ordenadas"); 
-            return [];
-        }
-        //calculamos la distancia y filtramos por radio. Mapeamos el resultado. 
-        const estacionesCercanas = estaciones
-        .map(estacion => {
-            const distance = calculateDistance(lat, lon, estacion.coordenadas.lat, estacion.coordenadas.lon); 
-            //retornamos la estación original  con la distancia añadida: 
-            return {
-                ...estacion,
-                distanciaKm: distance
-            }; 
-        })
-        //solo falta filtrar para obtener las estaciones que estén dentro de ese perímetro: 
-        .filter(estacion => estacion.distanciaKm >= 0) 
-        //ordenamos las estaciones en orden ascedente: 
-        .sort((a, b) => a.distanciaKm - b.distanciaKm); 
-        console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
-        return estacionesCercanas; 
+  export async function getEstacionesBicingCercanas(location) {
+    const {lat, lon} = location;
+    const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+    if(!estaciones || estaciones === null) {
+        console.log("SERVICE BICING: No tenemos estaciones cacheadas para ser ordenadas"); 
+        return [];
     }
-    //en caso de no ser coordenadas válidas:
-    return null;
+    const estacionesCercanas = estaciones
+    .map(estacion => {
+        // Asegúrate de que calculateDistance recibe los parámetros en el orden correcto
+        const distance = calculateDistance(lat, lon, estacion.coordenadas.lat, estacion.coordenadas.lon); 
+        return {
+            ...estacion,
+            distanciaKm: distance
+        }; 
+    })
+    .filter(estacion => estacion.distanciaKm <= 5) 
+    .sort((a, b) => a.distanciaKm - b.distanciaKm); 
+    
+    console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
+    return estacionesCercanas; 
 }
 
-
-//getEstacionesBicingCercanas({lat: 41.123, lon: 121.12}); 
