@@ -135,12 +135,6 @@ class StationsSyncWorker {
       console.log(`  Total syncs: ${this.stats.totalSyncs}\n`);
 
       this.stationsService.forceRefresh(stations);
-      // return {
-      //   success: true,
-      //   count: stations.length,
-      //   duration,
-      // };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.stats.lastSyncTime = new Date();

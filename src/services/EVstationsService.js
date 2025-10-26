@@ -5,14 +5,14 @@ import {calculateDistance}  from '../utils/maths.js';
 
 let stationsCache = null;
 let lastFetch = null;
-const CACHE_DURATION = 1 * 30 * 1000; 
+
+const CACHE_DURATION = 5 * 60 * 1000; 
 
 export default class StationsService {
   
   // TODO: Most of the static data queries should be fetched in DB instead of service!
   async fetchAllStations() {
-    if (stationsCache && lastFetch && 
-        Date.now() - lastFetch < CACHE_DURATION) {
+    if (stationsCache && lastFetch) {
       console.log('Returning cached stations');
       return stationsCache;
     }
@@ -20,46 +20,6 @@ export default class StationsService {
     // Return null if there is no data in cache. We should return the data in database for offline cases.
     return null;
   }
-
-  //   console.log('Fetching all stations from ICAEN WFS...');
-    
-  //   const params = new URLSearchParams({
-  //     service: 'WFS',
-  //     version: '1.1.0',
-  //     request: 'GetFeature',
-  //     typename: 'icaen:estat_punt_recarrega_visor',
-  //     outputFormat: 'application/json',
-  //     srsname: 'EPSG:4326'
-  //   });
-
-  //   try {
-  //     const response = await fetch(`${ICAEN_WFS_URL}?${params}`);
-      
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  //     }
-      
-  //     const contentType = response.headers.get('content-type');
-  //     if (contentType?.includes('xml')) {
-  //       const errorText = await response.text();
-  //       console.error('WFS Error Response:', errorText);
-  //       throw new Error('WFS service returned an error');
-  //     }
-      
-  //     const data = await response.json();
-      
-  //     stationsCache = data.features || [];
-  //     lastFetch = Date.now();
-      
-  //     console.log(`Fetched ${stationsCache.length} stations at ${new Date(lastFetch).toISOString()}`);
-      
-  //     return stationsCache;
-      
-  //   } catch (error) {
-  //     console.error('Error fetching stations from WFS:', error);
-  //     throw error;
-  //   }
-  // }
 
   async getStationById(id) {
     const stations = stationsCache;
@@ -124,6 +84,7 @@ export default class StationsService {
   async forceRefresh(data) {
     this.clearCache();
     stationsCache = data;
+    lastFetch = Date.now()
     console.log('Cache refreshed correctly!');
   }
 }
