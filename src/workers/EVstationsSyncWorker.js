@@ -16,7 +16,7 @@ class StationsSyncWorker {
     this.stationsService = new StationsService();
     this.intervalId = null;
     this.isRunning = false;
-    this.syncInterval = 1 * 60 * 1000; // 5 minutes in milliseconds
+    this.syncInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
     this.stats = {
       totalSyncs: 0,
       lastSyncTime: null,
