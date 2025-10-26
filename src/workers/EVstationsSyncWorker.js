@@ -1,6 +1,6 @@
 // src/workers/stationsSyncWorker.js
 import StationsService from '../services/EVstationsService.js';
-
+const ICAEN_WFS_URL = 'https://xarxarecarrega.icaen.gencat.cat/ows/wfs';
 /**
  * Background worker that periodically fetches station data from the external API.
  * Maintains an in-memory cache of stations with automatic refresh every 5 minutes.
@@ -16,7 +16,7 @@ class StationsSyncWorker {
     this.stationsService = new StationsService();
     this.intervalId = null;
     this.isRunning = false;
-    this.syncInterval = 1 * 60 * 1000; // 5 minutes in milliseconds
+    this.syncInterval = 5 * 60 * 1000; // 5 minutes in milliseconds
     this.stats = {
       totalSyncs: 0,
       lastSyncTime: null,
@@ -68,6 +68,48 @@ class StationsSyncWorker {
     console.log('Sync worker stopped');
   }
 
+  async fetchAllStations() {
+
+
+    console.log('Fetching all stations from ICAEN WFS...');
+    
+    const params = new URLSearchParams({
+      service: 'WFS',
+      version: '1.1.0',
+      request: 'GetFeature',
+      typename: 'icaen:estat_punt_recarrega_visor',
+      outputFormat: 'application/json',
+      srsname: 'EPSG:4326'
+    });
+
+    try {
+      const response = await fetch(`${ICAEN_WFS_URL}?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('xml')) {
+        const errorText = await response.text();
+        console.error('WFS Error Response:', errorText);
+        throw new Error('WFS service returned an error');
+      }
+      
+      const data = await response.json();
+      
+      const lastFetch = Date.now();
+      
+      console.log(`Fetched ${data.features.length} stations at ${new Date(lastFetch).toISOString()}`);
+      
+      return data.features;
+      
+    } catch (error) {
+      console.error('Error fetching stations from WFS:', error);
+      throw error;
+    }
+  }
+
   /**
    * Performs a single synchronization with the external API.
    * Updates statistics and logs the result.
@@ -79,7 +121,7 @@ class StationsSyncWorker {
     console.log(`\n[${new Date().toISOString()}] Starting station sync`);
 
     try {
-      const stations = await this.stationsService.forceRefresh();
+      const stations = await this.fetchAllStations();
       
       const duration = Date.now() - startTime;
       this.stats.totalSyncs++;
@@ -92,12 +134,7 @@ class StationsSyncWorker {
       console.log(`  Duration: ${duration}ms`);
       console.log(`  Total syncs: ${this.stats.totalSyncs}\n`);
 
-      return {
-        success: true,
-        count: stations.length,
-        duration,
-      };
-
+      this.stationsService.forceRefresh(stations);
     } catch (error) {
       const duration = Date.now() - startTime;
       this.stats.lastSyncTime = new Date();
