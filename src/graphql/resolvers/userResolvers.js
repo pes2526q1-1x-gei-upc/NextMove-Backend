@@ -1,4 +1,3 @@
-// src/graphql/resolvers/userResolvers.js
 import AuthService from "../../services/AuthService.js";
 import UsersRepository from "../../repositories/UsersRepository.js";
 
@@ -107,7 +106,7 @@ export const userResolvers = {
       }
     },
     
-    // ✅ NUEVOS RESOLVERS QUE FALTAN
+    // NUEVOS RESOLVERS QUE FALTAN -- verificar si se pueden agrupar o no
     updateUser: async (_, { email, name, preferredMode }) => {
       try {
         const user = await usersRepo.getUserByEmail(email);

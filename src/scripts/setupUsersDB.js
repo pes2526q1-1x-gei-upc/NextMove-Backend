@@ -5,7 +5,7 @@ async function setupUsersDatabase() {
   const client = await pool.connect();
   
   try {
-    console.log('🗑️  Limpiando tablas de usuarios...');
+    console.log('Borrando tablas de usuarios...');
     
     await client.query(`
       DROP TABLE IF EXISTS bloqueados CASCADE;
@@ -15,8 +15,8 @@ async function setupUsersDatabase() {
       DROP TYPE IF EXISTS mode CASCADE;
     `);
     
-    console.log('✅ Tablas antiguas eliminadas');
-    console.log('🔨 Creando estructura de usuarios...');
+    console.log('Se han podido eliminar las tablas de usuarios si existían.');
+    console.log('Creando tablas de usuarios...');
     
     // Crear enum Mode (CAR, BIKE)
     await client.query(`
@@ -27,11 +27,11 @@ async function setupUsersDatabase() {
     await client.query(`
       CREATE TABLE users (
         email VARCHAR(150) PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
+        name VARCHAR(100) UNIQUE,
         photo VARCHAR(255),
         birth_date VARCHAR(50),
         phone_number VARCHAR(20),
-        preferred_mode mode NOT NULL,
+        preferred_mode mode,
         bio_description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

@@ -1,4 +1,3 @@
-// src/config/database.js
 import pg from 'pg';
 const { Pool } = pg;
 
@@ -17,11 +16,11 @@ const pool = new Pool({
 });
 
 pool.on('connect', () => {
-  console.log('✅ Conectado a PostgreSQL/RDS');
+  console.log('Conectado a la base de datos PostgreSQL');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Error en PostgreSQL:', err);
+  console.error('Error al conectar con la base de datos PostgreSQL:', err);
 });
 
 export default pool;
