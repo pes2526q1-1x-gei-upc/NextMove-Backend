@@ -120,7 +120,7 @@ extend type Query {
 
   """
   Busca estaciones de carga cercanas a una ubicación. Dada unas coordenadas (latitude, longitude) y un radio en km(opcional). (ctrl + click sobre LocationInput para más detalles)
-  Las estaciones retornadas incluyen el campo distance calculado. 
+  Las estaciones retornadas incluyen el campo distance calculado que representa: la distancia desde las coordenadas de entrada respecto a las coordenadas de la estación en km. 
   Ejemplo de uso:
   query GetNearbyStations ($location: LocationInput!) {
     nearbyStations(location: $location) {
