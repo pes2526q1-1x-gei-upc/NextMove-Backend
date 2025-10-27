@@ -20,3 +20,18 @@ input CoordinatesInput {
   latitude: Float!
   longitude: Float!
 }
+
+"""
+Input para especificar una locación geográfica (en coordenados de grados) y un radio (en km). 
+"""
+input LocationInput {
+  """
+  Tipo compartido definido en base.graphql que representa unas coordenadas en este orden (latitude, longitude)
+  """
+  coordinates: CoordinatesInput! 
+  """
+  Radio (en km) en el que se quiere buscar a partir de las coordenadas, 
+  es un paramétros opcional, si no tiene valor se coge como valor por defecto 5 Km
+  """
+  radiusKm: Float 
+}

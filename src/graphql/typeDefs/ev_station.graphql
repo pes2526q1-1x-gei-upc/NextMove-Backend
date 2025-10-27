@@ -63,20 +63,7 @@ type StationsResponse {
   total: Int!
 }
 
-"""
-Input para especificar una locación geográfica (en coordenados de grados) y un radio (en km). 
-"""
-input LocationInput {
-  """
-  Tipo compartido definido en base.graphql que representa unas coordenadas en este orden (latitude, longitude)
-  """
-  coordinates: CoordinatesInput! 
-  """
-  Radio (en km) en el que se quiere buscar a partir de las coordenadas, 
-  es un paramétros opcional, si no tiene valor se coge como valor por defecto 5 Km
-  """
-  radiusKm: Float 
-}
+
 
 # Esto de momento no se usa, olvidenlo
 input BoundsInput {
@@ -89,18 +76,67 @@ input BoundsInput {
 extend type Query {
   """
   Obtiene todas las estaciones de carga eléctrica disponibles.
-  Retorna un objeto con el array de estaciones y el total.
+  Retorna un objeto con el array de estaciones y el total. Ejemplo de uso:
+  query GetAllStations {
+    stations {
+      total
+      stations {
+        id
+        coordinates{
+          longitude
+          latitude
+        }
+        distance
+        connectors {
+          type
+          status
+        }
+      }
+    }
+  }
   """
   stations: StationsResponse!
 
   """
   Obtiene una estación de carga específica por su ID.
-  Retorna null si no existe.
+  Retorna null si no existe. Ejemplo de uso:
+  query GetStationById ($id: ID!) {
+    station(id: $id) {
+      id
+      name
+      coordinates {
+        longitude
+        latitude
+      }
+      connectors {
+        type
+        powerKw
+        status
+      }
+    }
+  }
   """
   station(id: ID!): Station
+
   """
-  Busca estaciones de carga cercanas a una ubicación.
-  Las estaciones retornadas incluyen el campo distance calculado.
+  Busca estaciones de carga cercanas a una ubicación. Dada unas coordenadas (latitude, longitude) y un radio en km(opcional). (ctrl + click sobre LocationInput para más detalles)
+  Las estaciones retornadas incluyen el campo distance calculado. 
+  Ejemplo de uso:
+  query GetNearbyStations ($location: LocationInput!) {
+    nearbyStations(location: $location) {
+      name
+      coordinates {
+        longitude
+        latitude
+      }
+      connectors {
+        type
+        powerKw
+        status
+      }
+      distance
+    }
+  }
   """
   nearbyStations(location: LocationInput!): [Station!]!
   
