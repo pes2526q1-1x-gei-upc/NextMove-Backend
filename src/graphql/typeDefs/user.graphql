@@ -1,8 +1,15 @@
+"""
+Enumeración de los modos de transporte preferidos por el usuario.
+"""
 enum Mode {
   CAR
   BIKE
 }
 
+"""
+Representa un usuario registrado en el sistema.
+Contiene información de perfil y preferencias de transporte.
+"""
 type User {
   email: String!
   name: String!
@@ -14,12 +21,37 @@ type User {
   createdAt: String
 }
 
+"""
+Input para crear un nuevo usuario.
+Contiene los campos mínimos necesarios para el registro -> email, nombre y un modo preferido
+"""
 input CreateUserInput {
   email: String!
   name: String!
   preferredMode: Mode!
 }
 
+"""
+Input para actualizar información del usuario.
+Todos los campos son opcionales, solo se actualizan los proporcionados.
+Por ejemplo supón que un usuario inicialmente tiene estos datos ->
+preferredMode: CAR,
+photo: null
+phoneNumber: 123
+birthDate: 1/2/3
+bio: hola
+
+Si queremos actualizar su numero por 456 y quitar su bio (vacío) el Input entero será: 
+preferredMode: CAR
+photo: null
+birthDate: 1/2/3
+phoneNumber: 456 -> cambio
+birthDate: 1/2/3
+bio: null -> cambio
+
+Fíjate que la información antigua debes ponerlo igualmente en el input y no puedes dejarlo como null.
+Ya que en este contexto null significa que queremos quitar información de ese campo. 
+"""
 input UserUpdateInput {
   preferredMode: Mode
   photo: String
@@ -29,9 +61,30 @@ input UserUpdateInput {
 }
 
 extend type Query {
+
+  me: User
+  
+  """
+  Obtiene un usuario específico por su email.
+  Retorna null si el usuario no existe.
+  
+  Ejemplo:
+  query {
+    User(email: "usuario@ejemplo.com") {
+      name
+      preferredMode
+    }
+  }
+  """
   User(email: String!): User
+  
+  """
+  Obtiene la lista completa de todos los usuarios registrados.
+  Fíjate que no tiene ningun parámetro de entrada, porque internamente
+  lo que hace es validar el token que está en el header de la petición.
+  """
   Users: [User!]!
-}
+} 
 
 extend type Mutation {
   createUser(name: String!, email: String!, preferredMode: Mode!): User!
