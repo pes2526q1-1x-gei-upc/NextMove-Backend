@@ -9,11 +9,12 @@ export const userResolvers = {
       try {
         if (!context.user) {
           throw new Error('No autenticado');
-        }
+        } else console.log("Hola");
         
         const user = context.user;
-        let dbUser = await usersRepo.getUserByEmail(user.email);
-        
+        console.log("valor de context user", context.user);
+        let dbUser = await usersRepo.getUserByEmail(context.user.email);
+        console.log("Valor de usuario devuelto", dbUser);
         if (!dbUser) {
           dbUser = await usersRepo.createUser({
             email: user.email,
@@ -21,7 +22,9 @@ export const userResolvers = {
             preferredMode: 'CAR'
           });
         }
-        
+
+
+        console.log("Valor de usuario devuelto", dbUser);
         return dbUser;
         
       } catch (err) {
@@ -64,8 +67,9 @@ export const userResolvers = {
       }
     },
     
-    updateMe: async (_, { email, name, preferredMode }, context) => {
+    updateMe: async (_, { email, name, preferredMode, phoneNumber, bioDescription }, context) => {
       try {
+        // Verificar autenticación
         if (!context.user) {
           throw new Error('No autenticado');
         }
@@ -78,18 +82,43 @@ export const userResolvers = {
         }
         
         const changingData = {};
-        if (name) changingData.name = name;
-        if (preferredMode) changingData.preferredMode = preferredMode;
+        
+        if (name !== undefined) {
+          changingData.name = name;
+        }
+        
+        if (preferredMode !== undefined) {
+          changingData.preferredMode = preferredMode;
+        }
+        
+        if (phoneNumber !== undefined) {
+          changingData.phoneNumber = phoneNumber;
+        }
+        
+        if (bioDescription !== undefined) {
+          changingData.bioDescription = bioDescription;
+        }
+        
+        if (Object.keys(changingData).length === 0) {
+          throw new Error('No se proporcionaron campos para actualizar');
+        }
         
         const updatedUser = await usersRepo.updateUser(userEmail, changingData);
         
+        if (!updatedUser) {
+          throw new Error('Error al actualizar el usuario');
+        }
+        
+        console.log(`Usuario ${userEmail} actualizado exitosamente:`, changingData);
+        
         return updatedUser;
+        
       } catch (error) {
         console.error('Error actualizando usuario:', error);
         throw error;
       }
     },
-    
+        
     deleteMe: async (_, { email }, context) => {
       try {
         if (!context.user) {

@@ -63,7 +63,7 @@ input UserUpdateInput {
 extend type Query {
 
   me: User
-  
+
   """
   Obtiene un usuario específico por su email.
   Retorna null si el usuario no existe.
@@ -88,8 +88,8 @@ extend type Query {
 
 extend type Mutation {
   createUser(name: String!, email: String!, preferredMode: Mode!): User!
-  updateUser(email: String!, name: String, preferredMode: Mode): User!
+  updateUser(email: String!, name: String): User!
   deleteUser(email: String!): Boolean!
-  updateMe(email: String, name: String, preferredMode: Mode): User
+  updateMe(email: String, name: String, preferredMode: Mode, phoneNumber: String, bioDescription: String): User
   deleteMe(email: String): Boolean!
 }
