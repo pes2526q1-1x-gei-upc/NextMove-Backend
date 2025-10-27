@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 global.fetch = jest.fn();
-import { getEstacionesFusionadas } from '../src/services/EstacionBicinigService.js';
+import { getEstacionesFusionadas } from '../src/services/EstacionBicingService.js';
 
 
 

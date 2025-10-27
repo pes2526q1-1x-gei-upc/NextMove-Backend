@@ -42,7 +42,7 @@ function calcularPlazasOcupadas(anclajesDisponibles, plazasTotales) {
 
 //FUNCIÓN PARA OBTENER Y FUSIONAR LOS DATOS DE LAS ESTACIONES DE BICING:
 export async function getEstacionesFusionadas() {
-    console.log("Servicio EstacionBicinigService: getEstacionesFusionadas");
+    console.log("Servicio EstacionBicingService: getEstacionesFusionadas");
     try { 
         //Solicitamos los dos JSONs a la vez a la API.
         const [infoResponse, statusResponse] = await Promise.all([
@@ -124,7 +124,7 @@ export async function getEstacionesFusionadas() {
 
 //No generamos una dependencia circular porque únicamente usamos el worker para obtener las estaciones de bici cacheadas
 export async function getEstacionFusionada(id) {
-    console.log("Servicio EstacionBicinigService: getEstacionFusionada ID: " + id);
+    console.log("Servicio EstacionBicingService: getEstacionFusionada ID: " + id);
     const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
     if(!estaciones || estaciones === null) {
         console.log("SERVICE BICING: No tenemos estaciones de bicing en caché"); 
