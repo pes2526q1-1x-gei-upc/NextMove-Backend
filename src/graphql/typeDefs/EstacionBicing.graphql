@@ -1,22 +1,29 @@
-#Definición de objeto Estación de Bicing,
-# en graphQL no hay herencias, todo al mismo obejto!
 
-#Enumaration de estado de las estaciones: mirar artibutos 
+
+"""
+Enumeración que define los posibles estados operativos de una estación de Bicing.
+Representa si la estación está funcionando completamente o tiene restricciones.
+"""
 enum EstadoEstacion {
-    OPERATIVA
+    OPERATIVA   #Estación completamente operativa: se pueden alquilar y anclar bicis
     SOLO_ANCLAJE
     SOLO_ALQUILER
-    FUERA_DE_SERVICIO
+    FUERA_DE_SERVICIO   #Estación temporalmente cerrada por mantenimiento o avería
+ 
 }
 
-#He decido no aplanar más la estructura para que se asemeje más al diagrama
+"""
+Tipo principal que representa una estación de Bicing.
+Contiene tanto información estática como dinámica.
+En GraphQL no hay herencia, por lo que todos los atributos se definen en el mismo tipo.
+"""
 type EstacionBicing {
     #Atributos Estáticos
     
     id: ID!
     nombre: String!
     direccion: String!
-    coordenadas: Coordinates!
+    coordenadas: Coordinates! #Tipo compartido definido en base.graphql
     plazasTotales: Int! "capacity"
     estacionCargaElectrica: Boolean!
 
@@ -34,12 +41,51 @@ type EstacionBicing {
     bicisMecanicasDisponibles: Int!
     bicisElectricasDisponibles: Int!
 
+    """
+    Distancia en kilómetros es un valor de retorno que solo aparece en ciertas queries donde queramos computar
+    la distancia desde un punto hasta una estación. En el resto de casos será null. 
+    """
     distanciaKm: Float
+
 }
 
 
 type Query {
+    """
+    Obtiene la lista completa de todas las estaciones de Bicing.
+    Retorna un array no nulo con elementos no nulos (siempre habrá al menos un array vacío).
+    """
     getEstacionesDeBicing: [EstacionBicing!]!, 
+
+      """
+    Obtiene una estación específica por su ID.
+    Retorna null si no se encuentra la estación.
+    
+    Ejemplo de uso:
+    query {
+      getEstacionDeBicing(id: "123") {
+        nombre
+        bicisMecanicasDisponibles
+      }
+    }
+    """
     getEstacionDeBicing(id: ID!): EstacionBicing
+    
+    """
+    Busca estaciones cercanas a una ubicación geográfica específica.
+    Las estaciones retornadas incluyen el campo distanciaKm calculado.
+    
+    Ejemplo de uso:
+    query {
+      getEstacionesDeBicingCercanas(location: {
+        coordinates: { latitude: 41.3851, longitude: 2.1734 }
+        radiusKm: 2
+      }) {
+        nombre
+        distanciaKm
+        anclajesDisponibles
+      }
+    }
+    """
     getEstacionesDeBicingCercanas(location: LocationInput!): [EstacionBicing!]!
 }

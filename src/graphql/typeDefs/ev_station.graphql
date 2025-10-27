@@ -1,11 +1,20 @@
+"""
+Representa una estación de carga para vehículos eléctricos.
+Contiene información sobre ubicación, conectores disponibles y estado.
+"""
+
 type Station {
   id: ID!
   name: String!
   address: String
   city: String
-  coordinates: Coordinates!
+  coordinates: Coordinates! #Tipo compartido definido en base.graphql
   
-  # Available connectors
+
+  """
+  Lista de conectores disponibles en esta estación.
+  Cada conector tiene su tipo, potencia y estado individual.
+  """
   connectors: [Connector!]!
 
   # Metadata
@@ -13,15 +22,22 @@ type Station {
   isSuperFast: Boolean
   lastUpdated: String
   
-  # Optional distance field for nearby queries
+  """
+  Distancia en kilómetros es un valor de retorno que solo aparece en ciertas queries donde queramos computar
+  la distancia desde un punto hasta una estación. En el resto de casos será null. 
+  """
   distance: Float
 }
 
+"""
+Representa un conector individual de carga en una estación.
+Una estación puede tener múltiples conectores de diferentes tipos.
+"""
 type Connector {
-  type: ConnectorType!
+  type: ConnectorType!   #Tipo de conector (CCS, CHAdeMO, Mennekes, Schuko)
   powerKw: Float!
-  status: ConnectorStatus!
-  statusCode: String!
+  status: ConnectorStatus!     #Estado actual del conector (disponible, ocupado, no disponible)
+  statusCode: String! # Código interno para debugging de ser necesario (no se suele utilizar)
 }
 
 
@@ -38,16 +54,31 @@ enum ConnectorStatus {
   UNAVAILABLE  
 }
 
+"""
+Respuesta de la query stations que incluye un array de estaciones y 
+un total que representa el número de estaciones que hay en el array.
+"""
 type StationsResponse {
   stations: [Station!]!
   total: Int!
 }
 
+"""
+Input para especificar una locación geográfica (en coordenados de grados) y un radio (en km). 
+"""
 input LocationInput {
-  coordinates: CoordinatesInput!
-  radiusKm: Float
+  """
+  Tipo compartido definido en base.graphql que representa unas coordenadas en este orden (latitude, longitude)
+  """
+  coordinates: CoordinatesInput! 
+  """
+  Radio (en km) en el que se quiere buscar a partir de las coordenadas, 
+  es un paramétros opcional, si no tiene valor se coge como valor por defecto 5 Km
+  """
+  radiusKm: Float 
 }
 
+# Esto de momento no se usa, olvidenlo
 input BoundsInput {
   north: Float!
   south: Float!
@@ -56,9 +87,25 @@ input BoundsInput {
 }
 
 extend type Query {
+  """
+  Obtiene todas las estaciones de carga eléctrica disponibles.
+  Retorna un objeto con el array de estaciones y el total.
+  """
   stations: StationsResponse!
+
+  """
+  Obtiene una estación de carga específica por su ID.
+  Retorna null si no existe.
+  """
   station(id: ID!): Station
+  """
+  Busca estaciones de carga cercanas a una ubicación.
+  Las estaciones retornadas incluyen el campo distance calculado.
+  """
   nearbyStations(location: LocationInput!): [Station!]!
+  
+
+  # QUERIES NO IMPLEMENTADAS Y QUE TAMPOCO NOS IMPORTAN POR EL MOMENTO
   stationsInBounds(bounds: BoundsInput!): [Station!]!
   stationsByCity(city: String!): [Station!]!
 }
