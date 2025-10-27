@@ -26,6 +26,8 @@ const configPeticion = {
  * - Solo_Devolucion: podemos devolver bicicletas, pero no alquilarlas.
  * - Fuera_de_Servicio: no podemos ni alquilar ni devolver bicicletas.
  */
+
+
 function calcularEstadoEstacion(estacionEstado) {
     if(estacionEstado.is_renting && estacionEstado.is_returning) return "OPERATIVA"; 
     else if(estacionEstado.is_renting && !estacionEstado.is_returning) return "SOLO_ALQUILER";
@@ -157,8 +159,8 @@ export async function getEstacionesCache() {
 } 
 
 //Método para obtener las estaciones ordenadas por distancia: 
-  export async function getEstacionesBicingCercanas(location) {
-    const {lat, lon} = location;
+  export async function getEstacionesDeBicingCercanas(lat, lon, radius) {
+    
     const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
     if(!estaciones || estaciones === null) {
         console.log("SERVICE BICING: No tenemos estaciones cacheadas para ser ordenadas"); 
@@ -173,10 +175,11 @@ export async function getEstacionesCache() {
             distanciaKm: distance
         }; 
     })
-    .filter(estacion => estacion.distanciaKm <= 5) 
+    .filter(estacion => estacion.distanciaKm <= radius) 
     .sort((a, b) => a.distanciaKm - b.distanciaKm); 
     
     console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
     return estacionesCercanas; 
 }
+
 

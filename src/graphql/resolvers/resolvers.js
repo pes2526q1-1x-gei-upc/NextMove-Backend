@@ -12,7 +12,8 @@ export const resolvers = {
     station: EVStationResolvers.Query.station,
     nearbyStations: EVStationResolvers.Query.nearbyStations,
     getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
-    getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing
+    getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
+    getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,

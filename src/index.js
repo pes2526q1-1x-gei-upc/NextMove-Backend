@@ -6,6 +6,7 @@ import { ruruHTML } from 'ruru/server';
 import schema from './graphql/schema.js';
 import StationsService from './services/EVstationsService.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
+import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 
 const stationsService = new StationsService();
 const app = express();
@@ -203,6 +204,7 @@ app.listen(PORT, () => {
   
   console.log('\n');
   syncWorker.start();
+  bicingSyncWorker.start();
 });
 
 // Graceful shutdown - stops worker before process exit

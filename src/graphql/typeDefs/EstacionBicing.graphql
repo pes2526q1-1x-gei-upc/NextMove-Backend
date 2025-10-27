@@ -39,9 +39,13 @@ type EstacionBicing {
 
     bicisMecanicasDisponibles: Int!
     bicisElectricasDisponibles: Int!
+
+    distanciaKm: Float
 }
+
 
 type Query {
     getEstacionesDeBicing: [EstacionBicing!]!, 
     getEstacionDeBicing(id: ID!): EstacionBicing
+    getEstacionesDeBicingCercanas(location: LocationInput!): [EstacionBicing!]!
 }
