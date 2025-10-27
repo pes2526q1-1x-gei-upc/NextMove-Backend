@@ -6,11 +6,11 @@ export const estacionDeBicingResolver = {
     Query: {
         //método para obtener todas las estaciones de bicing fusionadas.
         getEstacionesDeBicing: async () => {
-            return await EstacionBicinigService.getEstacionesFusionadas();
+            return await EstacionBicingService.getEstacionesFusionadas();
         },
         //método para obtener una estación de bicing por su IDSS
         getEstacionDeBicing: async (_, {id}) => { 
-            return  EstacionBicinigService.getEstacionFusionada(id); 
+            return  EstacionBicingService.getEstacionFusionada(id); 
         },
 
         getEstacionesDeBicingCercanas: async (_, { location }) => { 
