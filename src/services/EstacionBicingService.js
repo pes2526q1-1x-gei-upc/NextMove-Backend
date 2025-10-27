@@ -52,6 +52,7 @@ export async function getEstacionesFusionadas() {
 
         //verficamos que las respuestas son correctas: 
         if(!infoResponse.ok || !statusResponse.ok) {
+            console.error(statusResponse)
             throw new Error("Error en las respuestas de las APIs");
         }
         //convertimos las respuestas a JSON
@@ -110,8 +111,8 @@ export async function getEstacionesFusionadas() {
     } catch (error) {
         console.error("Error al realizar las llamadas a las APIs:", error);
         if(error.response) {
-            console.error("Código de estado:", error.response.status);
-            console.error("Datos de la respuesta:", error.response.data);
+            console.error("Código de estado:", error.response);
+            console.error("Datos de la respuesta:", error.response);
         }
         if(error.response.status === 401) {
             console.error("Parece que el token de acceso no es válido.");
