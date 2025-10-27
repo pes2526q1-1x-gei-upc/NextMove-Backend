@@ -88,8 +88,8 @@ export async function getEstacionesFusionadas() {
                     nombre: existeEstacionMapa.name,
                     direccion: existeEstacionMapa.address,
                     coordenadas: {
-                        lat: existeEstacionMapa.lat,
-                        lon: existeEstacionMapa.lon
+                        latitude: existeEstacionMapa.lat,
+                        longitude: existeEstacionMapa.lon
                     },
                     plazasTotales: existeEstacionMapa.capacity,
                     estacionCargaElectrica: existeEstacionMapa.physical_configuration === "ELECTRICBIKESTATION",
@@ -169,7 +169,7 @@ export async function getEstacionesCache() {
     const estacionesCercanas = estaciones
     .map(estacion => {
         // Asegúrate de que calculateDistance recibe los parámetros en el orden correcto
-        const distance = calculateDistance(lat, lon, estacion.coordenadas.lat, estacion.coordenadas.lon); 
+        const distance = calculateDistance(lat, lon, estacion.coordenadas.latitude, estacion.coordenadas.longitude); 
         return {
             ...estacion,
             distanciaKm: distance

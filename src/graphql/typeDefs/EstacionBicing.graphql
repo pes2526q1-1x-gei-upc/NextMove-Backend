@@ -1,12 +1,6 @@
 #Definición de objeto Estación de Bicing,
 # en graphQL no hay herencias, todo al mismo obejto!
 
-#DATOS DE GPS
-type GPS {
-    lat: Float! 
-    lon: Float!
-}
-
 #Enumaration de estado de las estaciones: mirar artibutos 
 enum EstadoEstacion {
     OPERATIVA
@@ -22,7 +16,7 @@ type EstacionBicing {
     id: ID!
     nombre: String!
     direccion: String!
-    coordenadas: GPS!
+    coordenadas: Coordinates!
     plazasTotales: Int! "capacity"
     estacionCargaElectrica: Boolean!
 
