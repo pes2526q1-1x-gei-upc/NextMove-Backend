@@ -62,11 +62,23 @@ input UserUpdateInput {
 
 extend type Query {
 
+  """
+    Obtiene los datos del usuario de la sesión actual identificado por el token en el header de la request. 
+    Debe tener un token válido OBLIGATORIAMENTE, si no, no os funcionará la query.
+    El header debe tener esta forma (se puede setear en el playground también).
+    {
+      "Authorization": "Bearer <tokenSesionFirebase>"
+    }
+  """
   me: User
 
   """
   Obtiene un usuario específico por su email.
   Retorna null si el usuario no existe.
+
+  NO ES LO MISMO QUE 'me', no intentéis haceros el listo y hacer un refactor para reutilizar codigo por donde no se puede.
+  La query User permite a cualquier usuario obtener datos de otro usuario concreto mediante su email, en cambio, me solo te devuelve los datos del usuario de la sesión actual.
+  Es decir tienen responsabilidades y própositos diferentes, no mezclemos cosas, aunque "lógicamente" o "matemáticamente" se pueda reutilizar código (ya que me es un subconjunto de User).
   
   Ejemplo:
   query {
@@ -87,9 +99,18 @@ extend type Query {
 } 
 
 extend type Mutation {
-  createUser(name: String!, email: String!, preferredMode: Mode!): User!
-  updateUser(email: String!, name: String): User!
-  deleteUser(email: String!): Boolean!
+
+  """
+  Un usuario autenticado (con token en el header), puede actualizar sus datos mediante esta operación
+  retorna los mismos datos nuevos si salió bien, null en caso contrario. Nota: el campo email no se puede actualizar (de momento)
+  """
   updateMe(email: String, name: String, preferredMode: Mode, phoneNumber: String, bioDescription: String): User
+
+  """
+  No implementado o implementado pero no testeado
+  """
+  updateUser(email: String!, name: String): User!  
+  createUser(name: String!, email: String!, preferredMode: Mode!): User!
+  deleteUser(email: String!): Boolean!
   deleteMe(email: String): Boolean!
 }
