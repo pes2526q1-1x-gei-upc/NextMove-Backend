@@ -63,7 +63,7 @@ export const userResolvers = {
       }
     },
     
-    updateMe: async (_, { email, name, preferredMode, phoneNumber, bioDescription }, context) => {
+    updateMe: async (_, { email, name, preferredMode, phoneNumber, bioDescription, preferredLanguage}, context) => {
       try {
         // Verificar autenticación
         if (!context.user) {
