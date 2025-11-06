@@ -11,10 +11,12 @@ class UsersRepository {
       SELECT 
         email,
         name,
+        nickname,
         photo,
         birth_date as "birthDate",
         phone_number as "phoneNumber",
         preferred_mode as "preferredMode",
+        preferred_language,
         bio_description as "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
       FROM users
@@ -31,10 +33,12 @@ class UsersRepository {
       SELECT 
         email,
         name,
+        nickname,
         photo,
         birth_date as "birthDate",
         phone_number as "phoneNumber",
         preferred_mode as "preferredMode",
+        preferred_language,
         bio_description as "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
       FROM users
@@ -46,25 +50,27 @@ class UsersRepository {
   /**
    * Crear nuevo usuario
    */
-  async createUser(userData) {
-    const { email, name, preferredMode } = userData;
-    
-    const result = await pool.query(`
-      INSERT INTO users (email, name, preferred_mode)
-      VALUES ($1, $2, $3)
-      RETURNING 
-        email,
-        name,
-        photo,
-        birth_date as "birthDate",
-        phone_number as "phoneNumber",
-        preferred_mode as "preferredMode",
-        bio_description as "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
-    `, [email, name, preferredMode]);
-    
-    return result.rows[0];
-  }
+async createUser(userData) {
+  const { email } = userData;
+
+  const result = await pool.query(`
+    INSERT INTO users (email)
+    VALUES ($1)
+    RETURNING 
+      email,
+      name,
+      nickname,
+      photo,
+      birth_date AS "birthDate",
+      phone_number AS "phoneNumber",
+      preferred_mode AS "preferredMode",
+      preferred_language,
+      bio_description AS "bioDescription",
+      TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+  `, [email]); 
+
+  return result.rows[0];
+}
 
   /**
    * Actualizar usuario
@@ -83,10 +89,6 @@ class UsersRepository {
       fields.push(`photo = $${paramIndex++}`);
       values.push(changingData.photo);
     }
-    if (changingData.birthDate !== undefined) {
-      fields.push(`birth_date = $${paramIndex++}`);
-      values.push(changingData.birthDate);
-    }
     if (changingData.phoneNumber !== undefined) {
       fields.push(`phone_number = $${paramIndex++}`);
       values.push(changingData.phoneNumber);
@@ -94,6 +96,10 @@ class UsersRepository {
     if (changingData.bioDescription !== undefined) {
       fields.push(`bio_description = $${paramIndex++}`);
       values.push(changingData.bioDescription);
+    }
+    if(changingData.preferredLanguage !== undefined) {
+      fields.push(`preferred_language = $${paramIndex++}`);
+      values.push(changingData.preferredLanguage);
     }
 
     if (fields.length === 0) {
@@ -110,10 +116,12 @@ class UsersRepository {
       RETURNING 
         email,
         name,
+        nickname,
         photo,
         birth_date as "birthDate",
         phone_number as "phoneNumber",
         preferred_mode as "preferredMode",
+        preferred_language,
         bio_description as "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
     `, values);

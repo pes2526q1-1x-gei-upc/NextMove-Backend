@@ -12,11 +12,13 @@ Contiene información de perfil y preferencias de transporte.
 """
 type User {
   email: String!
-  name: String!
+  name: String
+  nickname: String
   photo: String
   birthDate: String
   phoneNumber: String
-  preferredMode: Mode!
+  preferredMode: Mode
+  preferredLanguage: String
   bioDescription: String
   createdAt: String
 }
@@ -27,8 +29,6 @@ Contiene los campos mínimos necesarios para el registro -> email, nombre y un m
 """
 input CreateUserInput {
   email: String!
-  name: String!
-  preferredMode: Mode!
 }
 
 """
@@ -55,7 +55,6 @@ Ya que en este contexto null significa que queremos quitar información de ese c
 input UserUpdateInput {
   preferredMode: Mode
   photo: String
-  birthDate: String
   phoneNumber: String
   bioDescription: String
 }

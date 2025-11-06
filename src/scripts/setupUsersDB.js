@@ -27,11 +27,13 @@ async function setupUsersDatabase() {
     await client.query(`
       CREATE TABLE users (
         email VARCHAR(150) PRIMARY KEY,
-        name VARCHAR(100) UNIQUE,
+        name VARCHAR(100),
+        nickname VARCHAR(50) UNIQUE,
         photo VARCHAR(255),
         birth_date VARCHAR(50),
         phone_number VARCHAR(20),
         preferred_mode mode,
+        preferred_language VARCHAR(20),
         bio_description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
