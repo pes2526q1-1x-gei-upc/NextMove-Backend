@@ -17,9 +17,7 @@ export const userResolvers = {
         console.log("Valor de usuario devuelto", dbUser);
         if (!dbUser) {
           dbUser = await usersRepo.createUser({
-            email: user.email,
-            name: user.displayName || user.name || 'Usuario de prueba',
-            preferredMode: 'CAR'
+            email: user.email
           });
         }
 
@@ -55,9 +53,7 @@ export const userResolvers = {
         }
         
         const newUser = await usersRepo.createUser({
-          email,
-          name,
-          preferredMode
+          email
         });
         
         return newUser;
@@ -83,8 +79,8 @@ export const userResolvers = {
         
         const changingData = {};
         
-        if (name !== undefined) {
-          changingData.name = name;
+        if(preferredLanguage !== undefined) {
+          changingData.preferredLanguage = preferredLanguage;
         }
         
         if (preferredMode !== undefined) {
