@@ -45,7 +45,7 @@ export const userResolvers = {
   },
   
   Mutation: {
-    createUser: async (_, { name, email, preferredMode }) => {
+    createUser: async (_, {email}) => {
       try {
         const existingUser = await usersRepo.getUserByEmail(email);
         if (existingUser) {

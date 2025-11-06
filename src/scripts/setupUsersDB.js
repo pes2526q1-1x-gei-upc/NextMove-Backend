@@ -28,7 +28,7 @@ async function setupUsersDatabase() {
       CREATE TABLE users (
         email VARCHAR(150) PRIMARY KEY,
         name VARCHAR(100),
-        nickmane VARCHAR(50) UNIQUE,
+        nickname VARCHAR(50) UNIQUE,
         photo VARCHAR(255),
         birth_date VARCHAR(50),
         phone_number VARCHAR(20),

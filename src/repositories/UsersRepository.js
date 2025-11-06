@@ -50,27 +50,27 @@ class UsersRepository {
   /**
    * Crear nuevo usuario
    */
-  async createUser(userData) {
-    const { email } = userData;
-    
-    const result = await pool.query(`
-      INSERT INTO users (email)
-      VALUES ($1)
-      RETURNING 
-        email,
-        name,
-        nickname,
-        photo,
-        birth_date as "birthDate",
-        phone_number as "phoneNumber",
-        preferred_mode as "preferredMode",ç
-        preferred_language,
-        bio_description as "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
-    `, [email, name, preferredMode]);
-    
-    return result.rows[0];
-  }
+async createUser(userData) {
+  const { email } = userData;
+
+  const result = await pool.query(`
+    INSERT INTO users (email)
+    VALUES ($1)
+    RETURNING 
+      email,
+      name,
+      nickname,
+      photo,
+      birth_date AS "birthDate",
+      phone_number AS "phoneNumber",
+      preferred_mode AS "preferredMode",
+      preferred_language,
+      bio_description AS "bioDescription",
+      TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+  `, [email]); 
+
+  return result.rows[0];
+}
 
   /**
    * Actualizar usuario
