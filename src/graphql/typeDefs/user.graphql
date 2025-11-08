@@ -25,91 +25,80 @@ type User {
 
 """
 Input para crear un nuevo usuario.
-Contiene los campos mínimos necesarios para el registro -> email, nombre y un modo preferido
 """
 input CreateUserInput {
   email: String!
+  name: String
+  preferredMode: Mode
 }
 
 """
 Input para actualizar información del usuario.
-Todos los campos son opcionales, solo se actualizan los proporcionados.
-Por ejemplo supón que un usuario inicialmente tiene estos datos ->
-preferredMode: CAR,
-photo: null
-phoneNumber: 123
-birthDate: 1/2/3
-bio: hola
-
-Si queremos actualizar su numero por 456 y quitar su bio (vacío) el Input entero será: 
-preferredMode: CAR
-photo: null
-birthDate: 1/2/3
-phoneNumber: 456 -> cambio
-birthDate: 1/2/3
-bio: null -> cambio
-
-Fíjate que la información antigua debes ponerlo igualmente en el input y no puedes dejarlo como null.
-Ya que en este contexto null significa que queremos quitar información de ese campo. 
+Todos los campos son opcionales.
 """
 input UserUpdateInput {
-  preferredMode: Mode
-  photo: String
+  name: String
+  nickname: String
   phoneNumber: String
   bioDescription: String
+  preferredMode: Mode
+  preferredLanguage: String
+  birthDate: String
+  photo: String
 }
 
 extend type Query {
-
   """
-    Obtiene los datos del usuario de la sesión actual identificado por el token en el header de la request. 
-    Debe tener un token válido OBLIGATORIAMENTE, si no, no os funcionará la query.
-    El header debe tener esta forma (se puede setear en el playground también).
-    {
-      "Authorization": "Bearer <tokenSesionFirebase>"
-    }
+  Obtiene los datos del usuario de la sesión actual.
+  Requiere token en header: Authorization: Bearer <token>
   """
   me: User
 
   """
-  Obtiene un usuario específico por su email.
-  Retorna null si el usuario no existe.
-
-  NO ES LO MISMO QUE 'me', no intentéis haceros el listo y hacer un refactor para reutilizar codigo por donde no se puede.
-  La query User permite a cualquier usuario obtener datos de otro usuario concreto mediante su email, en cambio, me solo te devuelve los datos del usuario de la sesión actual.
-  Es decir tienen responsabilidades y própositos diferentes, no mezclemos cosas, aunque "lógicamente" o "matemáticamente" se pueda reutilizar código (ya que me es un subconjunto de User).
-  
-  Ejemplo:
-  query {
-    User(email: "usuario@ejemplo.com") {
-      name
-      preferredMode
-    }
-  }
+  Obtiene un usuario por email.
   """
   User(email: String!): User
-  
+
   """
-  Obtiene la lista completa de todos los usuarios registrados.
-  Fíjate que no tiene ningun parámetro de entrada, porque internamente
-  lo que hace es validar el token que está en el header de la petición.
+  Lista todos los usuarios.
   """
   Users: [User!]!
-} 
+}
 
 extend type Mutation {
+  """
+  Actualiza los datos del usuario autenticado.
+  Usa email del token, o pásalo explícitamente.
+  """
+  updateMe(
+    email: String
+    name: String
+    nickname: String
+    phoneNumber: String
+    bioDescription: String
+    preferredMode: Mode
+    preferredLanguage: String
+    birthDate: String
+    photo: String
+  ): User!
 
   """
-  Un usuario autenticado (con token en el header), puede actualizar sus datos mediante esta operación
-  retorna los mismos datos nuevos si salió bien, null en caso contrario. Nota: el campo email no se puede actualizar (de momento)
+  Actualiza cualquier usuario (admin).
   """
-  updateMe(email: String, name: String, preferredMode: Mode, phoneNumber: String, bioDescription: String): User
+  updateUser(email: String!, name: String): User!
 
   """
-  No implementado o implementado pero no testeado
+  Crea un nuevo usuario.
   """
-  updateUser(email: String!, name: String): User!  
-  createUser(name: String!, email: String!, preferredMode: Mode!): User!
+  createUser(email: String!, name: String, preferredMode: Mode): User!
+
+  """
+  Elimina un usuario.
+  """
   deleteUser(email: String!): Boolean!
-  deleteMe(email: String): Boolean!
+
+  """
+  Elimina tu cuenta.
+  """
+  deleteMe: Boolean!
 }
