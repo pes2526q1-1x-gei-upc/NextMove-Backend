@@ -80,7 +80,6 @@ async updateUser(email, changingData) {
   const values = [];
   let paramIndex = 1;
 
-  // AÑADIMOS LOS CAMPOS QUE FALTABAN
   if (changingData.name !== undefined) {
     fields.push(`name = $${paramIndex++}`);
     values.push(changingData.name);
@@ -94,7 +93,7 @@ async updateUser(email, changingData) {
     values.push(changingData.birthDate);
   }
   if (changingData.phoneNumber !== undefined) {
-    fields.push(`phone_number = $$\${paramIndex++}`);
+    fields.push(`phone_number = $${paramIndex++}`);  // CORREGIDO
     values.push(changingData.phoneNumber);
   }
   if (changingData.bioDescription !== undefined) {
@@ -108,6 +107,10 @@ async updateUser(email, changingData) {
   if (changingData.preferredLanguage !== undefined) {
     fields.push(`preferred_language = $${paramIndex++}`);
     values.push(changingData.preferredLanguage);
+  }
+  if (changingData.photo !== undefined) {
+    fields.push(`photo = $${paramIndex++}`);
+    values.push(changingData.photo);
   }
 
   if (fields.length === 0) {
