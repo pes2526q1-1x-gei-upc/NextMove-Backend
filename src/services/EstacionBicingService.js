@@ -139,6 +139,8 @@ export async function getEstacionesFusionadas() {
             if (statusResponse && statusResponse.ok) {
                 console.error("Cuerpo de ESTADO_URL (que parecía OK):", statusBody);
             }
+            console.log('infoResponse status:', infoResponse.status);
+            console.log('statusResponse status:', statusResponse.status);
         }
         
         console.error("Stack trace:", error.stack);
