@@ -110,21 +110,14 @@ export async function getEstacionesFusionadas() {
 
     } catch (error) {
     console.error("Error al realizar las llamadas a las APIs:", error);
+    console.error("Mensaje de error:", error.message);
+    console.error("Stack trace:", error.stack);
 
-    if(error.response) {
-        console.error("Código de estado:", error.response.status);
-        console.error("Datos de la respuesta:", error.response.data);
+    // Con fetch(), no existe error.response
+    // El error puede ser de red, timeout, etc.
 
-        if(error.response.status === 401) {
-            console.error("Parece que el token de acceso no es válido.");
-        }
-    } else {
-        console.error("Error desconocido al realizar las llamadas a las APIs.");
-    }
-
-    // IMPORTANTE: Retornar un array vacío en caso de error
-    return [];
-    }
+    return []; // Siempre retornar array vacío en caso de error
+}
 }
 
 //No generamos una dependencia circular porque únicamente usamos el worker para obtener las estaciones de bici cacheadas
