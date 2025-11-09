@@ -134,7 +134,7 @@ export async function getEstacionesFusionadas() {
             
             // Comprobamos qué respuesta pudo fallar
             if (infoResponse && infoResponse.ok) {
-                console.error("Cuerpo de INFO_URL (que parecía OK):", infoBody);
+                //console.error("Cuerpo de INFO_URL (que parecía OK):", infoBody);
             }
             if (statusResponse && statusResponse.ok) {
                 console.error("Cuerpo de ESTADO_URL (que parecía OK):", statusBody);
