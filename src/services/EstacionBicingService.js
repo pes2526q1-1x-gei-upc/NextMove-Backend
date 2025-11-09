@@ -14,7 +14,8 @@ const ESTADO_URL = "https://opendata-ajuntament.barcelona.cat/data/dataset/6aa34
 const configPeticion = {
     method: 'GET', 
     headers: {
-        'Authorization': TOKEN_DE_ACCESO_API
+        'Authorization': TOKEN_DE_ACCESO_API,
+        'Accept': 'application/json'
     }
 };  
 
