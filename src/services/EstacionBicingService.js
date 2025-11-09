@@ -109,17 +109,21 @@ export async function getEstacionesFusionadas() {
         return estacionesFusionadas; //retorna el array fusionado.  PODEMOS FILTRAR PARA SUPRIMIR NULLS SI QUEREMOS.
 
     } catch (error) {
-        console.error("Error al realizar las llamadas a las APIs:", error);
-        if(error.response) {
-            console.error("Código de estado:", error.response);
-            console.error("Datos de la respuesta:", error.response);
-        }
+    console.error("Error al realizar las llamadas a las APIs:", error);
+
+    if(error.response) {
+        console.error("Código de estado:", error.response.status);
+        console.error("Datos de la respuesta:", error.response.data);
+
         if(error.response.status === 401) {
             console.error("Parece que el token de acceso no es válido.");
         }
-        else {
-            console.error("Error desconocido al realizar las llamadas a las APIs.");
-        }
+    } else {
+        console.error("Error desconocido al realizar las llamadas a las APIs.");
+    }
+
+    // IMPORTANTE: Retornar un array vacío en caso de error
+    return [];
     }
 }
 
@@ -182,3 +186,5 @@ export async function getEstacionesCache() {
     console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
     return estacionesCercanas; 
 }
+
+
