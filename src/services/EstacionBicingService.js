@@ -1,4 +1,3 @@
-//service bicing
 import 'dotenv/config';
 import { calculateDistance } from '../utils/maths.js'
 import EstacionDeBicingSyncWorker from '../workers/EstacionDeBicingSyncWorker.js';
@@ -21,7 +20,7 @@ const configPeticion = {
 
 //FUNCIÓN QUE DETERMINA EL ESTADO DE LA ESTACIÓN DE BICING: 
 /** Cuatro estados posibles: 
- *  - Operativa: podemos alquilar y devolver bicicletas.
+ * - Operativa: podemos alquilar y devolver bicicletas.
  * - Solo_Alquiler: podemos alquilar bicicletas, pero no devolverlas.
  * - Solo_Devolucion: podemos devolver bicicletas, pero no alquilarlas.
  * - Fuera_de_Servicio: no podemos ni alquilar ni devolver bicicletas.
@@ -43,23 +42,40 @@ function calcularPlazasOcupadas(anclajesDisponibles, plazasTotales) {
 //FUNCIÓN PARA OBTENER Y FUSIONAR LOS DATOS DE LAS ESTACIONES DE BICING:
 export async function getEstacionesFusionadas() {
     console.log("Servicio EstacionBicingService: getEstacionesFusionadas");
+    
+    // Estas variables se declaran aquí para que el bloque catch pueda acceder a sus cuerpos de texto
+    let infoBody = '';
+    let statusBody = '';
+    let infoResponse;
+    let statusResponse;
+
     try { 
         //Solicitamos los dos JSONs a la vez a la API.
-        const [infoResponse, statusResponse] = await Promise.all([
+        [infoResponse, statusResponse] = await Promise.all([
             fetch(INFO_URL, configPeticion),
             fetch(ESTADO_URL, configPeticion)
         ]);
 
-        //verficamos que las respuestas son correctas: 
-        if(!infoResponse.ok || !statusResponse.ok) {
-            console.error(statusResponse)
-            throw new Error("Error en las respuestas de las APIs");
-        }
-        //convertimos las respuestas a JSON
-        const [infoData, statusData] = await Promise.all([
-            infoResponse.json(),
-            statusResponse.json()
+        // Leemos ambas respuestas como texto
+        [infoBody, statusBody] = await Promise.all([
+            infoResponse.text(),
+            statusResponse.text()
         ]);
+
+        // Verificamos que las respuestas son correctas individualmente
+        if (!infoResponse.ok) {
+            console.error(`Error en la API INFO (${infoResponse.status} ${infoResponse.statusText}):`, infoBody);
+            throw new Error(`Error en la API INFO: ${infoResponse.status}`);
+        }
+        if (!statusResponse.ok) {
+            console.error(`Error en la API ESTADO (${statusResponse.status} ${statusResponse.statusText}):`, statusBody);
+            throw new Error(`Error en la API ESTADO: ${statusResponse.status}`);
+        }
+
+        // Ahora intentamos parsear el texto a JSON
+        // Si esto falla, el catch de abajo se activará y podrá mostrar el texto (HTML)
+        const infoData = JSON.parse(infoBody);
+        const statusData = JSON.parse(statusBody);
         
         console.log("Datos convertidos a JSON de forma correcta!"); 
         const estacionesInfo = infoData.data.stations;  //-- array de objetos.
@@ -109,15 +125,25 @@ export async function getEstacionesFusionadas() {
         return estacionesFusionadas; //retorna el array fusionado.  PODEMOS FILTRAR PARA SUPRIMIR NULLS SI QUEREMOS.
 
     } catch (error) {
-    console.error("Error al realizar las llamadas a las APIs:", error);
-    console.error("Mensaje de error:", error.message);
-    console.error("Stack trace:", error.stack);
+        console.error("Error al realizar las llamadas a las APIs:", error.name, error.message);
 
-    // Con fetch(), no existe error.response
-    // El error puede ser de red, timeout, etc.
-
-    return []; // Siempre retornar array vacío en caso de error
-}
+        // Si el error es de parseo JSON, mostramos el cuerpo que falló
+        if (error.name === 'SyntaxError') {
+            console.error("====================== ERROR DE PARSEO JSON ======================");
+            console.error("La API devolvió algo que no es JSON (probablemente HTML).");
+            
+            // Comprobamos qué respuesta pudo fallar
+            if (infoResponse && infoResponse.ok) {
+                console.error("Cuerpo de INFO_URL (que parecía OK):", infoBody);
+            }
+            if (statusResponse && statusResponse.ok) {
+                console.error("Cuerpo de ESTADO_URL (que parecía OK):", statusBody);
+            }
+        }
+        
+        console.error("Stack trace:", error.stack);
+        return []; // Siempre retornar array vacío en caso de error
+    }
 }
 
 //No generamos una dependencia circular porque únicamente usamos el worker para obtener las estaciones de bici cacheadas
@@ -151,7 +177,8 @@ export async function getEstacionesCache() {
         return null; 
     }
     else {
-        console.log("SERVICE BICING: Tengo este número de estaciones de bicing cacheadas: " + estacionesCache.lenght); 
+        // CORRECCIÓN: Era .lenght, lo he cambiado a .length
+        console.log("SERVICE BICING: Tengo este número de estaciones de bicing cacheadas: " + estacionesCache.length); 
         return estacionesCache;
     }
 } 
@@ -179,5 +206,3 @@ export async function getEstacionesCache() {
     console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
     return estacionesCercanas; 
 }
-
-
