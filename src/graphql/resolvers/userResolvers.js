@@ -74,7 +74,8 @@ export const userResolvers = {
         preferredMode,
         preferredLanguage,
         birthDate,
-        photo
+        photo,
+        needsToRegister,
       },
       context
     ) => {
@@ -107,6 +108,7 @@ export const userResolvers = {
         if (preferredLanguage !== undefined) changingData.preferredLanguage = preferredLanguage;
         if (birthDate !== undefined) changingData.birthDate = birthDate;
         if (photo !== undefined) changingData.photo = photo;
+        if (needsToRegister !== undefined) changingData.needsToRegister = needsToRegister;
 
         if (Object.keys(changingData).length === 0) {
           return user; // No hay cambios, devolver actual
