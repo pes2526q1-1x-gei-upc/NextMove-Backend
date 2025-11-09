@@ -35,7 +35,8 @@ async function setupUsersDatabase() {
         preferred_mode mode,
         preferred_language VARCHAR(20),
         bio_description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        needsToRegister BOOLEAN
       );
       
       CREATE INDEX idx_users_email ON users(email);

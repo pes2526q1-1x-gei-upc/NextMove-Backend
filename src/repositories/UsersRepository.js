@@ -18,7 +18,8 @@ class UsersRepository {
         preferred_mode as "preferredMode",
         preferred_language,
         bio_description as "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt",
+        needsToRegister
       FROM users
       ORDER BY created_at DESC
     `);
@@ -40,7 +41,8 @@ class UsersRepository {
         preferred_mode as "preferredMode",
         preferred_language,
         bio_description as "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt",
+        needsToRegister
       FROM users
       WHERE email = $1
     `, [email]);
@@ -66,7 +68,8 @@ async createUser(userData) {
       preferred_mode AS "preferredMode",
       preferred_language,
       bio_description AS "bioDescription",
-      TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+      TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+      needsToRegister
   `, [email]); 
 
   return result.rows[0];
@@ -112,6 +115,10 @@ async createUser(userData) {
       fields.push(`photo = $${paramIndex++}`);
       values.push(changingData.photo);
     }
+    if(changingData.needsToRegister !== undefined) {
+      fields.push(`needsToRegister = $${paramIndex++}`);
+      values.push(changingData.needsToRegister);
+    }
 
     if (fields.length === 0) {
       return this.getUserByEmail(email);
@@ -133,7 +140,8 @@ async createUser(userData) {
         preferred_mode as "preferredMode",
         preferred_language as "preferredLanguage", 
         bio_description as "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt",
+        needsToRegister
     `;
 
     const result = await pool.query(query, values);
