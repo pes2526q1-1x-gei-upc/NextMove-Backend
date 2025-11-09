@@ -21,6 +21,7 @@ type User {
   preferredLanguage: String
   bioDescription: String
   createdAt: String
+  needsToRegister: Boolean
 }
 
 """
@@ -45,6 +46,7 @@ input UserUpdateInput {
   preferredLanguage: String
   birthDate: String
   photo: String
+  needsToRegister: Boolean
 }
 
 extend type Query {
@@ -80,6 +82,7 @@ extend type Mutation {
     preferredLanguage: String
     birthDate: String
     photo: String
+    needsToRegister: Boolean
   ): User!
 
   """
