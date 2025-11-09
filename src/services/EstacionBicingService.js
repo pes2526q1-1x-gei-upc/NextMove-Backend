@@ -57,8 +57,8 @@ export async function getEstacionesFusionadas() {
         }
         //convertimos las respuestas a JSON
         const [infoData, statusData] = await Promise.all([
-        parseJsonSafe(infoResponse, 'info'),
-        parseJsonSafe(statusResponse, 'status'),
+            infoResponse.json(),
+            statusResponse.json()
         ]);
         
         console.log("Datos convertidos a JSON de forma correcta!"); 
@@ -182,29 +182,3 @@ export async function getEstacionesCache() {
     console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
     return estacionesCercanas; 
 }
-
-// Helper para parsear JSON de forma segura
-const parseJsonSafe = async (res, name = 'response') => {
-  // 1) Comprobar estado HTTP
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`${name} HTTP ${res.status} ${res.statusText} - ${body.slice(0, 200)}`);
-  }
-
-  // 2) Leer cuerpo como texto una sola vez
-  const body = await res.text().catch(() => '');
-
-  // 3) Verificar Content-Type
-  const ct = (res.headers.get('content-type') || '').toLowerCase();
-  if (!ct.includes('application/json')) {
-    throw new Error(`${name} no es JSON (Content-Type: ${ct}) - empieza con: ${body.slice(0, 200)}`);
-  }
-
-  // 4) Parsear JSON con manejo de errores y tolerar cuerpo vacío (p. ej., 204)
-  if (!body) return null;
-  try {
-    return JSON.parse(body);
-  } catch (err) {
-    throw new Error(`${name} JSON inválido: ${err.message} - empieza con: ${body.slice(0, 200)}`);
-  }
-};
