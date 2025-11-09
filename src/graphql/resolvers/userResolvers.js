@@ -63,54 +63,66 @@ export const userResolvers = {
       }
     },
     
-    updateMe: async (_, { email, name, preferredMode, phoneNumber, bioDescription, preferredLanguage}, context) => {
+    updateMe: async (
+      _,
+      {
+        email,
+        name,
+        nickname,
+        phoneNumber,
+        bioDescription,
+        preferredMode,
+        preferredLanguage,
+        birthDate,
+        photo
+      },
+      context
+    ) => {
       try {
         // Verificar autenticación
         if (!context.user) {
           throw new Error('No autenticado');
         }
-        
+
         const userEmail = context.user.email;
-        
+
+        // Opcional: validar que el email del argumento coincida con el del token
+        if (email && email !== userEmail) {
+          throw new Error('No puedes actualizar otro usuario');
+        }
+
         const user = await usersRepo.getUserByEmail(userEmail);
         if (!user) {
           throw new Error('Usuario no encontrado');
         }
-        
+
         const changingData = {};
-        
-        if(preferredLanguage !== undefined) {
-          changingData.preferredLanguage = preferredLanguage;
-        }
-        
-        if (preferredMode !== undefined) {
-          changingData.preferredMode = preferredMode;
-        }
-        
-        if (phoneNumber !== undefined) {
-          changingData.phoneNumber = phoneNumber;
-        }
-        
-        if (bioDescription !== undefined) {
-          changingData.bioDescription = bioDescription;
-        }
-        
+
+        // AÑADIMOS TODOS LOS CAMPOS
+        if (name !== undefined) changingData.name = name;
+        if (nickname !== undefined) changingData.nickname = nickname;
+        if (phoneNumber !== undefined) changingData.phoneNumber = phoneNumber;
+        if (bioDescription !== undefined) changingData.bioDescription = bioDescription;
+        if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
+        if (preferredLanguage !== undefined) changingData.preferredLanguage = preferredLanguage;
+        if (birthDate !== undefined) changingData.birthDate = birthDate;
+        if (photo !== undefined) changingData.photo = photo;
+
         if (Object.keys(changingData).length === 0) {
-          throw new Error('No se proporcionaron campos para actualizar');
+          return user; // No hay cambios, devolver actual
         }
-        
+
         const updatedUser = await usersRepo.updateUser(userEmail, changingData);
-        
+
         if (!updatedUser) {
           throw new Error('Error al actualizar el usuario');
         }
-        
-        console.log(`Usuario ${userEmail} actualizado exitosamente:`, changingData);
-        
+
+        console.log(`Usuario ${userEmail} actualizado:`, changingData);
         return updatedUser;
-        
+
       } catch (error) {
-        console.error('Error actualizando usuario:', error);
+        console.error('Error en updateMe:', error);
         throw error;
       }
     },

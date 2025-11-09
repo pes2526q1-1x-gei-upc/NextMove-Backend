@@ -70,24 +70,27 @@ async createUser(userData) {
   `, [email]); 
 
   return result.rows[0];
-}
+  }
 
-  /**
-   * Actualizar usuario
-   */
+/**
+ * Actualizar usuario
+ */
   async updateUser(email, changingData) {
     const fields = [];
     const values = [];
     let paramIndex = 1;
 
-    // Solo actualizar campos que vienen en changingData
-    if (changingData.preferredMode !== undefined) {
-      fields.push(`preferred_mode = $${paramIndex++}`);
-      values.push(changingData.preferredMode);
+    if (changingData.name !== undefined) {
+      fields.push(`name = $${paramIndex++}`);
+      values.push(changingData.name);
     }
-    if (changingData.photo !== undefined) {
-      fields.push(`photo = $${paramIndex++}`);
-      values.push(changingData.photo);
+    if (changingData.nickname !== undefined) {
+      fields.push(`nickname = $${paramIndex++}`);
+      values.push(changingData.nickname);
+    }
+    if (changingData.birthDate !== undefined) {
+      fields.push(`birth_date = $${paramIndex++}`);
+      values.push(changingData.birthDate);
     }
     if (changingData.phoneNumber !== undefined) {
       fields.push(`phone_number = $${paramIndex++}`);
@@ -97,19 +100,26 @@ async createUser(userData) {
       fields.push(`bio_description = $${paramIndex++}`);
       values.push(changingData.bioDescription);
     }
-    if(changingData.preferredLanguage !== undefined) {
+    if (changingData.preferredMode !== undefined) {
+      fields.push(`preferred_mode = $${paramIndex++}`);
+      values.push(changingData.preferredMode);
+    }
+    if (changingData.preferredLanguage !== undefined) {
       fields.push(`preferred_language = $${paramIndex++}`);
       values.push(changingData.preferredLanguage);
     }
+    if (changingData.photo !== undefined) {
+      fields.push(`photo = $${paramIndex++}`);
+      values.push(changingData.photo);
+    }
 
     if (fields.length === 0) {
-      // No hay cambios, devolver usuario actual
       return this.getUserByEmail(email);
     }
 
     values.push(email);
     
-    const result = await pool.query(`
+    const query = `
       UPDATE users 
       SET ${fields.join(', ')}
       WHERE email = $${paramIndex}
@@ -121,11 +131,12 @@ async createUser(userData) {
         birth_date as "birthDate",
         phone_number as "phoneNumber",
         preferred_mode as "preferredMode",
-        preferred_language,
+        preferred_language as "preferredLanguage", 
         bio_description as "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "createdAt"
-    `, values);
-    
+    `;
+
+    const result = await pool.query(query, values);
     return result.rows[0];
   }
 
