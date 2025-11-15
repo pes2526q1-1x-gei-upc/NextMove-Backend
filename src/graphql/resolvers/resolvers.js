@@ -1,7 +1,7 @@
 import { userResolvers } from './userResolvers.js';
 import  EVStationResolvers from './EVStationRevolvers.js';
 import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js'; 
-
+import { friendshipResolvers } from './FriendshipResolvers.js';
 
 export const resolvers = {
   Query: {
@@ -14,7 +14,9 @@ export const resolvers = {
     nearbyStations: EVStationResolvers.Query.nearbyStations,
     getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
     getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
-    getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas
+    getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
+    ListFriends: friendshipResolvers.Query.ListFriends,
+    AllFriends: friendshipResolvers.Query.AllFriends
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -22,5 +24,7 @@ export const resolvers = {
     deleteMe: userResolvers.Mutation.deleteMe,
     updateUser: userResolvers.Mutation.updateUser,
     deleteUser: userResolvers.Mutation.deleteUser,
+    AddFriendship: friendshipResolvers.Mutation.AddFriendship,
+    RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship
   },
 };

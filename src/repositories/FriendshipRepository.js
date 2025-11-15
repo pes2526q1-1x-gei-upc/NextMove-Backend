@@ -1,0 +1,41 @@
+import {pool,pool2} from '../config/database.js';
+class FriendshipRepository {
+    /*Obtener todas las amistades de un usuario */
+    async getFriendships(nickname){
+        const result = await pool2.query(`
+        SELECT CASE WHEN nickname1 =$1 THEN nickname2 
+        ELSE nickname1 
+        END AS name
+        FROM amigos
+        WHERE nickname1 = $1 OR nickname2 = $1
+        `, [nickname]);
+        console.log("resultados de la query de amistades", result.rows);
+        return result.rows;
+    }
+    async getAllFriendships(){
+        const result = await pool2.query(`
+        SELECT * FROM amigos
+        `);
+        return result.rows;
+    }
+    async addFriendship(nickname1, nickname2){
+        const result = await pool2.query(`
+        INSERT INTO amigos (nickname1, nickname2)
+        VALUES ($1, $2)
+        RETURNING *
+        `, [nickname1, nickname2]);
+        return result.rows[0];
+    }
+    async removeFriendship(nickname1, nickname2){
+        const result = await pool2.query(`
+        DELETE FROM amigos
+        WHERE (nickname1 = $1 AND nickname2 = $2) OR (nickname1 = $2 AND nickname2 = $1)
+        RETURNING *
+        `, [nickname1, nickname2]);
+        
+        return result.rowCount > 0;
+    }
+    
+}
+
+export default FriendshipRepository;

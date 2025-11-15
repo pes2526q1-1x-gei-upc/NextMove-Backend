@@ -1,10 +1,10 @@
 // src/scripts/setupUsersDB.js
-import pool from '../config/database.js';
+import {pool,pool2} from '../config/database.js';
 
 async function setupUsersDatabase() {
-  const client = await pool.connect();
+  const client = await pool2.connect();
   
-  try {
+  /*try {
     console.log('Borrando tablas de usuarios...');
     
     await client.query(`
@@ -61,12 +61,14 @@ async function setupUsersDatabase() {
     const result = await client.query('SELECT COUNT(*) as count FROM users');
     console.log(`📊 Total usuarios: ${result.rows[0].count}`);
     
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('❌ Error:', error);
     throw error;
-  } finally {
+  } 
+  finally {
     client.release();
-  }
+  }*/
 }
 
 setupUsersDatabase()

@@ -11,18 +11,20 @@ Representa un usuario registrado en el sistema.
 Contiene información de perfil y preferencias de transporte.
 """
 type User {
+  id: String!
   email: String!
   name: String
-  nickname: String
+  nickname: String!
   photo: String
-  birthDate: String
-  phoneNumber: String
-  preferredMode: Mode
-  preferredLanguage: String
-  bioDescription: String
-  createdAt: String
+  birth_date: String
+  phone_number: String
+  preferred_mode: String
+  preferred_language: String
+  bio_description: String
+  created_at: String
   needsToRegister: Boolean
 }
+
 
 """
 Input para crear un nuevo usuario.

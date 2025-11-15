@@ -1,5 +1,5 @@
 // src/repositories/UsersRepository.js
-import pool from '../config/database.js';
+import {pool,pool2} from '../config/database.js';
 
 class UsersRepository {
   
