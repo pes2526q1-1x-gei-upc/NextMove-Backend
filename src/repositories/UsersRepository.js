@@ -1,5 +1,5 @@
 // src/repositories/UsersRepository.js
-import {pool,pool2} from '../config/database.js';
+import pool from '../config/database.js';
 
 class UsersRepository {
   
@@ -8,7 +8,8 @@ class UsersRepository {
    */
   async getAllUsers() {
     const result = await pool.query(`
-      SELECT 
+      SELECT
+        id,
         email,
         name,
         nickname,

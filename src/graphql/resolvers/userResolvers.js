@@ -129,7 +129,7 @@ export const userResolvers = {
       }
     },
         
-    deleteMe: async (_, { email }, context) => {
+    deleteMe: async (_, context) => {
       try {
         if (!context.user) {
           throw new Error('No autenticado');
