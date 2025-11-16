@@ -1,0 +1,71 @@
+"""
+Tipo que representa el recorrido que un usuario realiza. 
+Contiene toda la información necesaria
+
+"""
+
+type Recorrido {
+    id: ID!
+    user_email: String!
+    distancia: Float!
+    velocidad_media: Float!
+    co2: Float!
+    kcal: Float!
+    origen: Coordinates!
+    destino: Coordinates!
+    fecha_recorrido: String!
+}
+
+input CreateRecorridoInput {
+    user_email: String!
+    distancia: Float!
+    velocidad_media: Float!
+    co2: Float!
+    kcal: Float!
+    origen: CoordinatesInput!
+    destino: CoordinatesInput!  
+    fecha_recorrido: String
+}
+
+input UpdateRecorridoInput {
+    distancia: Float
+    co2: Float
+    kcal: Float
+    origen: CoordinatesInput 
+    destino: CoordinatesInput
+    fecha_recorrido: String
+}
+
+extend type Query {
+    """
+    obtiene todos los recorridos del sistema
+    """
+    recorridos: [Recorrido!]!
+    
+    """
+    obiteje el recorrido que se específica como parámetro de entrada. 
+    """
+    recorrido(id: ID!): Recorrido
+
+    """
+    obtiene todos los recorridos realizados por ese user.
+    """
+    recorridosByUser(user_email: String!): [Recorrido!]!
+}
+
+extend type Mutation {
+    """"
+    Almacena el recorrido (se hace mediante una creación)
+    """
+    createRecorrido(input: CreateRecorridoInput): Recorrido!
+
+    """
+    Modiifca el recorrido concreto en caso de inserción errónea
+    """
+    updateRecorrido(id: ID!, input: UpdateRecorridoInput!): Recorrido!
+
+    """
+    Elimina el recorrido que especificamos como parámetro de entrada. 
+    """
+    deleteRecorrido(id: ID!): Boolean!
+}
