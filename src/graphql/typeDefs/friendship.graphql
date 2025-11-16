@@ -1,0 +1,18 @@
+type friendship{
+    nickname1: String!
+    nickname2: String!
+}
+
+type friend{
+    name: String!
+}
+
+extend type Query{
+    ListFriends(nickname: String!): [friend!]
+    AllFriends: [friendship!]
+}
+
+extend type Mutation {
+    AddFriendship(nickname1: String!, nickname2: String!): friendship!
+    RemoveFriendship(nickname1: String!, nickname2: String!): Boolean!
+}

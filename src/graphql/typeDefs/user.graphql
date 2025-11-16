@@ -11,6 +11,7 @@ Representa un usuario registrado en el sistema.
 Contiene información de perfil y preferencias de transporte.
 """
 type User {
+  id: String!
   email: String!
   fullName: String
   nickname: String

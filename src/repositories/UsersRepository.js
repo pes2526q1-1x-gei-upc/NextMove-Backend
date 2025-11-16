@@ -8,7 +8,8 @@ class UsersRepository {
    */
   async getAllUsers() {
     const result = await pool.query(`
-      SELECT 
+      SELECT
+        id,
         email,
         fullname AS "fullName",
         nickname,
