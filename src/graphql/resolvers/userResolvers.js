@@ -1,4 +1,3 @@
-import AuthService from "../../services/AuthService.js";
 import UsersRepository from "../../repositories/UsersRepository.js";
 
 const usersRepo = new UsersRepository();
@@ -9,20 +8,11 @@ export const userResolvers = {
       try {
         if (!context.user) {
           throw new Error('No autenticado');
-        } else console.log("Hola");
+        }
         
         const user = context.user;
-        console.log("valor de context user", context.user);
         let dbUser = await usersRepo.getUserByEmail(context.user.email);
-        console.log("Valor de usuario devuelto", dbUser);
-        if (!dbUser) {
-          dbUser = await usersRepo.createUser({
-            email: user.email
-          });
-        }
-
-
-        console.log("Valor de usuario devuelto", dbUser);
+        
         return dbUser;
         
       } catch (err) {
@@ -45,20 +35,33 @@ export const userResolvers = {
   },
   
   Mutation: {
-    createUser: async (_, {email}) => {
+    createUser: async (_, { createInfo }) => {
       try {
-        const existingUser = await usersRepo.getUserByEmail(email);
-        if (existingUser) {
-          throw new Error(`Usuario con email ${email} ya existe`);
+        const { email, fullName, nickname, phoneNumber, preferredMode } = createInfo;
+        
+        const existingUserByEmail = await usersRepo.getUserByEmail(email);
+        if (existingUserByEmail) {
+          throw new Error(`Ya existe un usuario con el email: ${email}`);
+        }
+        
+        const existingUserByNickname = await usersRepo.getUserByNickname(nickname);
+        if (existingUserByNickname) {
+          throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
         }
         
         const newUser = await usersRepo.createUser({
-          email
+          email,
+          fullName,
+          nickname,
+          phoneNumber: phoneNumber || null,
+          preferredMode
         });
         
+        console.log(`Usuario creado exitosamente: ${email}`);
         return newUser;
+        
       } catch (error) {
-        console.error('Error creando usuario:', error);
+        console.error('Error creando usuario:', error.message);
         throw error;
       }
     },
@@ -66,8 +69,7 @@ export const userResolvers = {
     updateMe: async (
       _,
       {
-        email,
-        name,
+        fullName,
         nickname,
         phoneNumber,
         bioDescription,
@@ -75,22 +77,15 @@ export const userResolvers = {
         preferredLanguage,
         birthDate,
         photo,
-        needsToRegister,
       },
       context
     ) => {
       try {
-        // Verificar autenticación
         if (!context.user) {
           throw new Error('No autenticado');
         }
 
         const userEmail = context.user.email;
-
-        // Opcional: validar que el email del argumento coincida con el del token
-        if (email && email !== userEmail) {
-          throw new Error('No puedes actualizar otro usuario');
-        }
 
         const user = await usersRepo.getUserByEmail(userEmail);
         if (!user) {
@@ -99,19 +94,25 @@ export const userResolvers = {
 
         const changingData = {};
 
-        // AÑADIMOS TODOS LOS CAMPOS
-        if (name !== undefined) changingData.name = name;
-        if (nickname !== undefined) changingData.nickname = nickname;
+        if (fullName !== undefined) changingData.fullName = fullName;
+        if (nickname !== undefined) {
+          if (nickname !== user.nickname) {
+            const existingUser = await usersRepo.getUserByNickname(nickname);
+            if (existingUser) {
+              throw new Error(`El nickname ${nickname} ya está en uso`);
+            }
+          }
+          changingData.nickname = nickname;
+        }
         if (phoneNumber !== undefined) changingData.phoneNumber = phoneNumber;
         if (bioDescription !== undefined) changingData.bioDescription = bioDescription;
         if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
         if (preferredLanguage !== undefined) changingData.preferredLanguage = preferredLanguage;
         if (birthDate !== undefined) changingData.birthDate = birthDate;
         if (photo !== undefined) changingData.photo = photo;
-        changingData.needsToRegister = false;
 
         if (Object.keys(changingData).length === 0) {
-          return user; // No hay cambios, devolver actual
+          return user;
         }
 
         const updatedUser = await usersRepo.updateUser(userEmail, changingData);
@@ -120,16 +121,16 @@ export const userResolvers = {
           throw new Error('Error al actualizar el usuario');
         }
 
-        console.log(`Usuario ${userEmail} actualizado:`, changingData);
+        console.log(`Usuario ${userEmail} actualizado`);
         return updatedUser;
 
       } catch (error) {
-        console.error('Error en updateMe:', error);
+        console.error('Error en updateMe:', error.message);
         throw error;
       }
     },
         
-    deleteMe: async (_, { email }, context) => {
+    deleteMe: async (_, __, context) => {
       try {
         if (!context.user) {
           throw new Error('No autenticado');
@@ -140,13 +141,12 @@ export const userResolvers = {
         
         return deleted;
       } catch (error) {
-        console.error('Error eliminando usuario:', error);
+        console.error('Error eliminando usuario:', error.message);
         return false;
       }
     },
     
-    // NUEVOS RESOLVERS QUE FALTAN -- verificar si se pueden agrupar o no
-    updateUser: async (_, { email, name, preferredMode }) => {
+    updateUser: async (_, { email, fullName, preferredMode }) => {
       try {
         const user = await usersRepo.getUserByEmail(email);
         if (!user) {
@@ -154,14 +154,14 @@ export const userResolvers = {
         }
         
         const changingData = {};
-        if (name) changingData.name = name;
-        if (preferredMode) changingData.preferredMode = preferredMode;
+        if (fullName !== undefined) changingData.fullName = fullName;
+        if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
         
         const updatedUser = await usersRepo.updateUser(email, changingData);
         
         return updatedUser;
       } catch (error) {
-        console.error('Error actualizando usuario:', error);
+        console.error('Error actualizando usuario:', error.message);
         throw error;
       }
     },
@@ -171,7 +171,7 @@ export const userResolvers = {
         const deleted = await usersRepo.deleteUser(email);
         return deleted;
       } catch (error) {
-        console.error('Error eliminando usuario:', error);
+        console.error('Error eliminando usuario:', error.message);
         return false;
       }
     },

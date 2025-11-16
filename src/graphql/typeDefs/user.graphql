@@ -12,7 +12,7 @@ Contiene información de perfil y preferencias de transporte.
 """
 type User {
   email: String!
-  name: String
+  fullName: String
   nickname: String
   photo: String
   birthDate: String
@@ -21,7 +21,6 @@ type User {
   preferredLanguage: String
   bioDescription: String
   createdAt: String
-  needsToRegister: Boolean
 }
 
 """
@@ -29,8 +28,10 @@ Input para crear un nuevo usuario.
 """
 input CreateUserInput {
   email: String!
-  name: String
-  preferredMode: Mode
+  fullName: String!
+  nickname: String!
+  phoneNumber: String
+  preferredMode: Mode!
 }
 
 """
@@ -38,7 +39,7 @@ Input para actualizar información del usuario.
 Todos los campos son opcionales.
 """
 input UserUpdateInput {
-  name: String
+  fullName: String
   nickname: String
   phoneNumber: String
   bioDescription: String
@@ -46,7 +47,6 @@ input UserUpdateInput {
   preferredLanguage: String
   birthDate: String
   photo: String
-  needsToRegister: Boolean
 }
 
 extend type Query {
@@ -70,11 +70,10 @@ extend type Query {
 extend type Mutation {
   """
   Actualiza los datos del usuario autenticado.
-  Usa email del token, o pásalo explícitamente.
+  Usa email del token.
   """
   updateMe(
-    email: String
-    name: String
+    fullName: String
     nickname: String
     phoneNumber: String
     bioDescription: String
@@ -82,18 +81,17 @@ extend type Mutation {
     preferredLanguage: String
     birthDate: String
     photo: String
-    needsToRegister: Boolean
   ): User!
 
   """
   Actualiza cualquier usuario (admin).
   """
-  updateUser(email: String!, name: String): User!
+  updateUser(email: String!, fullName: String, preferredMode: Mode): User!
 
   """
   Crea un nuevo usuario.
   """
-  createUser(email: String!, name: String, preferredMode: Mode): User!
+  createUser(createInfo: CreateUserInput!): User!
 
   """
   Elimina un usuario.
