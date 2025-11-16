@@ -2,6 +2,9 @@ import { userResolvers } from './userResolvers.js';
 import  EVStationResolvers from './EVStationRevolvers.js';
 import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js'; 
 import { friendshipResolvers } from './FriendshipResolvers.js';
+import { recorridosResolver } from './RecorridoResolver.js';
+import { createSourceEventStream } from 'graphql';
+
 
 export const resolvers = {
   Query: {
@@ -17,6 +20,9 @@ export const resolvers = {
     getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
     ListFriends: friendshipResolvers.Query.ListFriends,
     AllFriends: friendshipResolvers.Query.AllFriends
+    recorridos: recorridosResolver.Query.recorridos, 
+    recorrido: recorridosResolver.Query.recorrido, 
+    recorridosByUser: recorridosResolver.Query.recorridosByUser
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -26,5 +32,8 @@ export const resolvers = {
     deleteUser: userResolvers.Mutation.deleteUser,
     AddFriendship: friendshipResolvers.Mutation.AddFriendship,
     RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship
+    createRecorrido: recorridosResolver.Mutation.createRecorrido,
+    updateRecorrido: recorridosResolver.Mutation.updateRecorrido,
+    deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido 
   },
 };
