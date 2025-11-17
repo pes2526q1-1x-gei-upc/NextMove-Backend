@@ -19,7 +19,7 @@ export const resolvers = {
     getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
     getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
     ListFriends: friendshipResolvers.Query.ListFriends,
-    AllFriends: friendshipResolvers.Query.AllFriends
+    AllFriends: friendshipResolvers.Query.AllFriends,
     recorridos: recorridosResolver.Query.recorridos, 
     recorrido: recorridosResolver.Query.recorrido, 
     recorridosByUser: recorridosResolver.Query.recorridosByUser
@@ -31,7 +31,7 @@ export const resolvers = {
     updateUser: userResolvers.Mutation.updateUser,
     deleteUser: userResolvers.Mutation.deleteUser,
     AddFriendship: friendshipResolvers.Mutation.AddFriendship,
-    RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship
+    RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship,
     createRecorrido: recorridosResolver.Mutation.createRecorrido,
     updateRecorrido: recorridosResolver.Mutation.updateRecorrido,
     deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido 
