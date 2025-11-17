@@ -6,6 +6,12 @@ enum Mode {
   BIKE
 }
 
+enum Language {
+  ESP
+  CAT
+  ENG
+}
+
 """
 Representa un usuario registrado en el sistema.
 Contiene información de perfil y preferencias de transporte.
@@ -13,26 +19,31 @@ Contiene información de perfil y preferencias de transporte.
 type User {
   id: String!
   email: String!
-  fullName: String
+  name: String
   nickname: String
   photo: String
   birthDate: String
   phoneNumber: String
   preferredMode: Mode
-  preferredLanguage: String
+  preferredLanguage: Language
   bioDescription: String
   createdAt: String
 }
 
 """
 Input para crear un nuevo usuario.
+birthDate en formato DD-MM-AAAA
+preferredLanguage es opcional, por defecto ESP. Se espera: ESP, CAT o ENG
 """
 input CreateUserInput {
   email: String!
-  fullName: String!
+  name: String!
   nickname: String!
   phoneNumber: String
   preferredMode: Mode!
+  preferredLanguage: Language
+  birthDate: String
+  bioDescription: String
 }
 
 """
@@ -40,12 +51,12 @@ Input para actualizar información del usuario.
 Todos los campos son opcionales.
 """
 input UserUpdateInput {
-  fullName: String
+  name: String
   nickname: String
   phoneNumber: String
   bioDescription: String
   preferredMode: Mode
-  preferredLanguage: String
+  preferredLanguage: Language
   birthDate: String
   photo: String
 }
@@ -74,12 +85,12 @@ extend type Mutation {
   Usa email del token.
   """
   updateMe(
-    fullName: String
+    name: String
     nickname: String
     phoneNumber: String
     bioDescription: String
     preferredMode: Mode
-    preferredLanguage: String
+    preferredLanguage: Language
     birthDate: String
     photo: String
   ): User!
@@ -87,7 +98,7 @@ extend type Mutation {
   """
   Actualiza cualquier usuario (admin).
   """
-  updateUser(email: String!, fullName: String, preferredMode: Mode): User!
+  updateUser(email: String!, name: String, preferredMode: Mode): User!
 
   """
   Crea un nuevo usuario.

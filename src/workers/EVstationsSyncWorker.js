@@ -97,7 +97,7 @@ class StationsSyncWorker {
       }
       
       const data = await response.json();
-      
+      // console.log(data.features);
       const lastFetch = Date.now();
       
       console.log(`Fetched ${data.features.length} stations at ${new Date(lastFetch).toISOString()}`);

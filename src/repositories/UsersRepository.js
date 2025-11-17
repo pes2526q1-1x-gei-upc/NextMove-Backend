@@ -11,7 +11,7 @@ class UsersRepository {
       SELECT
         id,
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
         birth_date AS "birthDate",
@@ -33,7 +33,7 @@ class UsersRepository {
     const result = await pool.query(`
       SELECT 
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
         birth_date AS "birthDate",
@@ -55,7 +55,7 @@ class UsersRepository {
     const result = await pool.query(`
       SELECT 
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
         birth_date AS "birthDate",
@@ -74,34 +74,37 @@ class UsersRepository {
    * Crear nuevo usuario
    */
   async createUser(userData) {
-    const { email, fullName, nickname, phoneNumber, preferredMode } = userData;
+    const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = userData;
 
-    if (!email || !fullName || !nickname || !preferredMode) {
-      throw new Error('Los campos email, fullName, nickname y preferredMode son obligatorios');
+    if (!email || !name || !nickname || !preferredMode) {
+      throw new Error('Los campos email, name, nickname y preferredMode son obligatorios');
     }
 
     try {
       const result = await pool.query(`
         INSERT INTO users (
           email,
-          fullname,
+          name,
           nickname,
           phone_number,
-          preferred_mode
+          preferred_mode,
+          preferred_language,
+          bio_description,
+          birth_date
         )
-        VALUES ($1, $2, $3, $4, $5::mode)
+        VALUES ($1, $2, $3, $4, $5::mode , $6, $7, $8::date)
         RETURNING 
           email,
-          fullname AS "fullName",
+          name AS "name",
           nickname,
           photo,
-          birth_date AS "birthDate",
           phone_number AS "phoneNumber",
           preferred_mode AS "preferredMode",
           preferred_language AS "preferredLanguage",
           bio_description AS "bioDescription",
+          TO_CHAR(birth_date, 'YYYY-MM-DD') AS "birthDate",
           TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
-      `, [email, fullName, nickname, phoneNumber || null, preferredMode]); 
+      `, [email, name, nickname, phoneNumber || null, preferredMode, preferredLanguage || "ESP", bioDescription || null, birthDate || null]); 
 
       return result.rows[0];
     } catch (error) {
@@ -125,9 +128,9 @@ class UsersRepository {
     const values = [];
     let paramIndex = 1;
 
-    if (changingData.fullName !== undefined) {
-      fields.push(`fullname = $${paramIndex++}`);
-      values.push(changingData.fullName);
+    if (changingData.name !== undefined) {
+      fields.push(`name = $${paramIndex++}`);
+      values.push(changingData.name);
     }
     if (changingData.nickname !== undefined) {
       fields.push(`nickname = $${paramIndex++}`);
@@ -170,10 +173,10 @@ class UsersRepository {
       WHERE email = $${paramIndex}
       RETURNING 
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
-        birth_date AS "birthDate",
+        TO_CHAR(birth_date, 'YYYY-MM-DD') AS "birthDate",
         phone_number AS "phoneNumber",
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage", 

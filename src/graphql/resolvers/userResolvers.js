@@ -37,7 +37,7 @@ export const userResolvers = {
   Mutation: {
     createUser: async (_, { createInfo }) => {
       try {
-        const { email, fullName, nickname, phoneNumber, preferredMode } = createInfo;
+        const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = createInfo;
         
         const existingUserByEmail = await usersRepo.getUserByEmail(email);
         if (existingUserByEmail) {
@@ -51,10 +51,13 @@ export const userResolvers = {
         
         const newUser = await usersRepo.createUser({
           email,
-          fullName,
+          name,
           nickname,
           phoneNumber: phoneNumber || null,
-          preferredMode
+          preferredMode,
+          preferredLanguage: preferredLanguage || "ESP",
+          bioDescription: bioDescription || null,
+          birthDate: birthDate || null,
         });
         
         console.log(`Usuario creado exitosamente: ${email}`);
@@ -69,7 +72,7 @@ export const userResolvers = {
     updateMe: async (
       _,
       {
-        fullName,
+        name,
         nickname,
         phoneNumber,
         bioDescription,
@@ -94,7 +97,7 @@ export const userResolvers = {
 
         const changingData = {};
 
-        if (fullName !== undefined) changingData.fullName = fullName;
+        if (name !== undefined) changingData.name = name;
         if (nickname !== undefined) {
           if (nickname !== user.nickname) {
             const existingUser = await usersRepo.getUserByNickname(nickname);
@@ -146,7 +149,7 @@ export const userResolvers = {
       }
     },
     
-    updateUser: async (_, { email, fullName, preferredMode }) => {
+    updateUser: async (_, { email, name, preferredMode }) => {
       try {
         const user = await usersRepo.getUserByEmail(email);
         if (!user) {
@@ -154,7 +157,7 @@ export const userResolvers = {
         }
         
         const changingData = {};
-        if (fullName !== undefined) changingData.fullName = fullName;
+        if (name !== undefined) changingData.name = name;
         if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
         
         const updatedUser = await usersRepo.updateUser(email, changingData);
