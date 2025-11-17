@@ -36,7 +36,8 @@ class UsersRepository {
         name AS "name",
         nickname,
         photo,
-        birth_date AS "birthDate",
+        -- AQUÍ ESTABA EL ERROR: Faltaba el TO_CHAR
+        TO_CHAR(birth_date, 'YYYY-MM-DD') AS "birthDate", 
         phone_number AS "phoneNumber",
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
