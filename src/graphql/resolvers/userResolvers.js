@@ -38,13 +38,16 @@ export const userResolvers = {
     createUser: async (_, { createInfo }) => {
       try {
         const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = createInfo;
+        console.log('Entramos en createUser. Esto es usuario: ', createInfo);
         
         const existingUserByEmail = await usersRepo.getUserByEmail(email);
+        console.log('Existing user by email check: ', existingUserByEmail);
         if (existingUserByEmail) {
           throw new Error(`Ya existe un usuario con el email: ${email}`);
         }
         
         const existingUserByNickname = await usersRepo.getUserByNickname(nickname);
+        console.log('Existing user by nickname check: ', existingUserByNickname);
         if (existingUserByNickname) {
           throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
         }
@@ -65,6 +68,7 @@ export const userResolvers = {
         
       } catch (error) {
         console.error('Error creando usuario:', error.message);
+        console.log('Error details: ', error.code);
         throw error;
       }
     },
