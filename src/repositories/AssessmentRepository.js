@@ -4,6 +4,7 @@ class AssessmentRepository{
     async createAssessment(AssessmentData)
     {
         const {nickname, station_id, score, comments} = AssessmentData;
+        console.log(AssessmentData);
         await pool.query(`
         INSERT INTO valoracion (nickname, station_id, score, description)
         VALUES ($1, $2, $3, $4)
@@ -33,8 +34,8 @@ class AssessmentRepository{
     async EditAssessment(AssessmentData)
     {
         const {nickname, station_id, created_at, score, comments} = AssessmentData;
-        fields = [];
-        values = [];
+        const fields = [];
+        const values = [];
         let index = 1;
         if(score !== undefined){
             fields.push(`score = $${index}`);
@@ -63,9 +64,10 @@ class AssessmentRepository{
     async getAssessmentsByStationId(station_id)
     {
         const result = await pool.query(`
-        SELECT nickname, score, description, TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS.US') AS "created_at" FROM valoracion
+        SELECT nickname, score, description as comments, TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS.US') AS "created_at" FROM valoracion
         WHERE station_id = $1
         `, [station_id]);
+        console.log(result.rows);
         return result.rows;
     }
 }

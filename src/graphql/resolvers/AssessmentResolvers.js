@@ -32,14 +32,19 @@ export const assessmentResolver = {
                 return await assessmentRepository.DeleteAssessment(assessmentData);
             }
             catch(error){
-
+                throw error;
             }
         },
         editAssessment: async (_, { nickname, station_id, created_at, score, comments }) => {
             try{
                 const assessmentData = { nickname, station_id, created_at, score, comments };
                 return await assessmentRepository.EditAssessment(assessmentData);
-            } catch (error) {}
+            } catch (error) {
+                if(error.code === '23503'){
+                    throw new Error('Nickname or Station ID incorrect.');
+                }
+                throw error;
+            }
         }
     }
 };
