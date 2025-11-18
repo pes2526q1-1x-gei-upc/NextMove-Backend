@@ -3,6 +3,7 @@ import  EVStationResolvers from './EVStationRevolvers.js';
 import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js'; 
 import { friendshipResolvers } from './FriendshipResolvers.js';
 import { recorridosResolver } from './RecorridoResolver.js';
+import { assessmentResolver } from './AssessmentResolvers.js';
 import { createSourceEventStream } from 'graphql';
 
 
@@ -22,7 +23,8 @@ export const resolvers = {
     AllFriends: friendshipResolvers.Query.AllFriends,
     recorridos: recorridosResolver.Query.recorridos, 
     recorrido: recorridosResolver.Query.recorrido, 
-    recorridosByUser: recorridosResolver.Query.recorridosByUser
+    recorridosByUser: recorridosResolver.Query.recorridosByUser,
+    getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -34,6 +36,9 @@ export const resolvers = {
     RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship,
     createRecorrido: recorridosResolver.Mutation.createRecorrido,
     updateRecorrido: recorridosResolver.Mutation.updateRecorrido,
-    deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido 
+    deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido,
+    createAssessment: assessmentResolver.Mutation.createAssessment,
+    deleteAssessment: assessmentResolver.Mutation.deleteAssessment,
+    editAssessment: assessmentResolver.Mutation.editAssessment
   },
 };

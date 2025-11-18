@@ -1,0 +1,19 @@
+
+
+type Assessment{
+    nickname: String!
+    station_id: String!
+    score: Int!
+    comments: String
+    created_at: String!
+}
+
+extend type Query{
+    getAssessmentsByStationId(id: String!): [Assessment]!
+}
+
+extend type Mutation{
+    createAssessment(nickname: String!, station_id: String!, score: Int!, comments: String): Float
+    deleteAssessment(nickname: String!, station_id: String!, created_at: String!): Float
+    editAssessment(nickname: String!, station_id: String!, created_at: String!, score: Int!, comments: String): Float
+}
