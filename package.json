@@ -7,7 +7,10 @@
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js",
     "db:setup-users": "node ./src/scripts/setupUsersDB.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "migrate:create": "node-pg-migrate create",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down"
   },
   "keywords": [],
   "author": "",
@@ -27,11 +30,12 @@
     "graphql-http": "^1.22.4",
     "graphql-tag": "^2.12.6",
     "node-fetch": "^3.3.2",
-    "pg": "^8.13.1",
+    "pg": "^8.16.3",
     "ruru": "^2.0.0-beta.30"
   },
   "devDependencies": {
     "jest": "^30.2.0",
+    "node-pg-migrate": "^8.0.3",
     "nodemon": "^3.1.10"
   },
   "type": "module"
