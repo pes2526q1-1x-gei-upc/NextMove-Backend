@@ -16,19 +16,18 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
     staticConnectors.push({ type: 'SCHUKO', powerKw: parseFloat(dbStation.schuko_power_kw) });
   }
 
-  // Combinar con datos dinámicos
   const connectorsWithStatus = staticConnectors.map(connector => {
     const dynamicInfo = dynamicData?.connectors?.find(dc => dc.type === connector.type);
     
     return {
       ...connector,
       status: dynamicInfo?.status || 'UNAVAILABLE',
-      statusCode: dynamicInfo?.statusCode || '-'  // Cambiado de 'UNKNOWN' a '-'
+      statusCode: dynamicInfo?.statusCode || '-'
     };
   });
 
   return {
-    id: dbStation.id,
+    id: dbStation.external_id,  // Usar external_id para GraphQL
     name: dbStation.name,
     address: dbStation.address,
     city: dbStation.city,
@@ -38,7 +37,6 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
     },
     connectors: connectorsWithStatus,
     distance: dbStation.distance ? parseFloat(dbStation.distance) : null,
-    // Estos se agregan desde el resolver, no aquí
     accessType: null,
     isSuperFast: false,
     lastUpdated: null

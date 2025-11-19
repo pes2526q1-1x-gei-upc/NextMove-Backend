@@ -85,9 +85,8 @@ class StationsSyncWorker {
       }
       
       const data = await response.json();
-      const lastFetch = Date.now();
       
-      console.log(`Fetched ${data.features.length} stations at ${new Date(lastFetch).toISOString()}`);
+      console.log(`Fetched ${data.features.length} stations at ${new Date().toISOString()}`);
       
       return data.features;
       
@@ -97,230 +96,113 @@ class StationsSyncWorker {
     }
   }
 
-  // async syncStations() {
-  //   const startTime = Date.now();
-  //   console.log(`\n[${new Date().toISOString()}] Starting station sync`);
-
-  //   try {
-  //     const icaenFeatures = await this.fetchAllStations();
-      
-  //     // Guardar TODOS los features completos en el cache
-  //     const dynamicDataMap = new Map();
-  //     for (const feature of icaenFeatures) {
-  //       const stationId = feature.properties?.id;
-  //       if (stationId) {
-  //         const dynamicData = extractDynamicData(feature);
-  //         dynamicDataMap.set(stationId, dynamicData);
-  //       }
-  //     }
-  //     console.log(`Map size before forceRefresh: ${dynamicDataMap.size}`);
-  //     await this.stationsService.forceRefresh(dynamicDataMap);
-
-  //         const cacheInfo = this.stationsService.getCachedStations();
-  //   console.log(`Cache size after forceRefresh: ${cacheInfo.count}`);
-    
-  //     const shouldSyncDb = (!this.lastDbSync || 
-  //                          (Date.now() - this.lastDbSync >= this.dbSyncInterval))
-  //                          && process.env.NODE_ENV !== 'dev';
-
-  //     if (shouldSyncDb) {
-  //       console.log('\nStarting database synchronization...');
-  //       await this.syncToDatabase(icaenFeatures);
-  //       this.lastDbSync = Date.now();
-  //       this.stats.lastDbSyncTime = new Date();
-  //       this.stats.lastDbSyncSuccess = true;
-  //       console.log('Database sync completed');
-  //     } else {
-  //       const nextDbSync = this.lastDbSync 
-  //         ? new Date(this.lastDbSync + this.dbSyncInterval)
-  //         : new Date(Date.now() + this.dbSyncInterval);
-  //       console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
-  //     }
-
-  //     const duration = Date.now() - startTime;
-  //     this.stats.totalSyncs++;
-  //     this.stats.lastSyncTime = new Date();
-  //     this.stats.lastSyncSuccess = true;
-  //     this.stats.consecutiveFailures = 0;
-
-  //     console.log(`\nSync completed successfully`);
-  //     console.log(`  Stations fetched: ${icaenFeatures.length}`);
-  //     console.log(`  Dynamic cache size: ${dynamicDataMap.size}`);
-  //     console.log(`  Duration: ${duration}ms`);
-  //     console.log(`  Total syncs: ${this.stats.totalSyncs}\n`);
-
-  //     return {
-  //       success: true,
-  //       count: icaenFeatures.length,
-  //       duration,
-  //       dbSynced: shouldSyncDb
-  //     };
-
-  //   } catch (error) {
-  //     const duration = Date.now() - startTime;
-  //     this.stats.lastSyncTime = new Date();
-  //     this.stats.lastSyncSuccess = false;
-  //     this.stats.consecutiveFailures++;
-
-  //     console.error(`Sync failed after ${duration}ms`);
-  //     console.error(`  Error: ${error.message}`);
-  //     console.error(`  Consecutive failures: ${this.stats.consecutiveFailures}`);
-
-  //     if (this.stats.consecutiveFailures >= 3) {
-  //       console.error(`WARNING: ${this.stats.consecutiveFailures} consecutive sync failures detected`);
-  //     }
-
-  //     return {
-  //       success: false,
-  //       error: error.message,
-  //       duration,
-  //     };
-  //   }
-  // }
-
   async syncStations() {
-  const startTime = Date.now();
-  console.log(`\n[${new Date().toISOString()}] Starting station sync`);
+    const startTime = Date.now();
+    console.log(`\n[${new Date().toISOString()}] Starting station sync`);
 
-  try {
-    const icaenFeatures = await this.fetchAllStations();
-    
-    const dynamicDataMap = new Map();
-    const duplicates = [];
-    const firstOccurrence = new Map();
-
-    for (const feature of icaenFeatures) {
-      const stationId = feature.properties?.id;
+    try {
+      const icaenFeatures = await this.fetchAllStations();
       
-      if (firstOccurrence.has(stationId)) {
-        // Es un duplicado - guardar ambos para análisis
-        duplicates.push({
-          id: stationId,
-          first: firstOccurrence.get(stationId),
-          duplicate: {
-            name: feature.properties?.nom,
-            address: feature.properties?.carrer,
-            city: feature.properties?.ciutat,
-            coordinates: feature.geometry?.coordinates,
-            estatccs: feature.properties?.estatccs,
-            estatcha: feature.properties?.estatcha,
-            estatmnk1: feature.properties?.estatmnk1,
-            estatmnk2: feature.properties?.estatmnk2,
-            shucko: feature.properties?.shucko,
-            potenciaccs: feature.properties?.potenciaccs,
-            potenciacha: feature.properties?.potenciacha,
-            potenciamnk1: feature.properties?.potenciamnk1,
-            potenciamnk2: feature.properties?.potenciamnk2,
-            superrapid: feature.properties?.superrapid,
-            tipus_acces: feature.properties?.tipus_acces
-          }
-        });
-      } else {
-        // Primera vez que vemos este ID
-        firstOccurrence.set(stationId, {
-          name: feature.properties?.nom,
-          address: feature.properties?.carrer,
-          city: feature.properties?.ciutat,
-          coordinates: feature.geometry?.coordinates,
-          estatccs: feature.properties?.estatccs,
-          estatcha: feature.properties?.estatcha,
-          estatmnk1: feature.properties?.estatmnk1,
-          estatmnk2: feature.properties?.estatmnk2,
-          shucko: feature.properties?.shucko,
-          potenciaccs: feature.properties?.potenciaccs,
-          potenciacha: feature.properties?.potenciacha,
-          potenciamnk1: feature.properties?.potenciamnk1,
-          potenciamnk2: feature.properties?.potenciamnk2,
-          superrapid: feature.properties?.superrapid,
-          tipus_acces: feature.properties?.tipus_acces
-        });
+      const dynamicDataMap = new Map();
+      let mergedCount = 0;
+
+      for (const feature of icaenFeatures) {
+        const stationId = feature.properties?.id;
+        
+        if (!stationId) continue;
+        
+        if (dynamicDataMap.has(stationId)) {
+          const existing = dynamicDataMap.get(stationId);
+          const newData = extractDynamicData(feature);
+          
+          const connectorMap = new Map();
+          existing.connectors.forEach(c => connectorMap.set(c.type, c));
+          
+          newData.connectors.forEach(c => {
+            const existingConnector = connectorMap.get(c.type);
+            if (!existingConnector || existingConnector.statusCode === '-' || c.statusCode !== '-') {
+              connectorMap.set(c.type, c);
+            }
+          });
+          
+          dynamicDataMap.set(stationId, {
+            connectors: Array.from(connectorMap.values()),
+            lastUpdated: newData.lastUpdated || existing.lastUpdated,
+            accessType: newData.accessType || existing.accessType,
+            isSuperFast: newData.isSuperFast || existing.isSuperFast
+          });
+          
+          mergedCount++;
+        } else {
+          const dynamicData = extractDynamicData(feature);
+          dynamicDataMap.set(stationId, dynamicData);
+        }
+      }
+
+      if (mergedCount > 0) {
+        console.log(`Merged ${mergedCount} duplicate stations in cache`);
       }
       
-      const dynamicData = extractDynamicData(feature);
-      dynamicDataMap.set(stationId, dynamicData);
+      await this.stationsService.forceRefresh(dynamicDataMap);
+      
+      const shouldSyncDb = (!this.lastDbSync || 
+                           (Date.now() - this.lastDbSync >= this.dbSyncInterval))
+                           && process.env.NODE_ENV !== 'dev';
+
+      if (shouldSyncDb) {
+        console.log('\nStarting database synchronization...');
+        await this.syncToDatabase(icaenFeatures);
+        this.lastDbSync = Date.now();
+        this.stats.lastDbSyncTime = new Date();
+        this.stats.lastDbSyncSuccess = true;
+        console.log('Database sync completed');
+      } else {
+        const nextDbSync = this.lastDbSync 
+          ? new Date(this.lastDbSync + this.dbSyncInterval)
+          : new Date(Date.now() + this.dbSyncInterval);
+        console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
+      }
+
+      const duration = Date.now() - startTime;
+      this.stats.totalSyncs++;
+      this.stats.lastSyncTime = new Date();
+      this.stats.lastSyncSuccess = true;
+      this.stats.consecutiveFailures = 0;
+
+      console.log(`\nSync completed successfully`);
+      console.log(`  Stations fetched: ${icaenFeatures.length}`);
+      console.log(`  Cache size: ${dynamicDataMap.size}`);
+      console.log(`  Duration: ${duration}ms\n`);
+
+      return {
+        success: true,
+        count: icaenFeatures.length,
+        duration,
+        dbSynced: shouldSyncDb
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      this.stats.lastSyncTime = new Date();
+      this.stats.lastSyncSuccess = false;
+      this.stats.consecutiveFailures++;
+
+      console.error(`Sync failed after ${duration}ms`);
+      console.error(`  Error: ${error.message}`);
+      console.error(`  Consecutive failures: ${this.stats.consecutiveFailures}`);
+
+      if (this.stats.consecutiveFailures >= 3) {
+        console.error(`WARNING: ${this.stats.consecutiveFailures} consecutive sync failures detected`);
+      }
+
+      return {
+        success: false,
+        error: error.message,
+        duration,
+      };
     }
-
-    // Guardar duplicados en archivo
-    if (duplicates.length > 0) {
-      const fs = await import('fs');
-      fs.writeFileSync(
-        './duplicates-analysis.json', 
-        JSON.stringify(duplicates, null, 2)
-      );
-      console.log(`📝 Saved ${duplicates.length} duplicates to duplicates-analysis.json`);
-    }
-
-    console.log(`\n=== SYNC SUMMARY ===`);
-    console.log(`Total features: ${icaenFeatures.length}`);
-    console.log(`Unique stations: ${dynamicDataMap.size}`);
-    console.log(`Duplicates: ${duplicates.length}`);
-    console.log(`===================\n`);
-    
-    await this.stationsService.forceRefresh(dynamicDataMap);
-
-    const cacheInfo = this.stationsService.getCachedStations();
-    console.log(`Cache size after forceRefresh: ${cacheInfo.count}`);
-    
-    const shouldSyncDb = (!this.lastDbSync || 
-                         (Date.now() - this.lastDbSync >= this.dbSyncInterval))
-                         && process.env.NODE_ENV !== 'dev';
-
-    if (shouldSyncDb) {
-      console.log('\nStarting database synchronization...');
-      await this.syncToDatabase(icaenFeatures);
-      this.lastDbSync = Date.now();
-      this.stats.lastDbSyncTime = new Date();
-      this.stats.lastDbSyncSuccess = true;
-      console.log('Database sync completed');
-    } else {
-      const nextDbSync = this.lastDbSync 
-        ? new Date(this.lastDbSync + this.dbSyncInterval)
-        : new Date(Date.now() + this.dbSyncInterval);
-      console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
-    }
-
-    const duration = Date.now() - startTime;
-    this.stats.totalSyncs++;
-    this.stats.lastSyncTime = new Date();
-    this.stats.lastSyncSuccess = true;
-    this.stats.consecutiveFailures = 0;
-
-    console.log(`\nSync completed successfully`);
-    console.log(`  Stations fetched: ${icaenFeatures.length}`);
-    console.log(`  Unique stations: ${seenIds.size}`);
-    console.log(`  Duplicates: ${duplicateCount}`);
-    console.log(`  Dynamic cache size: ${dynamicDataMap.size}`);
-    console.log(`  Duration: ${duration}ms`);
-    console.log(`  Total syncs: ${this.stats.totalSyncs}\n`);
-
-    return {
-      success: true,
-      count: icaenFeatures.length,
-      duration,
-      dbSynced: shouldSyncDb
-    };
-
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    this.stats.lastSyncTime = new Date();
-    this.stats.lastSyncSuccess = false;
-    this.stats.consecutiveFailures++;
-
-    console.error(`Sync failed after ${duration}ms`);
-    console.error(`  Error: ${error.message}`);
-    console.error(`  Consecutive failures: ${this.stats.consecutiveFailures}`);
-
-    if (this.stats.consecutiveFailures >= 3) {
-      console.error(`WARNING: ${this.stats.consecutiveFailures} consecutive sync failures detected`);
-    }
-
-    return {
-      success: false,
-      error: error.message,
-      duration,
-    };
   }
-}
+
   async syncToDatabase(icaenStations) {
     const startTime = Date.now();
     console.log(`Syncing ${icaenStations.length} stations to database...`);
@@ -331,8 +213,6 @@ class StationsSyncWorker {
       let successCount = 0;
       let errorCount = 0;
 
-      // TODO: cambiar Upsert por batch es más eficiente que iterar
-      // Lo dejo así de momento porque es más fácil de debugar.
       for (const station of mappedStations) {
         try {
           await this.repository.upsertStation(station);

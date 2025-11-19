@@ -4,7 +4,7 @@ export default class StationsRepository {
   
   async upsertStation(stationData) {
     const {
-      id,
+      id: externalId,
       name,
       address,
       city,
@@ -16,31 +16,21 @@ export default class StationsRepository {
       schuko_power_kw
     } = stationData;
 
+    // Sin UNIQUE constraint, simplemente insertamos todas las estaciones
     const query = `
       INSERT INTO ev_stations (
-        id, name, address, city, coordinates,
+        external_id, name, address, city, coordinates,
         ccs_power_kw, chademo_power_kw, mennekes_power_kw, schuko_power_kw,
         last_synced_at
       ) VALUES (
         $1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5, $6), 4326),
         $7, $8, $9, $10, NOW()
       )
-      ON CONFLICT (id) 
-      DO UPDATE SET
-        name = EXCLUDED.name,
-        address = EXCLUDED.address,
-        city = EXCLUDED.city,
-        coordinates = EXCLUDED.coordinates,
-        ccs_power_kw = EXCLUDED.ccs_power_kw,
-        chademo_power_kw = EXCLUDED.chademo_power_kw,
-        mennekes_power_kw = EXCLUDED.mennekes_power_kw,
-        schuko_power_kw = EXCLUDED.schuko_power_kw,
-        last_synced_at = NOW()
       RETURNING *;
     `;
 
     const values = [
-      id, name, address, city, longitude, latitude,
+      externalId, name, address, city, longitude, latitude,
       ccs_power_kw, chademo_power_kw, mennekes_power_kw, schuko_power_kw
     ];
 
@@ -48,31 +38,8 @@ export default class StationsRepository {
       const result = await pool.query(query, values);
       return result.rows[0];
     } catch (error) {
-      console.error('Error upserting station:', error);
+      console.error('Error inserting station:', error);
       throw error;
-    }
-  }
-
-  async upsertStationsBatch(stationsData) {
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
-      
-      const results = [];
-      for (const stationData of stationsData) {
-        const result = await this.upsertStation(stationData);
-        results.push(result);
-      }
-      
-      await client.query('COMMIT');
-      return results;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      console.error('Error in batch upsert:', error);
-      throw error;
-    } finally {
-      client.release();
     }
   }
 
@@ -80,6 +47,7 @@ export default class StationsRepository {
     const query = `
       SELECT 
         id,
+        external_id,
         name,
         address,
         city,
@@ -105,10 +73,11 @@ export default class StationsRepository {
     }
   }
 
-  async getStationById(id) {
+  async getStationById(externalId) {
     const query = `
       SELECT 
         id,
+        external_id,
         name,
         address,
         city,
@@ -122,11 +91,12 @@ export default class StationsRepository {
         updated_at,
         last_synced_at
       FROM ev_stations
-      WHERE id = $1;
+      WHERE external_id = $1
+      LIMIT 1;
     `;
 
     try {
-      const result = await pool.query(query, [id]);
+      const result = await pool.query(query, [externalId]);
       return result.rows[0] || null;
     } catch (error) {
       console.error('Error fetching station by id:', error);
@@ -138,6 +108,7 @@ export default class StationsRepository {
     const query = `
       SELECT 
         id,
+        external_id,
         name,
         address,
         city,
@@ -173,6 +144,7 @@ export default class StationsRepository {
     const query = `
       SELECT 
         id,
+        external_id,
         name,
         address,
         city,
@@ -202,6 +174,7 @@ export default class StationsRepository {
     const query = `
       SELECT 
         id,
+        external_id,
         name,
         address,
         city,
