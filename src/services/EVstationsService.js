@@ -1,90 +1,108 @@
-import fetch from 'node-fetch';
-import {calculateDistance}  from '../utils/maths.js';
+import StationsRepository from '../repositories/EVStationsRepository.js';
+import { calculateDistance } from '../utils/maths.js';
 
-
-
-let stationsCache = null;
+// Cache de SOLO datos dinámicos (estados de conectores)
+let dynamicCache = new Map();
 let lastFetch = null;
 
-const CACHE_DURATION = 5 * 60 * 1000; 
+const CACHE_DURATION = 5 * 60 * 1000;
 
 export default class StationsService {
-  
-  // TODO: Most of the static data queries should be fetched in DB instead of service!
+  constructor() {
+    this.repository = new StationsRepository();
+  }
+
   async fetchAllStations() {
-    if (stationsCache && lastFetch) {
-      console.log('Returning cached stations');
-      return stationsCache;
+    try {
+      const dbStations = await this.repository.getAllStations();
+      
+      if (dbStations.length > 0) {
+        console.log(`Loaded ${dbStations.length} stations from database`);
+        return dbStations;
+      }
+
+      console.log('No stations in database');
+      return [];
+    } catch (error) {
+      console.error('Error fetching stations from database:', error);
+      return [];
     }
-    
-    // Return null if there is no data in cache. We should return the data in database for offline cases.
-    return null;
   }
 
   async getStationById(id) {
-    const stations = stationsCache;
-    const station = stations.find(s => s.properties.id === id);
-    return station || null;
+    try {
+      const dbStation = await this.repository.getStationById(id);
+      return dbStation;
+    } catch (error) {
+      console.error('Error getting station by id:', error);
+      return null;
+    }
   }
 
   async searchStationsByLocation(lat, lon, radiusKm = 5) {
-    
-    const nearby = stationsCache
-      .map(station => {
-        const [stationLon, stationLat] = station.geometry.coordinates;
-        const distance = calculateDistance(lat, lon, stationLat, stationLon);
-        return { ...station, distance };
-      })
-      .filter(station => station.distance <= radiusKm)
-      .sort((a, b) => a.distance - b.distance);
-    
-    return nearby;
+    try {
+      const nearbyStations = await this.repository.getNearbyStations(lat, lon, radiusKm);
+      return nearbyStations;
+    } catch (error) {
+      console.error('Error searching stations by location:', error);
+      return [];
+    }
   }
 
   async getStationsInBounds(bounds) {
-    const stations = stationsCache;
-    
-    return stations.filter(station => {
-      const [lon, lat] = station.geometry.coordinates;
-      return lat >= bounds.south && 
-             lat <= bounds.north && 
-             lon >= bounds.west && 
-             lon <= bounds.east;
-    });
+    try {
+      const stations = await this.repository.getStationsInBounds(
+        bounds.north,
+        bounds.south,
+        bounds.east,
+        bounds.west
+      );
+      return stations;
+    } catch (error) {
+      console.error('Error getting stations in bounds:', error);
+      return [];
+    }
   }
 
   async getStationsByCity(city) {
-    const stations =  stationsCache;
-    
-    return stationsCache.filter(station => {
-      const stationCity = station.properties.ciutat || '';
-      return stationCity.toLowerCase().includes(city.toLowerCase());
-    });
+    try {
+      const stations = await this.repository.getStationsByCity(city);
+      return stations;
+    } catch (error) {
+      console.error('Error getting stations by city:', error);
+      return [];
+    }
   }
 
-
+  /**
+   * Obtiene los datos dinámicos de una estación desde el cache
+   */
+  getDynamicData(stationId) {
+    return dynamicCache.get(stationId);
+  }
 
   getCachedStations() {
-
-  
     return {
-      stations: stationsCache,
+      stations: dynamicCache,
       lastFetch: lastFetch ? new Date(lastFetch) : null,
-      count: stationsCache ? stationsCache.length : 0,
+      count: dynamicCache.size,
       isFresh: lastFetch && Date.now() - lastFetch < CACHE_DURATION
     };
   }
 
   clearCache() {
-    stationsCache = null;
+    dynamicCache.clear();
     lastFetch = null;
-    console.log('Cache cleared');
+    console.log('Dynamic cache cleared');
   }
 
-  async forceRefresh(data) {
+  /**
+   * Refresca el cache con datos dinámicos extraídos de ICAEN
+   */
+  async forceRefresh(dynamicDataMap) {
     this.clearCache();
-    stationsCache = data;
-    lastFetch = Date.now()
-    console.log('Cache refreshed correctly!');
+    dynamicCache = dynamicDataMap;
+    lastFetch = Date.now();
+    console.log(`Dynamic cache refreshed with ${dynamicCache.size} stations`);
   }
 }

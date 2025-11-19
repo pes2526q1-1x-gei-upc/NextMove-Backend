@@ -1,116 +1,45 @@
 import StationsService from '../../services/EVstationsService.js';
+import { mapRepositoryToGraphQL } from '../../utils/EVStationsMapper.js';
 import { GraphQLError } from 'graphql';
 
 const stationsService = new StationsService();
 
-const parseConnectorStatus = (statusCode) => {
-  switch (statusCode) {
-    case "1":
-      return "AVAILABLE";
-    case "0":
-      return "OCCUPIED";
-    case "-":
-    default:
-      return "UNAVAILABLE";
-  }
-};
+function enrichStationWithDynamicData(dbStation) {
+  const dynamicData = stationsService.getDynamicData(dbStation.id);
+  
+  // mapRepositoryToGraphQL combina estático + dinámico
+  const station = mapRepositoryToGraphQL(dbStation, dynamicData);
 
-// Mapeo de tipo de conector
-const parseConnectorType = (tipusCode) => {
-  switch (tipusCode?.toUpperCase()) {
-    case "F": // Fast AC
-    case "M": // Mennekes/Type2
-      return "MENNEKES";
-    default:
-      return "MENNEKES";
-  }
-};
 
-// Map feature to GQL output type Station
-const mapStationData = (feature) => {
-  if (!feature || !feature.properties) {
-    return null;
+  if (dynamicData) {
+    station.accessType = dynamicData.accessType || null;
+    station.isSuperFast = dynamicData.isSuperFast || false;
+    station.lastUpdated = dynamicData.lastUpdated || null;
   }
 
-  const props = feature.properties;
-  const [longitude, latitude] = feature.geometry?.coordinates || [null, null];
-
-
-  const connectors = [];
-  // CCS type connectors
-  if (props.estatccs !== "-" && props.potenciaccs !== "-") {
-    connectors.push({
-      type: "CCS",
-      powerKw: parseFloat(props.potenciaccs) || 0,
-      status: parseConnectorStatus(props.estatccs),
-      statusCode: props.estatccs,
-    });
-  }
-
-  // CHAdeMO
-  if (props.estatcha !== "-" && props.potenciacha !== "-") {
-    connectors.push({
-      type: "CHADEMO",
-      powerKw: parseFloat(props.potenciacha) || 0,
-      status: parseConnectorStatus(props.estatcha),
-      statusCode: props.estatcha,
-    });
-  }
-
-  // Mennekes 1
-  if (props.estatmnk1 !== "-" && props.potenciamnk1 !== "-") {
-    connectors.push({
-      type: parseConnectorType(props.tipusmnk1),
-      powerKw: parseFloat(props.potenciamnk1) || 0,
-      status: parseConnectorStatus(props.estatmnk1),
-      statusCode: props.estatmnk1,
-    });
-  }
-
-  // Mennekes 2
-  if (props.estatmnk2 !== "-" && props.potenciamnk2 !== "-") {
-    connectors.push({
-      type: parseConnectorType(props.tipusmnk2),
-      powerKw: parseFloat(props.potenciamnk2) || 0,
-      status: parseConnectorStatus(props.estatmnk2),
-      statusCode: props.estatmnk2,
-    });
-  }
-
-  // Schuko 
-  if (props.shucko === "1") {
-    connectors.push({
-      type: "SCHUKO",
-      powerKw: 3.7, // IDK standard schuko power
-      status: "AVAILABLE", // I am assuming this is true?
-      statusCode: "1",
-    });
-  }
-
-  return {
-    id: props.id,
-    name: props.nom || "Sin nombre",
-    address: props.carrer || null,
-    city: props.ciutat || null,
-    coordinates: { latitude, longitude },
-    connectors: connectors,
-    accessType: props.tipus_acces || null,
-    isSuperFast: props.superrapid === "1" || props.superrapid === "2",
-    lastUpdated: props.data || null,
-    distance: feature.distance || null,
-  };
-};
+  return station;
+}
 
 const StationsResolvers = {
   Query: {
     stations: async () => {
       try {
-        const features = await stationsService.fetchAllStations();
-        const stations = features.map(mapStationData).filter(Boolean);
+        const dbStations = await stationsService.fetchAllStations();
+        
+        if (!dbStations || dbStations.length === 0) {
+          return {
+            stations: [],
+            total: 0
+          };
+        }
+
+        const stations = dbStations
+          .map(enrichStationWithDynamicData)
+          .filter(Boolean);
 
         return {
-          stations: stations,
-          total: stations.length,
+          stations,
+          total: stations.length
         };
       } catch (error) {
         console.error('Error in stations resolver:', error);
@@ -125,16 +54,20 @@ const StationsResolvers = {
 
     station: async (_, { id }) => {
       try {
-        const feature = await stationsService.getStationById(id);
+        const dbStation = await stationsService.getStationById(id);
         
-        if (!feature) {
+        if (!dbStation) {
           throw new GraphQLError('Station not found', {
             extensions: { code: 'NOT_FOUND' },
           });
         }
         
-        return mapStationData(feature);
+        return enrichStationWithDynamicData(dbStation);
       } catch (error) {
+        if (error instanceof GraphQLError) {
+          throw error;
+        }
+        
         console.error('Error in station resolver:', error);
         throw new GraphQLError('Failed to fetch station', {
           extensions: { 
@@ -149,13 +82,16 @@ const StationsResolvers = {
       try {
         const { coordinates, radiusKm = 5 } = location;
         const { latitude, longitude } = coordinates;
-        const features = await stationsService.searchStationsByLocation(
+
+        const dbStations = await stationsService.searchStationsByLocation(
           latitude,
           longitude,
           radiusKm
         );
 
-        return features.map(mapStationData).filter(Boolean);
+        return dbStations
+          .map(enrichStationWithDynamicData)
+          .filter(Boolean);
       } catch (error) {
         console.error('Error in nearbyStations resolver:', error);
         throw new GraphQLError('Failed to search nearby stations', {
@@ -167,13 +103,16 @@ const StationsResolvers = {
       }
     },
 
-    stationsInBounds: async (_, { bounds }) => {
+    stationsByCity: async (_, { city }) => {
       try {
-        const features = await stationsService.getStationsInBounds(bounds);
-        return features.map(mapStationData).filter(Boolean);
+        const dbStations = await stationsService.getStationsByCity(city);
+        
+        return dbStations
+          .map(enrichStationWithDynamicData)
+          .filter(Boolean);
       } catch (error) {
-        console.error('Error in stationsInBounds resolver:', error);
-        throw new GraphQLError('Failed to fetch stations in bounds', {
+        console.error('Error in stationsByCity resolver:', error);
+        throw new GraphQLError('Failed to fetch stations by city', {
           extensions: { 
             code: 'INTERNAL_SERVER_ERROR',
             originalError: error.message,
@@ -182,13 +121,16 @@ const StationsResolvers = {
       }
     },
 
-    stationsByCity: async (_, { city }) => {
+    stationsInBounds: async (_, { bounds }) => {
       try {
-        const features = await stationsService.getStationsByCity(city);
-        return features.map(mapStationData).filter(Boolean);
+        const dbStations = await stationsService.getStationsInBounds(bounds);
+        
+        return dbStations
+          .map(enrichStationWithDynamicData)
+          .filter(Boolean);
       } catch (error) {
-        console.error('Error in stationsByCity resolver:', error);
-        throw new GraphQLError('Failed to fetch stations by city', {
+        console.error('Error in stationsInBounds resolver:', error);
+        throw new GraphQLError('Failed to fetch stations in bounds', {
           extensions: { 
             code: 'INTERNAL_SERVER_ERROR',
             originalError: error.message,
