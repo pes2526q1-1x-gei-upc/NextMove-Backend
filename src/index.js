@@ -13,6 +13,11 @@ const stationsService = new StationsService();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+dotenv.config({ path: '../.env' });
+
+
+
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
