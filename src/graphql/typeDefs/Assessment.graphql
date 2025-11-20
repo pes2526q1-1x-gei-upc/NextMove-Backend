@@ -8,12 +8,18 @@ type Assessment{
     created_at: String!
 }
 
+type AssessmentInfo{
+    averageScore: Float!
+    totalAssessments: Int!
+}
+
 extend type Query{
     getAssessmentsByStationId(id: String!): [Assessment]!
+    getStationAssessmentInfo(id: String!): AssessmentInfo!
 }
 
 extend type Mutation{
     createAssessment(nickname: String!, station_id: String!, score: Int!, comments: String): Float
-    deleteAssessment(nickname: String!, station_id: String!, created_at: String!): Float
-    editAssessment(nickname: String!, station_id: String!, created_at: String!, score: Int, comments: String): Float
+    deleteAssessment(nickname: String!, station_id: String!): Float
+    editAssessment(nickname: String!, station_id: String!, score: Int, comments: String): Float
 }

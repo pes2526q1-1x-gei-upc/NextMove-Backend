@@ -24,7 +24,8 @@
       recorridos: recorridosResolver.Query.recorridos, 
       recorrido: recorridosResolver.Query.recorrido, 
       recorridosByUser: recorridosResolver.Query.recorridosByUser,
-      getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId
+      getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
+      getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
     },
     Mutation: {
       createUser: userResolvers.Mutation.createUser,
