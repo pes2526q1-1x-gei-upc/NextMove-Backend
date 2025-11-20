@@ -1,42 +1,14 @@
 import StationsService from '../../services/EVstationsService.js';
-import { mapRepositoryToGraphQL } from '../../utils/EVStationsMapper.js';
 import { GraphQLError } from 'graphql';
 
 const stationsService = new StationsService();
-
-function enrichStationWithDynamicData(dbStation) {
-  const dynamicData = stationsService.getDynamicData(dbStation.id);
-  
-  // mapRepositoryToGraphQL combina estático + dinámico
-  const station = mapRepositoryToGraphQL(dbStation, dynamicData);
-
-
-  if (dynamicData) {
-    station.accessType = dynamicData.accessType || null;
-    station.isSuperFast = dynamicData.isSuperFast || false;
-    station.lastUpdated = dynamicData.lastUpdated || null;
-  }
-
-  return station;
-}
 
 const StationsResolvers = {
   Query: {
     stations: async () => {
       try {
-        const dbStations = await stationsService.fetchAllStations();
+        const stations = await stationsService.getAllStations();
         
-        if (!dbStations || dbStations.length === 0) {
-          return {
-            stations: [],
-            total: 0
-          };
-        }
-
-        const stations = dbStations
-          .map(enrichStationWithDynamicData)
-          .filter(Boolean);
-
         return {
           stations,
           total: stations.length
@@ -54,15 +26,15 @@ const StationsResolvers = {
 
     station: async (_, { id }) => {
       try {
-        const dbStation = await stationsService.getStationById(id);
+        const station = await stationsService.getStationById(id);
         
-        if (!dbStation) {
+        if (!station) {
           throw new GraphQLError('Station not found', {
             extensions: { code: 'NOT_FOUND' },
           });
         }
         
-        return enrichStationWithDynamicData(dbStation);
+        return station;
       } catch (error) {
         if (error instanceof GraphQLError) {
           throw error;
@@ -83,15 +55,13 @@ const StationsResolvers = {
         const { coordinates, radiusKm = 5 } = location;
         const { latitude, longitude } = coordinates;
 
-        const dbStations = await stationsService.searchStationsByLocation(
+        const stations = await stationsService.searchStationsByLocation(
           latitude,
           longitude,
           radiusKm
         );
 
-        return dbStations
-          .map(enrichStationWithDynamicData)
-          .filter(Boolean);
+        return stations;
       } catch (error) {
         console.error('Error in nearbyStations resolver:', error);
         throw new GraphQLError('Failed to search nearby stations', {
@@ -105,11 +75,8 @@ const StationsResolvers = {
 
     stationsByCity: async (_, { city }) => {
       try {
-        const dbStations = await stationsService.getStationsByCity(city);
-        
-        return dbStations
-          .map(enrichStationWithDynamicData)
-          .filter(Boolean);
+        const stations = await stationsService.getStationsByCity(city);
+        return stations;
       } catch (error) {
         console.error('Error in stationsByCity resolver:', error);
         throw new GraphQLError('Failed to fetch stations by city', {
@@ -123,11 +90,8 @@ const StationsResolvers = {
 
     stationsInBounds: async (_, { bounds }) => {
       try {
-        const dbStations = await stationsService.getStationsInBounds(bounds);
-        
-        return dbStations
-          .map(enrichStationWithDynamicData)
-          .filter(Boolean);
+        const stations = await stationsService.getStationsInBounds(bounds);
+        return stations;
       } catch (error) {
         console.error('Error in stationsInBounds resolver:', error);
         throw new GraphQLError('Failed to fetch stations in bounds', {

@@ -17,8 +17,7 @@ export default class StationsService {
       const dbStations = await this.repository.getAllStations();
       
       return dbStations.map(dbStation => {
-        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
-        const dynamicData = dynamicCache.get(cacheKey);
+        const dynamicData = dynamicCache.get(dbStation.id);  // id = índice del array
         return mapRepositoryToGraphQL(dbStation, dynamicData);
       });
     } catch (error) {
@@ -27,13 +26,12 @@ export default class StationsService {
     }
   }
 
-  async getStationById(externalId) {
+  async getStationById(id) {
     try {
-      const dbStation = await this.repository.getStationById(externalId);
+      const dbStation = await this.repository.getStationById(id);
       if (!dbStation) return null;
       
-      const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
-      const dynamicData = dynamicCache.get(cacheKey);
+      const dynamicData = dynamicCache.get(dbStation.id);
       return mapRepositoryToGraphQL(dbStation, dynamicData);
     } catch (error) {
       console.error('Error in getStationById:', error);
