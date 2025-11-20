@@ -103,51 +103,30 @@ class StationsSyncWorker {
     try {
       const icaenFeatures = await this.fetchAllStations();
       
+      // Cache usando external_id simple (para queries rápidas)
       const dynamicDataMap = new Map();
-      let mergedCount = 0;
 
       for (const feature of icaenFeatures) {
         const stationId = feature.properties?.id;
+        const stationName = feature.properties?.nom;
         
-        if (!stationId) continue;
+        if (!stationId || !stationName) continue;
         
-        if (dynamicDataMap.has(stationId)) {
-          const existing = dynamicDataMap.get(stationId);
-          const newData = extractDynamicData(feature);
-          
-          const connectorMap = new Map();
-          existing.connectors.forEach(c => connectorMap.set(c.type, c));
-          
-          newData.connectors.forEach(c => {
-            const existingConnector = connectorMap.get(c.type);
-            if (!existingConnector || existingConnector.statusCode === '-' || c.statusCode !== '-') {
-              connectorMap.set(c.type, c);
-            }
-          });
-          
-          dynamicDataMap.set(stationId, {
-            connectors: Array.from(connectorMap.values()),
-            lastUpdated: newData.lastUpdated || existing.lastUpdated,
-            accessType: newData.accessType || existing.accessType,
-            isSuperFast: newData.isSuperFast || existing.isSuperFast
-          });
-          
-          mergedCount++;
-        } else {
-          const dynamicData = extractDynamicData(feature);
-          dynamicDataMap.set(stationId, dynamicData);
-        }
+        // Crear clave única usando external_id + nombre + coordenadas
+        const coords = feature.geometry?.coordinates || [0, 0];
+        const cacheKey = `${stationId}||${stationName}||${coords[0]},${coords[1]}`;
+        
+        const dynamicData = extractDynamicData(feature);
+        dynamicDataMap.set(cacheKey, dynamicData);
       }
-
-      if (mergedCount > 0) {
-        console.log(`Merged ${mergedCount} duplicate stations in cache`);
-      }
+      
+      console.log(`Cache entries created: ${dynamicDataMap.size}`);
       
       await this.stationsService.forceRefresh(dynamicDataMap);
       
       const shouldSyncDb = (!this.lastDbSync || 
-                           (Date.now() - this.lastDbSync >= this.dbSyncInterval))
-                           && process.env.NODE_ENV !== 'dev';
+                          (Date.now() - this.lastDbSync >= this.dbSyncInterval))
+                          && process.env.NODE_ENV !== 'dev';
 
       if (shouldSyncDb) {
         console.log('\nStarting database synchronization...');

@@ -1,5 +1,5 @@
 import StationsRepository from '../repositories/EVStationsRepository.js';
-import { calculateDistance } from '../utils/maths.js';
+import { mapRepositoryToGraphQL } from '../utils/EVStationsMapper.js';
 
 // Cache de SOLO datos dinámicos (estados de conectores)
 let dynamicCache = new Map();
@@ -12,37 +12,44 @@ export default class StationsService {
     this.repository = new StationsRepository();
   }
 
-  async fetchAllStations() {
+  async getAllStations() {
     try {
       const dbStations = await this.repository.getAllStations();
       
-      if (dbStations.length > 0) {
-        console.log(`Loaded ${dbStations.length} stations from database`);
-        return dbStations;
-      }
-
-      console.log('No stations in database');
-      return [];
+      return dbStations.map(dbStation => {
+        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
+        const dynamicData = dynamicCache.get(cacheKey);
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
     } catch (error) {
-      console.error('Error fetching stations from database:', error);
-      return [];
+      console.error('Error in getAllStations:', error);
+      throw error;
     }
   }
 
-  async getStationById(id) {
+  async getStationById(externalId) {
     try {
-      const dbStation = await this.repository.getStationById(id);
-      return dbStation;
+      const dbStation = await this.repository.getStationById(externalId);
+      if (!dbStation) return null;
+      
+      const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
+      const dynamicData = dynamicCache.get(cacheKey);
+      return mapRepositoryToGraphQL(dbStation, dynamicData);
     } catch (error) {
-      console.error('Error getting station by id:', error);
-      return null;
+      console.error('Error in getStationById:', error);
+      throw error;
     }
   }
 
   async searchStationsByLocation(lat, lon, radiusKm = 5) {
     try {
-      const nearbyStations = await this.repository.getNearbyStations(lat, lon, radiusKm);
-      return nearbyStations;
+      const dbStations = await this.repository.getNearbyStations(lat, lon, radiusKm);
+      
+      return dbStations.map(dbStation => {
+        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
+        const dynamicData = dynamicCache.get(cacheKey);
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
     } catch (error) {
       console.error('Error searching stations by location:', error);
       return [];
@@ -51,13 +58,18 @@ export default class StationsService {
 
   async getStationsInBounds(bounds) {
     try {
-      const stations = await this.repository.getStationsInBounds(
+      const dbStations = await this.repository.getStationsInBounds(
         bounds.north,
         bounds.south,
         bounds.east,
         bounds.west
       );
-      return stations;
+      
+      return dbStations.map(dbStation => {
+        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
+        const dynamicData = dynamicCache.get(cacheKey);
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
     } catch (error) {
       console.error('Error getting stations in bounds:', error);
       return [];
@@ -66,8 +78,13 @@ export default class StationsService {
 
   async getStationsByCity(city) {
     try {
-      const stations = await this.repository.getStationsByCity(city);
-      return stations;
+      const dbStations = await this.repository.getStationsByCity(city);
+      
+      return dbStations.map(dbStation => {
+        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
+        const dynamicData = dynamicCache.get(cacheKey);
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
     } catch (error) {
       console.error('Error getting stations by city:', error);
       return [];
@@ -76,9 +93,14 @@ export default class StationsService {
 
   /**
    * Obtiene los datos dinámicos de una estación desde el cache
+   * @param {string} externalId - ID externo de ICAEN
+   * @param {string} name - Nombre de la estación
+   * @param {number} longitude - Longitud
+   * @param {number} latitude - Latitud
    */
-  getDynamicData(stationId) {
-    return dynamicCache.get(stationId);
+  getDynamicData(externalId, name, longitude, latitude) {
+    const cacheKey = `${externalId}||${name}||${longitude},${latitude}`;
+    return dynamicCache.get(cacheKey);
   }
 
   getCachedStations() {

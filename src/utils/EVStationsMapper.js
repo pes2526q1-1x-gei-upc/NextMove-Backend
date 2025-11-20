@@ -1,5 +1,3 @@
-let count = 0;
-
 export function mapRepositoryToGraphQL(dbStation, dynamicData) {
   const staticConnectors = [];
   
@@ -27,7 +25,7 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
   });
 
   return {
-    id: dbStation.external_id,  // Usar external_id para GraphQL
+    id: dbStation.external_id,
     name: dbStation.name,
     address: dbStation.address,
     city: dbStation.city,
@@ -37,9 +35,9 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
     },
     connectors: connectorsWithStatus,
     distance: dbStation.distance ? parseFloat(dbStation.distance) : null,
-    accessType: null,
-    isSuperFast: false,
-    lastUpdated: null
+    accessType: dynamicData?.accessType || null,
+    isSuperFast: dynamicData?.isSuperFast || false,
+    lastUpdated: dynamicData?.lastUpdated || null
   };
 }
 
@@ -112,7 +110,7 @@ export function mapICAENToRepository(icaenFeature) {
 
   return {
     id: props.id,
-    name: props.nom || props.id || 'Estación sin nombre', // Fallback a ID si no hay nombre
+    name: props.nom || props.id || 'Estación sin nombre',
     address: props.carrer || null,
     city: props.ciutat || null,
     longitude,
@@ -131,7 +129,6 @@ function parseConnectors(properties) {
     MENNEKES: null,
     SCHUKO: null
   };
-
 
   if (properties.estatccs && properties.estatccs !== '-') {
     const power = parseFloat(properties.potenciaccs);
@@ -186,5 +183,4 @@ function inferPowerFromType(connectorType, properties) {
   return defaults[connectorType] || null;
 }
 
-// Mantener para compatibilidad
 export const extractDynamicConnectorInfo = extractDynamicData;
