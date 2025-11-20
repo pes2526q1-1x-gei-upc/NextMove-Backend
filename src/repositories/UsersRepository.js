@@ -36,7 +36,7 @@ class UsersRepository {
         name AS "name",
         nickname,
         photo,
-        TO_CHAR(birth_date, 'YYYY-MM-DD') AS "birthDate", 
+        TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate", 
         phone_number AS "phoneNumber",
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
@@ -75,12 +75,14 @@ class UsersRepository {
    */
   async createUser(userData) {
     const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = userData;
+    console.log('Creating user with data:', userData);
 
     if (!email || !name || !nickname || !preferredMode) {
       throw new Error('Los campos email, name, nickname y preferredMode son obligatorios');
     }
 
     try {
+      console.log('Birth date: ', birthDate);
       const result = await pool.query(`
         INSERT INTO users (
           email,
@@ -102,7 +104,7 @@ class UsersRepository {
           preferred_mode AS "preferredMode",
           preferred_language AS "preferredLanguage",
           bio_description AS "bioDescription",
-          TO_CHAR(birth_date, 'YYYY-MM-DD') AS "birthDate",
+          TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
           TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
       `, [email, name, nickname, phoneNumber || null, preferredMode, preferredLanguage || "ESP", bioDescription || null, birthDate || null]); 
 
@@ -176,7 +178,7 @@ class UsersRepository {
         name AS "name",
         nickname,
         photo,
-        TO_CHAR(birth_date, 'YYYY-MM-DD') AS "birthDate",
+        TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
         phone_number AS "phoneNumber",
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage", 
