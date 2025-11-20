@@ -13,7 +13,24 @@ async batchInsertStations(stationsData) {
     const placeholders = [];
     
     stationsData.forEach((station, index) => {
-      const offset = index * 11;
+    /**  
+     * This "11" offset is needed since each tuple has 11 columns.
+      And what we want is a INSERT with values such that:
+      
+      - Station 0 (index = 0)
+      offset = 0 * 11 = 0
+      Placeholders: $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+
+      - Station 1 (index = 1)
+      offset = 1 * 11 = 11
+      Placeholders: $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+
+      - Station 2 (index = 2)
+      offset = 2 * 11 = 22
+      Placeholders: $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, and so on...
+    */      
+   
+    const offset = index * 11;
       placeholders.push(
         `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, 
           ST_SetSRID(ST_MakePoint($${offset + 6}, $${offset + 7}), 4326),
