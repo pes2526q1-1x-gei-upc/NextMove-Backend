@@ -25,7 +25,8 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
   });
 
   return {
-    id: dbStation.external_id,
+    id: dbStation.id,  // Ahora usar el ID interno (índice)
+    externalId: dbStation.external_id,  // Agregar external_id aparte
     name: dbStation.name,
     address: dbStation.address,
     city: dbStation.city,
