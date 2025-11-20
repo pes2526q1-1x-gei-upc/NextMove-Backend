@@ -112,8 +112,9 @@ class StationsSyncWorker {
       dynamicDataMap.set(index, dynamicData);
     });
     
-    console.log(`Cache entries created: ${dynamicDataMap.size}`);
-    
+    console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
+
+
     await this.stationsService.forceRefresh(dynamicDataMap);
     const currentDbCount = await this.repository.getStationsCount();
     const newStationsCount = dynamicDataMap.size;

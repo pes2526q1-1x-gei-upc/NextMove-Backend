@@ -16,7 +16,6 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
 
   const connectorsWithStatus = staticConnectors.map(connector => {
     const dynamicInfo = dynamicData?.connectors?.find(dc => dc.type === connector.type);
-    
     return {
       ...connector,
       status: dynamicInfo?.status || 'UNAVAILABLE',
@@ -25,8 +24,8 @@ export function mapRepositoryToGraphQL(dbStation, dynamicData) {
   });
 
   return {
-    id: dbStation.id,  // Ahora usar el ID interno (índice)
-    externalId: dbStation.external_id,  // Agregar external_id aparte
+    id: dbStation.id,  
+    externalId: dbStation.external_id, 
     name: dbStation.name,
     address: dbStation.address,
     city: dbStation.city,

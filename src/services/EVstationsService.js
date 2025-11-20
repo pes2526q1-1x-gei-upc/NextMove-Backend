@@ -1,7 +1,6 @@
 import StationsRepository from '../repositories/EVStationsRepository.js';
 import { mapRepositoryToGraphQL } from '../utils/EVStationsMapper.js';
 
-// Cache de SOLO datos dinámicos (estados de conectores)
 let dynamicCache = new Map();
 let lastFetch = null;
 
@@ -17,7 +16,7 @@ export default class StationsService {
       const dbStations = await this.repository.getAllStations();
       
       return dbStations.map(dbStation => {
-        const dynamicData = dynamicCache.get(dbStation.id);  // id = índice del array
+        const dynamicData = dynamicCache.get(dbStation.id);
         return mapRepositoryToGraphQL(dbStation, dynamicData);
       });
     } catch (error) {
@@ -44,8 +43,7 @@ export default class StationsService {
       const dbStations = await this.repository.getNearbyStations(lat, lon, radiusKm);
       
       return dbStations.map(dbStation => {
-        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
-        const dynamicData = dynamicCache.get(cacheKey);
+        const dynamicData = dynamicCache.get(dbStation.id);
         return mapRepositoryToGraphQL(dbStation, dynamicData);
       });
     } catch (error) {
@@ -64,8 +62,7 @@ export default class StationsService {
       );
       
       return dbStations.map(dbStation => {
-        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
-        const dynamicData = dynamicCache.get(cacheKey);
+        const dynamicData = dynamicCache.get(dbStation.id); 
         return mapRepositoryToGraphQL(dbStation, dynamicData);
       });
     } catch (error) {
@@ -79,8 +76,7 @@ export default class StationsService {
       const dbStations = await this.repository.getStationsByCity(city);
       
       return dbStations.map(dbStation => {
-        const cacheKey = `${dbStation.external_id}||${dbStation.name}||${dbStation.longitude},${dbStation.latitude}`;
-        const dynamicData = dynamicCache.get(cacheKey);
+        const dynamicData = dynamicCache.get(dbStation.id);  
         return mapRepositoryToGraphQL(dbStation, dynamicData);
       });
     } catch (error) {
@@ -89,16 +85,8 @@ export default class StationsService {
     }
   }
 
-  /**
-   * Obtiene los datos dinámicos de una estación desde el cache
-   * @param {string} externalId - ID externo de ICAEN
-   * @param {string} name - Nombre de la estación
-   * @param {number} longitude - Longitud
-   * @param {number} latitude - Latitud
-   */
-  getDynamicData(externalId, name, longitude, latitude) {
-    const cacheKey = `${externalId}||${name}||${longitude},${latitude}`;
-    return dynamicCache.get(cacheKey);
+  getDynamicData(id) {
+    return dynamicCache.get(id);  
   }
 
   getCachedStations() {
@@ -116,9 +104,6 @@ export default class StationsService {
     console.log('Dynamic cache cleared');
   }
 
-  /**
-   * Refresca el cache con datos dinámicos extraídos de ICAEN
-   */
   async forceRefresh(dynamicDataMap) {
     this.clearCache();
     dynamicCache = dynamicDataMap;
