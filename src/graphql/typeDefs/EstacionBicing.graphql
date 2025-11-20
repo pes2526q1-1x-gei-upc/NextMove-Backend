@@ -29,17 +29,17 @@ type EstacionBicing {
 
     #Atributos dinámicos
 
-    sePuedenAlquilarBicis: Boolean!
-    sePuedeAnclarBicis: Boolean!
+    sePuedenAlquilarBicis: Boolean
+    sePuedeAnclarBicis: Boolean
 
-    plazasOcupadas: Int!
-    anclajesDisponibles: Int!
-    estado: EstadoEstacion!
+    plazasOcupadas: Int
+    anclajesDisponibles: Int
+    estado: EstadoEstacion
 
     #podemos desglosarlo: 
 
-    bicisMecanicasDisponibles: Int!
-    bicisElectricasDisponibles: Int!
+    bicisMecanicasDisponibles: Int
+    bicisElectricasDisponibles: Int
 
     """
     Distancia en kilómetros es un valor de retorno que solo aparece en ciertas queries donde queramos computar
@@ -47,6 +47,26 @@ type EstacionBicing {
     """
     distanciaKm: Float
 
+}
+
+input CreateInputEstacionBicing {
+    id: ID!
+    nombre: String!
+    direccion: String!
+    coordenadas: CoordinatesInput! #Tipo compartido definido en base.graphql
+    plazasTotales: Int! 
+    estacionCargaElectrica: Boolean!
+}
+
+"""
+En este caso  los campos no son obligatorios porque puede ser únicamente una actualización parcial de la estación. 
+"""
+input updateEstacionInput {
+  nombre: String
+  direccion: String
+  coordenadas: CoordinatesInput
+  plazasTotales: Int
+  estacionCargaElectrica: Boolean
 }
 
 
@@ -88,4 +108,12 @@ type Query {
     }
     """
     getEstacionesDeBicingCercanas(location: LocationInput!): [EstacionBicing!]!
+}
+
+type Mutation {
+  createEstacionDeBicing(dataEstacion: CreateInputEstacionBicing!): EstacionBicing!
+
+  updateEstacionDeBicing(id: ID!, dataEstacion: updateEstacionInput!): EstacionBicing!
+
+  deleteEstacionDeBicing(id: ID!): Boolean!
 }
