@@ -165,7 +165,7 @@ describe('RecorridosRepository - CRUD (mocked pool)', () => {
     'origen',
     'destino',
     'fecha_recorrido'
-  ])('saveRecorrido rechaza cuando %s es null (NOT NULL)', async (campo) => {
+  ])('saveRecorrido: rechaza cuando %s es null (NOT NULL)', async (campo) => {
     const input = { ...mockInput };
     input[campo] = null;
 
