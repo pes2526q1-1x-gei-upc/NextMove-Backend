@@ -68,30 +68,25 @@ class RecorridosRepository {
     /** HACE EL INSERT DEL RECORRIDO EN LA BD*/
     /** En este caso podemos tener un error de constraint al insertar algún dato que nos viole algunta RI */
     async saveRecorrido(recorridoData) {
-        const pointOrigen = formatToPgPoint(recorridoData.origen); 
-        const  pointDestino = formatToPgPoint(recorridoData.destino); 
-        //console.log('datos de recorrido: ' + recorridoData); 
-        try {
-            const result = await pool.query(`
-                INSERT INTO recorridos(user_email, distancia, velocidad_media, co2, kcal, origen, destino, fecha_recorrido)
-                VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-                RETURNING *`, 
-            [
-                recorridoData.user_email, 
-                recorridoData.distancia, 
-                recorridoData.velocidad_media, 
-                recorridoData.co2, 
-                recorridoData.kcal, 
-                //coordenadas ya parseadas
-                pointOrigen, 
-                pointDestino, 
-                recorridoData.fecha_recorrido
-            ]); 
-            return this._transformRecorrido(result.rows[0]); 
-        } catch(error) {
-            throw error; 
-        }
-    }
+    const pointOrigen = formatToPgPoint(recorridoData.origen); 
+    const pointDestino = formatToPgPoint(recorridoData.destino); 
+
+    const result = await pool.query(`
+        INSERT INTO recorridos(user_email, distancia, velocidad_media, co2, kcal, origen, destino, fecha_recorrido)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *`, 
+      [
+        recorridoData.user_email, 
+        recorridoData.distancia, 
+        recorridoData.velocidad_media, 
+        recorridoData.co2, 
+        recorridoData.kcal, 
+        pointOrigen, 
+        pointDestino, 
+        recorridoData.fecha_recorrido
+      ]);
+    return this._transformRecorrido(result.rows[0]); 
+}
 
     /** ACTUALIZA EL RECORRIDO DEL USER EN CASO DE HABER ALGÚN ERROR (muy poco probable) de forma dinámica (aquellos campos que queramos) */
     async updateRecorrido(id, recorridoNuevaData) {
@@ -143,7 +138,8 @@ class RecorridosRepository {
         
         //caso en en el que no hay ningún campo que actualizar ==> retornamos este mismo recorrido. 
         if(fields.length === 0) {
-            return this._transformRecorrido(getRecorridoById(id)); 
+            const recorrido = await this.getRecorridoById(id);
+            return this._transformRecorrido(recorrido); 
         }
 
         values.push(id); 
@@ -154,12 +150,9 @@ class RecorridosRepository {
             WHERE id = $${paramIndex}
             RETURNING *
             `;
-        try {
-            const result = await pool.query(query, values); 
-            return this._transformRecorrido(result.rows[0]) || null; 
-        }catch(error) {
-            throw error;
-        }
+        const result = await pool.query(query, values); 
+        return this._transformRecorrido(result.rows[0]) || null; 
+
     }
     
     /** ELIMINA EL RECORRIDO CONCRETO */

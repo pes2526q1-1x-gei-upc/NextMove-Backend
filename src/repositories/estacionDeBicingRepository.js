@@ -22,33 +22,33 @@ const formatToPgPoint = (coords) => {
 };
 
 //Método que nos parse el contenido que recibimos por parte de la API a contenido insertable para la BD: 
-const parseApiToDbFormat = (apiData) => {
-    if (!apiData) return null;
-    //Prefiere primero station_id, sino id, sino null. 
-    const id = apiData.station_id || apiData.id || null;
-    //ídem. para nombre.
-    const nombre = apiData.name || apiData.nombre || null;
-    //ídem. para dirección. 
-    const direccion = apiData.address || apiData.direccion || null;
-    //ídem para plazasTotales.
-    const plazasTotales = apiData.capacity || apiData.plazasTotales || null;
+// const parseApiToDbFormat = (apiData) => {
+//     if (!apiData) return null;
+//     //Prefiere primero station_id, sino id, sino null. 
+//     const id = apiData.station_id || apiData.id || null;
+//     //ídem. para nombre.
+//     const nombre = apiData.name || apiData.nombre || null;
+//     //ídem. para dirección. 
+//     const direccion = apiData.address || apiData.direccion || null;
+//     //ídem para plazasTotales.
+//     const plazasTotales = apiData.capacity || apiData.plazasTotales || null;
 
-    // Coordenadas: intenta lat/lon directo o alternativas sencillas
-    const lat = apiData.lat || apiData.latitude || (apiData.coordenadas && (apiData.coordenadas.latitude || apiData.coordenadas.lat)) || null;
-    const lon = apiData.lon || apiData.longitude || (apiData.coordenadas && (apiData.coordenadas.longitude || apiData.coordenadas.lon)) || null;
-    const coordenadas = (lat && lon) ? formatToPgPoint({latitude: lat, longitude: lon}) : null;
+//     // Coordenadas: intenta lat/lon directo o alternativas sencillas
+//     const lat = apiData.lat || apiData.latitude || (apiData.coordenadas && (apiData.coordenadas.latitude || apiData.coordenadas.lat)) || null;
+//     const lon = apiData.lon || apiData.longitude || (apiData.coordenadas && (apiData.coordenadas.longitude || apiData.coordenadas.lon)) || null;
+//     const coordenadas = (lat && lon) ? formatToPgPoint({latitude: lat, longitude: lon}) : null;
 
-    const estacionCargaElectrica = (apiData.physical_configuration === "ELECTRICBIKESTATION") || (apiData.is_charging_station === true);
+//     const estacionCargaElectrica = (apiData.physical_configuration === "ELECTRICBIKESTATION") || (apiData.is_charging_station === true);
 
-    return {
-        id,
-        nombre,
-        direccion,
-        plazasTotales,
-        coordenadas,
-        estacionCargaElectrica
-    };
-};
+//     return {
+//         id,
+//         nombre,
+//         direccion,
+//         plazasTotales,
+//         coordenadas,
+//         estacionCargaElectrica
+//     };
+// };
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -95,26 +95,22 @@ class EstacionDeBicingRepository {
 
     /** MÉTODO QUE INSERTA LA ESTACIÓN EN LA BD */
     async createEstacionDeBicing(dataEstacion) {
-        //parseamos las coordenadas:
         const PointCoordenadas = formatToPgPoint(dataEstacion.coordenadas);
-        try {
-            const result = await pool.query(`
-                INSERT INTO EstacionBicing(id, nombre, direccion, plazastotales, coordenadas, estacioncargaelectrica)
-                VALUES($1, $2, $3, $4, $5, $6)
-                RETURNING *`,
-                [
-                    dataEstacion.id,
-                    dataEstacion.nombre,
-                    dataEstacion.direccion,
-                    dataEstacion.plazasTotales,
-                    PointCoordenadas,
-                    dataEstacion.estacionCargaElectrica
-                ]);
-            return this._transformEstacion(result.rows[0]);  
-        } catch(error) {
-            throw error;
-        }
+        const result = await pool.query(`
+            INSERT INTO EstacionBicing(id, nombre, direccion, plazastotales, coordenadas, estacioncargaelectrica)
+            VALUES($1, $2, $3, $4, $5, $6)
+            RETURNING *`,
+            [
+                dataEstacion.id,
+                dataEstacion.nombre,
+                dataEstacion.direccion,
+                dataEstacion.plazasTotales,
+                PointCoordenadas,
+                dataEstacion.estacionCargaElectrica
+            ]);
+        return this._transformEstacion(result.rows[0]);
     }
+
 
     /** MÉTODO QUE ACTUALIZA LA ESTACIÓN QUE SE PRECISA CON EL ID COMO PARÁMETRO DE ENTRADA */
     async updateEstacionDeBicing(id, changingData) {
@@ -165,24 +161,15 @@ class EstacionDeBicingRepository {
             WHERE (id = $${paramIndex})
             RETURNING *`;
 
-        try {
-            const result = await pool.query(query, values);
-            return this._transformEstacion(result.rows[0]) || null;  
-
-        } catch(error) {
-            throw error;
-        }
+        const result = await pool.query(query, values);
+        return this._transformEstacion(result.rows[0]) || null;
     }
 
     /** MÉTODO QUE ELIMINA LA ESTACIÓN QUE PRECISAMOS */
     async deleteEstacionBicing(id) {
-        try {
-            const result = await pool.query(`
-                DELETE FROM EstacionBicing WHERE(id = $1)`, [id]);
-            return result.rowCount > 0;
-        } catch(error) {
-            throw error;
-        }
+        const result = await pool.query(`
+            DELETE FROM EstacionBicing WHERE(id = $1)`, [id]);
+        return result.rowCount > 0;
     }
 
     /** MÉTODO DE SINCRONIZACIÓN  MASIVA NECESARIO PARA REALIZAR LAS ACTUALIZACIONES CADA 24 horas. 

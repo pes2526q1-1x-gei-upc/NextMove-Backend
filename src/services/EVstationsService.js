@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+//import fetch from 'node-fetch';
 import {calculateDistance}  from '../utils/maths.js';
 
 
@@ -54,7 +54,7 @@ export default class StationsService {
   }
 
   async getStationsByCity(city) {
-    const stations =  stationsCache;
+    //const stations =  stationsCache;
     
     return stationsCache.filter(station => {
       const stationCity = station.properties.ciutat || '';

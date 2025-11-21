@@ -4,7 +4,7 @@
   import { friendshipResolvers } from './FriendshipResolvers.js';
   import { recorridosResolver } from './RecorridoResolver.js';
   import { assessmentResolver } from './AssessmentResolvers.js';
-  import { createSourceEventStream } from 'graphql';
+  //import { createSourceEventStream } from 'graphql';
 
 
   export const resolvers = {

@@ -46,13 +46,8 @@ export const assessmentResolver = {
             }
         },
         deleteAssessment: async (_, { nickname, station_id }) => {
-            try{
-                const assessmentData = { nickname, station_id };
-                return await assessmentRepository.DeleteAssessment(assessmentData);
-            }
-            catch(error){
-                throw error;
-            }
+            const assessmentData = { nickname, station_id };
+            return await assessmentRepository.DeleteAssessment(assessmentData);
         },
         editAssessment: async (_, { nickname, station_id, score, comments }) => {
             try{

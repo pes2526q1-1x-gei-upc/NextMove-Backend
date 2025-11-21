@@ -37,8 +37,8 @@ class BicingSyncWorker {
         this.dynamicTimer = null;
         this.staticTimer = null;
 
-        this.DYNAMIC_SYNC_INTERVAL = 5 * 60 * 1000;       // 5 minutos
-        this.STATIC_SYNC_INTERVAL = 24 * 60 * 60 * 1000;  // 24 horas
+        this.DYNAMIC_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutos
+        this.STATIC_SYNC_INTERVAL = 24 * 60 * 60 * 1000; // 24 horas
 
         this.estacionesCache = [];
 

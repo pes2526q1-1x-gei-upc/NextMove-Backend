@@ -75,7 +75,7 @@ export const estacionDeBicingResolver = {
                 const hayCambios = Object.values(input).some(v => v !== undefined); 
                 if(!hayCambios) {
                     const estacionActual =  getEstacionById(id); 
-                    if(!estacionAcual) {
+                    if(!estacionActual) {
                         throw new Error('La estación que precisas no existe.');  
                     }
                     else return estacionActual; 

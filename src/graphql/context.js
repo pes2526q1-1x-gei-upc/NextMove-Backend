@@ -12,13 +12,10 @@ export async function createContext(req, res) {
   const token = authService.extractToken(authHeader);
   let user = null;
   // console.log(token);
-  if (token) {
-    try {
-      user = await authService.verifyToken(token);
-    } catch (error) {
-      throw error;
-    }
-  }
+if (token) {
+  user = await authService.verifyToken(token);
+}
+
   
   return {
     user,           // Usuario autenticado (null si no hay token válido)
