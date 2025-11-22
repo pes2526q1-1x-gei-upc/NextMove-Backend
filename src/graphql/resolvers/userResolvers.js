@@ -11,7 +11,7 @@ export const userResolvers = {
         }
         
         const user = context.user;
-        let dbUser = await usersRepo.getUserByEmail(context.user.email);
+        const dbUser = await usersRepo.getUserByEmail(context.user.email);
         
         return dbUser;
         
