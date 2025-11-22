@@ -26,6 +26,7 @@
       recorridosByUser: recorridosResolver.Query.recorridosByUser,
       getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
       getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
+      BlockList: friendshipResolvers.Query.BlockList,
     },
     Mutation: {
       createUser: userResolvers.Mutation.createUser,
@@ -43,6 +44,8 @@
       deleteEstacionDeBicing: estacionDeBicingResolver.Mutation.deleteEstacionDeBicing,
       createAssessment: assessmentResolver.Mutation.createAssessment,
       deleteAssessment: assessmentResolver.Mutation.deleteAssessment,
-      editAssessment: assessmentResolver.Mutation.editAssessment
+      editAssessment: assessmentResolver.Mutation.editAssessment,
+      BlockUser: friendshipResolvers.Mutation.BlockUser,
+      UnBlockUser: friendshipResolvers.Mutation.UnBlockUser,
     }
   };
