@@ -35,7 +35,38 @@ class FriendshipRepository {
         
         return result.rowCount > 0;
     }
-    
+    async getBlockList(email){   //nickname1=blocker, nickname2=blocked
+        const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+        const result = await pool.query(`
+        SELECT nickname2 AS blocked
+        FROM bloqueados
+        WHERE nickname1 = $1
+        `, [user.rows[0].nickname]);
+        return result.rows;
+    }
+    async blockUser(email, nickname2){
+        const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+        await this.removeFriendship(user.rows[0].nickname, nickname2);
+        const result = await pool.query(`
+        INSERT INTO bloqueados (nickname1, nickname2)
+        VALUES ($1, $2)
+        `, [user.rows[0].nickname, nickname2]);
+        return result.rowCount > 0;
+    }
+    async unBlockUser(email, nickname2){
+        const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+        const result = await pool.query(`
+        DELETE FROM bloqueados
+        WHERE nickname1 = $1 AND nickname2 = $2
+        `, [user.rows[0].nickname, nickname2]);
+        return result.rowCount > 0;
+    }
 }
 
 export default FriendshipRepository;
