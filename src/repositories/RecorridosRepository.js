@@ -21,6 +21,21 @@ const formatToPgPoint = (coords) => {
     return `(${coords.longitude}, ${coords.latitude})`; 
 };
 
+// Formatea una fecha (Date, timestamp string o epoch ms) a "DD/MM/YYYY HH:mm:ss (UTC)"
+const formatDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    const pad = (n) => String(n).padStart(2, '0');
+    const day = pad(date.getUTCDate());
+    const month = pad(date.getUTCMonth() + 1);
+    const year = date.getUTCFullYear();
+    const hours = pad(date.getUTCHours());
+    const minutes = pad(date.getUTCMinutes());
+    const seconds = pad(date.getUTCSeconds());
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds} (UTC)`;
+};
+
 ////////////////////////////////////////////////////////////////////////
 
 class RecorridosRepository {
@@ -35,6 +50,11 @@ class RecorridosRepository {
         // Aplicamos el mapeo de nombres de propiedades
         transformed.origen = parsePgPoint(recorrido.origen);
         transformed.destino = parsePgPoint(recorrido.destino);
+
+        // Formateamos la fecha para mostrar día/mes/año y hora (UTC)
+        if (recorrido.fecha_recorrido) {
+            transformed.fecha_recorrido = formatDate(recorrido.fecha_recorrido);
+        }
 
         return transformed;
     }
@@ -72,21 +92,31 @@ class RecorridosRepository {
         const  pointDestino = formatToPgPoint(recorridoData.destino); 
         //console.log('datos de recorrido: ' + recorridoData); 
         try {
-            const result = await pool.query(`
-                INSERT INTO recorridos(user_email, distancia, velocidad_media, co2, kcal, origen, destino, fecha_recorrido)
-                VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-                RETURNING *`, 
-            [
-                recorridoData.user_email, 
-                recorridoData.distancia, 
-                recorridoData.velocidad_media, 
-                recorridoData.co2, 
-                recorridoData.kcal, 
-                //coordenadas ya parseadas
-                pointOrigen, 
-                pointDestino, 
-                recorridoData.fecha_recorrido
-            ]); 
+                let fechaParam = recorridoData.fecha_recorrido;
+                // Si no se proporciona fecha_recorrido, usar la fecha actual en ISO
+                if (fechaParam === undefined || fechaParam === null || fechaParam === '') {
+                    fechaParam = new Date().toISOString();
+                } else {
+                    // Si es un número o una cadena numérica, interpretarlo como epoch ms
+                    if (typeof fechaParam === 'number' || /^[0-9]+$/.test(String(fechaParam))) {
+                        fechaParam = new Date(Number(fechaParam)).toISOString();
+                    }
+                }
+                const result = await pool.query(`
+                    INSERT INTO recorridos(user_email, distancia, velocidad_media, co2, kcal, origen, destino, fecha_recorrido)
+                    VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+                    RETURNING *`, 
+                [
+                    recorridoData.user_email, 
+                    recorridoData.distancia, 
+                    recorridoData.velocidad_media, 
+                    recorridoData.co2, 
+                    recorridoData.kcal, 
+                    //coordenadas ya parseadas
+                    pointOrigen, 
+                    pointDestino, 
+                    fechaParam
+                ]); 
             return this._transformRecorrido(result.rows[0]); 
         } catch(error) {
             throw error; 
@@ -99,51 +129,56 @@ class RecorridosRepository {
         const values = []; 
         let paramIndex = 1; //primero apunta al primer argumento que pasamos. 
 
-        if(recorridoNuevaData.user_email !== undefined) {
+        if(recorridoNuevaData.user_email !== undefined && recorridoNuevaData.user_email !== null) {
             fields.push(`user_email = $${paramIndex++}`); 
             values.push(recorridoNuevaData.user_email); 
         }
         
-        if(recorridoNuevaData.distancia !== undefined) {
+        if(recorridoNuevaData.distancia !== undefined && recorridoNuevaData.distancia !== null) {
             fields.push(`distancia = $${paramIndex++}`); 
             values.push(recorridoNuevaData.distancia); 
         }
 
-        if(recorridoNuevaData.velocidad_media !== undefined) {
+        if(recorridoNuevaData.velocidad_media !== undefined && recorridoNuevaData.velocidad_media !== null) {
             fields.push(`velocidad_media = $${paramIndex++}`) ; 
             values.push(recorridoNuevaData.velocidad_media); 
         }
 
-        if(recorridoNuevaData.co2 !== undefined) {
+        if(recorridoNuevaData.co2 !== undefined && recorridoNuevaData.co2 !== null) {
             fields.push(`co2 = $${paramIndex++}`); 
             values.push(recorridoNuevaData.co2); 
         }
 
-        if(recorridoNuevaData.kcal !== undefined) {
+        if(recorridoNuevaData.kcal !== undefined && recorridoNuevaData.kcal !== null) {
             fields.push(`kcal = $${paramIndex++}`); 
             values.push(recorridoNuevaData.kcal); 
         }
 
-        if(recorridoNuevaData.origen !== undefined) {
+        if(recorridoNuevaData.origen !== undefined && recorridoNuevaData.origen !== null) {
             fields.push(`origen = $${paramIndex++}`); 
             //parseamos antes de pushear el valor.
             values.push(formatToPgPoint(recorridoNuevaData.origen)); 
         }
 
-        if(recorridoNuevaData.destino !== undefined) {
+        if(recorridoNuevaData.destino !== undefined && recorridoNuevaData.destino !== null) {
             fields.push(`destino = $${paramIndex++}`); 
             //parseamos antes de insertar. 
             values.push(formatToPgPoint(recorridoNuevaData.destino)); 
         }
 
-        if(recorridoNuevaData.fecha_recorrido !== undefined) {
+        if(recorridoNuevaData.fecha_recorrido !== undefined && recorridoNuevaData.fecha_recorrido !== null) {
             fields.push(`fecha_recorrido = $${paramIndex++}`); 
-            values.push(recorridoNuevaData.fecha_recorrido); 
+            // soportar epoch ms (number o string) -> convertir a ISO antes de insertar
+            let fechaVal = recorridoNuevaData.fecha_recorrido;
+            if (typeof fechaVal === 'number' || /^[0-9]+$/.test(String(fechaVal))) {
+                fechaVal = new Date(Number(fechaVal)).toISOString();
+            }
+            values.push(fechaVal);
         }
         
         //caso en en el que no hay ningún campo que actualizar ==> retornamos este mismo recorrido. 
         if(fields.length === 0) {
-            return this._transformRecorrido(getRecorridoById(id)); 
+            return await this.getRecorridoById(id);
         }
 
         values.push(id); 
