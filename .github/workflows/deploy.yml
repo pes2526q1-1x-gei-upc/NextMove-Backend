@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - feature-231/CI-CD
+      - release/*
 
 jobs:
   deploy:
@@ -22,18 +22,17 @@ jobs:
         run: |
           if [ "${GITHUB_REF##*/}" == "main" ]; then
             echo "servicio=pro-backend" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF##*/}" == "dev" ]; then
+          elif [[ "${GITHUB_REF##*/}" == release/* ]]; then
             echo "servicio=pre-backend" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF##*/}" == "dev" ]; then
+            echo "servicio=test-backend" >> $GITHUB_OUTPUT
           elif [ "${GITHUB_REF##*/}" == "refactor/linters" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
           elif [ "${GITHUB_REF##*/}" == "test-CD" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF##*/}" == "CI-CD" ]; then           # Para tu rama feature-231/CI-CD
-            echo "servicio=test-backend" >> $GITHUB_OUTPUT
           else
             echo "servicio=none" >> $GITHUB_OUTPUT
           fi
-
 
       - name: Desplegar servicio en EC2
         if: steps.vars.outputs.servicio != 'none'
