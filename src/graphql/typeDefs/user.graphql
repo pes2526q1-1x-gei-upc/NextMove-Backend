@@ -76,6 +76,13 @@ extend type Query {
   Lista todos los usuarios.
   """
   Users: [User!]!
+
+  """
+  Obtiene el/los usuario/s con matching parcial tales que empiezan por el parámetro nickname. 
+  Null, si no hay matching.
+  """
+  UsersByNickname(nickname: String!): [User!]!
+
 }
 
 extend type Mutation {

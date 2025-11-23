@@ -32,7 +32,12 @@ export const userResolvers = {
     Users: async () => {
       return await usersRepo.getAllUsers();
     },
+
+    UsersByNickname: async (_, { nickname }) => {
+      return await usersRepo.getUsersByNickname(nickname);
+    }
   },
+
   
   Mutation: {
     createUser: async (_, { createInfo }) => {

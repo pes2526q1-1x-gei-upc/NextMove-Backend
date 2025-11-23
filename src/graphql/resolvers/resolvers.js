@@ -13,17 +13,23 @@
       me: userResolvers.Query.me,
       User: userResolvers.Query.User,
       Users: userResolvers.Query.Users,
+      UsersByNickname: userResolvers.Query.UsersByNickname,
+      
       stations: EVStationResolvers.Query.stations,
       station: EVStationResolvers.Query.station,
       nearbyStations: EVStationResolvers.Query.nearbyStations,
+
       getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
       getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
       getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
+      
       ListFriends: friendshipResolvers.Query.ListFriends,
       AllFriends: friendshipResolvers.Query.AllFriends,
+
       recorridos: recorridosResolver.Query.recorridos, 
       recorrido: recorridosResolver.Query.recorrido, 
       recorridosByUser: recorridosResolver.Query.recorridosByUser,
+
       getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
       getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
       BlockList: friendshipResolvers.Query.BlockList,
