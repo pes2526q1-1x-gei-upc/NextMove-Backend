@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - test_AWS_conexion
+      - feature-231/CI-CD
 
 jobs:
   deploy:
