@@ -74,6 +74,15 @@ async getUsersByNickname(nickname) {
     return result.rows;
 }
 
+async existsUserByNickname(nickname) {
+    const result = await pool.query(`
+      SELECT 1
+      FROM users
+      WHERE nickname = $1
+    `, [nickname]);
+    return result.rows.length > 0;
+}
+
   /**
    * Crear nuevo usuario
    */
@@ -98,7 +107,7 @@ async getUsersByNickname(nickname) {
           bio_description,
           birth_date
         )
-        VALUES ($1, $2, $3, $4, $5::mode , $6, $7, $8::date)
+        VALUES ($1, $2, $3, $4, $5::"MODE" , $6, $7, $8::date)
         RETURNING 
           email,
           name AS "name",
@@ -155,7 +164,7 @@ async getUsersByNickname(nickname) {
       values.push(changingData.bioDescription);
     }
     if (changingData.preferredMode !== undefined) {
-      fields.push(`preferred_mode = $${paramIndex++}::mode`);
+      fields.push(`preferred_mode = $${paramIndex++}::"MODE"`);
       values.push(changingData.preferredMode);
     }
     if (changingData.preferredLanguage !== undefined) {
