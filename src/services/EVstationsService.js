@@ -1,90 +1,113 @@
-import fetch from 'node-fetch';
-import {calculateDistance}  from '../utils/maths.js';
+import StationsRepository from '../repositories/EVStationsRepository.js';
+import { mapRepositoryToGraphQL } from '../utils/EVStationsMapper.js';
 
-
-
-let stationsCache = null;
+let dynamicCache = new Map();
 let lastFetch = null;
 
-const CACHE_DURATION = 5 * 60 * 1000; 
+const CACHE_DURATION = 5 * 60 * 1000;
 
 export default class StationsService {
-  
-  // TODO: Most of the static data queries should be fetched in DB instead of service!
-  async fetchAllStations() {
-    if (stationsCache && lastFetch) {
-      console.log('Returning cached stations');
-      return stationsCache;
+  constructor() {
+    this.repository = new StationsRepository();
+  }
+
+  async getAllStations() {
+    try {
+      const dbStations = await this.repository.getAllStations();
+      
+      return dbStations.map(dbStation => {
+        const dynamicData = dynamicCache.get(dbStation.id);
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
+    } catch (error) {
+      console.error('Error in getAllStations:', error);
+      throw error;
     }
-    
-    // Return null if there is no data in cache. We should return the data in database for offline cases.
-    return null;
   }
 
   async getStationById(id) {
-    const stations = stationsCache;
-    const station = stations.find(s => s.properties.id === id);
-    return station || null;
+    try {
+      const dbStation = await this.repository.getStationById(id);
+      if (!dbStation) return null;
+      
+      const dynamicData = dynamicCache.get(dbStation.id);
+      return mapRepositoryToGraphQL(dbStation, dynamicData);
+    } catch (error) {
+      console.error('Error in getStationById:', error);
+      throw error;
+    }
   }
 
   async searchStationsByLocation(lat, lon, radiusKm = 5) {
-    
-    const nearby = stationsCache
-      .map(station => {
-        const [stationLon, stationLat] = station.geometry.coordinates;
-        const distance = calculateDistance(lat, lon, stationLat, stationLon);
-        return { ...station, distance };
-      })
-      .filter(station => station.distance <= radiusKm)
-      .sort((a, b) => a.distance - b.distance);
-    
-    return nearby;
+    try {
+      const dbStations = await this.repository.getNearbyStations(lat, lon, radiusKm);
+      
+      return dbStations.map(dbStation => {
+        const dynamicData = dynamicCache.get(dbStation.id);
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
+    } catch (error) {
+      console.error('Error searching stations by location:', error);
+      return [];
+    }
   }
 
   async getStationsInBounds(bounds) {
-    const stations = stationsCache;
-    
-    return stations.filter(station => {
-      const [lon, lat] = station.geometry.coordinates;
-      return lat >= bounds.south && 
-             lat <= bounds.north && 
-             lon >= bounds.west && 
-             lon <= bounds.east;
-    });
+    try {
+      const dbStations = await this.repository.getStationsInBounds(
+        bounds.north,
+        bounds.south,
+        bounds.east,
+        bounds.west
+      );
+      
+      return dbStations.map(dbStation => {
+        const dynamicData = dynamicCache.get(dbStation.id); 
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
+    } catch (error) {
+      console.error('Error getting stations in bounds:', error);
+      return [];
+    }
   }
 
   async getStationsByCity(city) {
-    const stations =  stationsCache;
-    
-    return stationsCache.filter(station => {
-      const stationCity = station.properties.ciutat || '';
-      return stationCity.toLowerCase().includes(city.toLowerCase());
-    });
+    try {
+      const dbStations = await this.repository.getStationsByCity(city);
+      
+      return dbStations.map(dbStation => {
+        const dynamicData = dynamicCache.get(dbStation.id);  
+        return mapRepositoryToGraphQL(dbStation, dynamicData);
+      });
+    } catch (error) {
+      console.error('Error getting stations by city:', error);
+      return [];
+    }
   }
 
-
+  getDynamicData(id) {
+    return dynamicCache.get(id);  
+  }
 
   getCachedStations() {
-
-  
     return {
-      stations: stationsCache,
+      stations: dynamicCache,
       lastFetch: lastFetch ? new Date(lastFetch) : null,
-      count: stationsCache ? stationsCache.length : 0,
+      count: dynamicCache.size,
       isFresh: lastFetch && Date.now() - lastFetch < CACHE_DURATION
     };
   }
 
   clearCache() {
-    stationsCache = null;
+    dynamicCache.clear();
     lastFetch = null;
-    console.log('Cache cleared');
+    console.log('Dynamic cache cleared');
   }
 
-  async forceRefresh(data) {
+  async forceRefresh(dynamicDataMap) {
     this.clearCache();
-    stationsCache = data;
+    dynamicCache = dynamicDataMap;
     lastFetch = Date.now();
-    console.log('Cache refreshed correctly!');
+    console.log(`Dynamic cache refreshed with ${dynamicCache.size} stations`);
   }
 }
