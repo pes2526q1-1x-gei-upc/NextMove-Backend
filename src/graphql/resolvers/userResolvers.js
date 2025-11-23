@@ -54,7 +54,7 @@ export const userResolvers = {
         const existingUserByNickname = await usersRepo.existsUserByNickname(nickname);
         console.log('Existing user by nickname check: ', existingUserByNickname);
         // getUsersByNickname returns an array; an empty array means no user found
-        if (Array.isArray(existingUserByNickname) && existingUserByNickname.length > 0) {
+        if (existingUserByNickname) {
           throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
         }
         
@@ -111,7 +111,7 @@ export const userResolvers = {
         if (nickname !== undefined) {
           if (nickname !== user.nickname) {
             const existingUser = await usersRepo.existsUserByNickname(nickname);
-            if (Array.isArray(existingUser) && existingUser.length > 0) {
+            if (existingUser) {
               throw new Error(`El nickname ${nickname} ya está en uso`);
             }
           }
