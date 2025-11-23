@@ -51,7 +51,7 @@ export const userResolvers = {
           throw new Error(`Ya existe un usuario con el email: ${email}`);
         }
         
-        const existingUserByNickname = await usersRepo.getUserByNickname(nickname);
+        const existingUserByNickname = await usersRepo.getUsersByNickname(nickname);
         console.log('Existing user by nickname check: ', existingUserByNickname);
         if (existingUserByNickname) {
           throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
@@ -109,7 +109,7 @@ export const userResolvers = {
         if (name !== undefined) changingData.name = name;
         if (nickname !== undefined) {
           if (nickname !== user.nickname) {
-            const existingUser = await usersRepo.getUserByNickname(nickname);
+            const existingUser = await usersRepo.getUsersByNickname(nickname);
             if (existingUser) {
               throw new Error(`El nickname ${nickname} ya está en uso`);
             }
