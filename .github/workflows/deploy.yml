@@ -1,0 +1,48 @@
+name: Despliegue Docker EC2 Automático
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - test_AWS_conexion
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Key
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Definir servicio según rama
+        id: vars
+        run: |
+          if [ "${GITHUB_REF##*/}" == "main" ]; then
+            echo "servicio=pro-backend" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF##*/}" == "dev" ]; then
+            echo "servicio=pre-backend" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF##*/}" == "refactor/linters" ]; then
+            echo "servicio=test-backend" >> $GITHUB_OUTPUT
+          else
+            echo "servicio=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Desplegar servicio en EC2
+        if: steps.vars.outputs.servicio != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # recuerda NO usar GITHUB_TOKEN
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            cd /home/ubuntu/BeMotion  # Cambia la ruta si tu repo está en otro sitio
+            git fetch --all
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+            docker-compose build \
+              --build-arg GITHUB_TOKEN=${GH_TOKEN} \
+              --build-arg GIT_BRANCH=${{ github.ref_name }} \
+              ${{ steps.vars.outputs.servicio }}
+            docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
+          EOF
