@@ -18,7 +18,7 @@ export const up = (pgm) => {
   pgm.addConstraint('favstation', 'favstation_user_id_fkey', {
     foreignKeys: {
       columns: 'user_id',
-      references: '"users"(id)'
+      references: '"users"(email)'
     }
   });
   pgm.addConstraint('favstation', 'favstation_station_id_fkey', {

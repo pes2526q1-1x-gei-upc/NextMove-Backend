@@ -18,7 +18,7 @@ export const up = (pgm) => {
     estacionCargaElectrica: { type: 'boolean', notNull: true }
   });
 
-  pgm.addConstraint('estacionbicing', 'estacionbicing_plazasTotales_check', 'CHECK (plazasTotales >= 0)');
+  pgm.addConstraint('estacionbicing', 'estacionbicing_plazasTotales_check', 'CHECK ("plazasTotales" >= 0)');
 };
 
 export const down = (pgm) => {

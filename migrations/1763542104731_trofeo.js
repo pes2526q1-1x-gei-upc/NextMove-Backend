@@ -15,9 +15,9 @@ export const up = (pgm) => {
     imagen: { type: 'varchar(100)', notNull: true, unique: true },
     descripcion: { type: 'varchar(200)' },
     nombre: { type: 'varchar(200)', notNull: true, unique: true },
-    valorNecesario: { type: 'integer' }
+    valor_necesario: { type: 'integer' }
   });
-  pgm.addConstraint('trofeo', 'trofeo_valorNecesario_check', 'CHECK (valorNecesario > 0)');
+  pgm.addConstraint('trofeo', 'trofeo_valorNecesario_check', 'CHECK (valor_necesario > 0)');
 };
 
 export const down = (pgm) => {
