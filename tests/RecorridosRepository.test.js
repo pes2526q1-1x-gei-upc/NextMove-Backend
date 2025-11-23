@@ -1,4 +1,4 @@
-import { mergeConfig } from 'axios';
+//import { mergeConfig } from 'axios';
 import { applyDatabaseMock, mockQuery } from './helpers/databaseMock.js';
 await applyDatabaseMock();
 const { default: RecorridosRepository } = await import('../src/repositories/RecorridosRepository.js');
