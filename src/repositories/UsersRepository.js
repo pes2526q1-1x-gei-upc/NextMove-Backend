@@ -51,7 +51,7 @@ class UsersRepository {
   /**
    * Obtener usuario por nickname
    */
-  async getUserByNickname(nickname) {
+async getUsersByNickname(nickname) {
     const result = await pool.query(`
       SELECT 
         email,
@@ -65,10 +65,14 @@ class UsersRepository {
         bio_description AS "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
       FROM users
-      WHERE nickname = $1
-    `, [nickname]);
-    return result.rows[0];
-  }
+      WHERE nickname ILIKE $1
+      ORDER BY nickname
+    `, [`${nickname}%`]);
+    
+    // console.log("Datos:", result.rows);
+    
+    return result.rows;
+}
 
   /**
    * Crear nuevo usuario
