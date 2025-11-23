@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Setup SSH Key
-        uses: webfactory/ssh-agent@v0.7.0
+        uses: webfactory/ssh-agent@v0.7.
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
@@ -26,9 +26,14 @@ jobs:
             echo "servicio=pre-backend" >> $GITHUB_OUTPUT
           elif [ "${GITHUB_REF##*/}" == "refactor/linters" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF##*/}" == "test-CD" ]; then
+            echo "servicio=test-backend" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF##*/}" == "CI-CD" ]; then           # Para tu rama feature-231/CI-CD
+            echo "servicio=test-backend" >> $GITHUB_OUTPUT
           else
             echo "servicio=none" >> $GITHUB_OUTPUT
           fi
+
 
       - name: Desplegar servicio en EC2
         if: steps.vars.outputs.servicio != 'none'
