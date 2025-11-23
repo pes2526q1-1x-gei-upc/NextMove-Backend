@@ -1,4 +1,4 @@
-import { mergeConfig } from 'axios';
+//import { mergeConfig } from 'axios';
 import { applyDatabaseMock, mockQuery } from './helpers/databaseMock.js';
 await applyDatabaseMock();
 const { default: RecorridosRepository } = await import('../src/repositories/RecorridosRepository.js');
@@ -85,7 +85,7 @@ describe('RecorridosRepository - CRUD (mocked pool)', () => {
   }); 
 
 
-  test('saveRecorrido: llama a pool.query con POINTs correctamente formateados y retorna el objeto transformado', async() => {
+  test('saveRecorrido: llama a pool.query con POINTs correctamente formateados y retorna el objeto transformado', async () => {
     mockQuery.mockResolvedValueOnce({ rows: [mockDbRow] }); 
     const repo = new RecorridosRepository(); 
     const res = await repo.saveRecorrido(mockInput); 
@@ -113,8 +113,8 @@ describe('RecorridosRepository - CRUD (mocked pool)', () => {
 
     // Configuramos mock: primera llamada -> SELECT (getRecorridoById), segunda -> UPDATE
     mockQuery
-    .mockResolvedValueOnce({ rows: [existingRow] }) //Resultado de la llamada al getRecorridosById. 
-    .mockResolvedValueOnce({ rows: [updatedRow] }); //Resultado de UPDATE. 
+      .mockResolvedValueOnce({ rows: [existingRow] }) //Resultado de la llamada al getRecorridosById. 
+      .mockResolvedValueOnce({ rows: [updatedRow] }); //Resultado de UPDATE. 
 
     const repo = new RecorridosRepository();
 
@@ -249,19 +249,19 @@ describe('RecorridosRepository - CRUD (mocked pool)', () => {
 
 
   test('updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo distancia)', async () => {
-      const existingRow = { ...mockDbRow };
-      mockQuery.mockRejectedValueOnce(Object.assign(new Error('invalid input syntax'), { code: '22P02' }));
+    const existingRow = { ...mockDbRow };
+    mockQuery.mockRejectedValueOnce(Object.assign(new Error('invalid input syntax'), { code: '22P02' }));
       
-      const repo = new RecorridosRepository();
-      await expect(repo.updateRecorrido(existingRow.id, { distancia: 'no_soy_un_número' })).rejects.toThrow();
+    const repo = new RecorridosRepository();
+    await expect(repo.updateRecorrido(existingRow.id, { distancia: 'no_soy_un_número' })).rejects.toThrow();
   });
      
-   test('updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo co2)', async () => {
-      const existingRow = { ...mockDbRow };
-      mockQuery.mockRejectedValueOnce(Object.assign(new Error('invalid input syntax'), { code: '22P02' }));
+  test('updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo co2)', async () => {
+    const existingRow = { ...mockDbRow };
+    mockQuery.mockRejectedValueOnce(Object.assign(new Error('invalid input syntax'), { code: '22P02' }));
       
-      const repo = new RecorridosRepository();
-      await expect(repo.updateRecorrido(existingRow.id, { co2: 'no_soy_un_número' })).rejects.toThrow();
+    const repo = new RecorridosRepository();
+    await expect(repo.updateRecorrido(existingRow.id, { co2: 'no_soy_un_número' })).rejects.toThrow();
   });
 
   test('updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo kcal)', async () => {

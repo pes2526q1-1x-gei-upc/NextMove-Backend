@@ -84,7 +84,7 @@ export default class StationsService {
   async forceRefresh(data) {
     this.clearCache();
     stationsCache = data;
-    lastFetch = Date.now()
+    lastFetch = Date.now();
     console.log('Cache refreshed correctly!');
   }
 }
