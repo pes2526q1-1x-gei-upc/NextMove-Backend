@@ -10,7 +10,7 @@ export const shorthands = undefined;
  */
 export const up = (pgm) => {
   pgm.createTable('mensaje', {
-    user_id: { type: 'varchar(100)', notNull: true },
+    user_email: { type: 'varchar(100)', notNull: true },
     cuerpo: { type: 'varchar(200)' },
     chat_id: { type: 'varchar(100)', notNull: true },
     imagen: { type: 'varchar(200)' },
@@ -20,8 +20,8 @@ export const up = (pgm) => {
   });
   pgm.addConstraint('mensaje', 'mensaje_user_id_fkey', {
     foreignKeys: {
-      columns: 'user_id',
-      references: '"users"(id)'
+      columns: 'user_email',
+      references: '"users"(email)'
     }
   });
   pgm.addConstraint('mensaje', 'mensaje_chat_id_fkey', {

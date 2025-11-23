@@ -50,22 +50,27 @@ export const up = (pgm) => {
 
   // Bloqueados
   pgm.createTable('bloqueados', {
-    id1: { type: 'varchar(20)', notNull: true },
-    id2: { type: 'varchar(20)', notNull: true }
-  }, { primaryKey: ['id1', 'id2'] });
-  pgm.addConstraint('bloqueados', 'bloqueados_id1_fkey', {
+    nickname1: { type: 'varchar(50)', notNull: true },
+    nickname2: { type: 'varchar(50)', notNull: true }
+  }, { primaryKey: ['nickname1', 'nickname2'] });
+  
+  pgm.addConstraint('bloqueados', 'bloqueados_nickname1_fkey', {
     foreignKeys: {
-      columns: 'id1',
-      references: '"users"(id)'
+      columns: 'nickname1',
+      references: '"users"(nickname)',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
     }
   });
-  pgm.addConstraint('bloqueados', 'bloqueados_id2_fkey', {
+  pgm.addConstraint('bloqueados', 'bloqueados_nickname2_fkey', {
     foreignKeys: {
-      columns: 'id2',
-      references: '"users"(id)'
+      columns: 'nickname2',
+      references: '"users"(nickname)',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
     }
   });
-  pgm.addConstraint('bloqueados', 'bloqueados_no_self', 'CHECK (id1 <> id2)');
+  pgm.addConstraint('bloqueados', 'bloqueados_no_self', 'CHECK (nickname1 <> nickname2)');
 
 };
 
