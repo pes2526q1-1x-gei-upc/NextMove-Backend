@@ -5,10 +5,12 @@ type friendship{
 
 type friend{
     name: String!
+    photo: String
 }
 
 type blockedUser{
     blocked: String!
+    photo: String
 }
 
 extend type Query{
@@ -19,7 +21,7 @@ extend type Query{
 
 extend type Mutation {
     AddFriendship(nickname: String!): friendship!
-    RemoveFriendship(nickname: String!): Boolean!
+    RemoveFriendship(nickname: String!): String
     BlockUser(nickname: String!): Boolean!
     UnBlockUser(nickname: String!): Boolean!
 }
