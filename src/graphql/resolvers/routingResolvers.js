@@ -2,7 +2,12 @@ import googleMapsService from '../../services/googleMapsService.js';
 
 const routingResolvers = {
   Query: {
-    computeRoute: async (_, { input }) => {
+    computeRoute: async (_, { input }, context) => {
+
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+
       try {
         if (Math.abs(input.origin.latitude) > 90 || Math.abs(input.origin.longitude) > 180 ||
             Math.abs(input.destination.latitude) > 90 || Math.abs(input.destination.longitude) > 180) {
@@ -40,7 +45,11 @@ const routingResolvers = {
       }
     },
 
-    searchLocation: async (_, { address }) => {
+    searchLocation: async (_, { address }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+
       try {
         if (!address || address.trim().length === 0) {
           throw new Error('La dirección no puede estar vacía');
@@ -53,7 +62,11 @@ const routingResolvers = {
       }
     },
 
-    reverseGeocode: async (_, { coordinates }) => {
+    reverseGeocode: async (_, { coordinates }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+
       try {
         if (Math.abs(coordinates.latitude) > 90 || Math.abs(coordinates.longitude) > 180) {
           throw new Error('Coordenadas fuera de rango válido');

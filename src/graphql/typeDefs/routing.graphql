@@ -1,4 +1,8 @@
-# src/graphql/typeDefs/routing.graphql
+"""
+API de enrutamiento y geocodificación usando Google Maps.
+Se necesita estar autenticado para usar estas consultas.
+Se espera que en el header de la request haya: "Authorization": "Bearer <token>"
+"""
 
 extend type Query {
   """
