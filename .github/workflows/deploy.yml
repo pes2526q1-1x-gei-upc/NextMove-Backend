@@ -41,17 +41,14 @@ jobs:
           GIT_BRANCH: ${{ steps.vars.outputs.git_branch }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            cd /home/ubuntu
-            if [ ! -d BeMotion/.git ]; then
-              git clone https://github.com/pes2526q1-1x-gei-upc/NextMove-Backend.git BeMotion
-            fi
-            cd BeMotion
-            git fetch --all
-            git checkout ${GIT_BRANCH}
-            git pull origin ${GIT_BRANCH}
-            docker-compose build \
-              --build-arg GITHUB_TOKEN=${GH_TOKEN} \
-              --build-arg GIT_BRANCH=${GIT_BRANCH} \
-              ${{ steps.vars.outputs.servicio }}
-            docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
-          EOF
+          cd /home/ubuntu/BeMotion
+          git fetch --all
+          git checkout ${GIT_BRANCH}
+          git pull origin ${GIT_BRANCH}
+          docker-compose build \
+            --build-arg GITHUB_TOKEN=${GH_TOKEN} \
+            --build-arg GIT_BRANCH=${GIT_BRANCH} \
+            ${{ steps.vars.outputs.servicio }}
+          docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
+        EOF
+
