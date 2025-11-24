@@ -50,5 +50,5 @@ jobs:
             --build-arg GIT_BRANCH=${GIT_BRANCH} \
             ${{ steps.vars.outputs.servicio }}
           docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
-        EOF
+          EOF
 
