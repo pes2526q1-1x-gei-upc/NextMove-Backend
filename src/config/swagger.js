@@ -19,7 +19,7 @@ const options = {
       },
       {
         url: 'http://51.94.90.40:3002/',
-        description: 'Servidor de producción'
+        description: 'Servidor de NextMove'
       }
     ],
     tags: [
