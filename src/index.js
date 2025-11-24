@@ -39,7 +39,7 @@ app.all(
   },
   createHandler({
     schema: schema,
-    context: (req, res) => createContext(req, res),
+    context: (req, res) => createContext(req, res)
   }),
 );
 

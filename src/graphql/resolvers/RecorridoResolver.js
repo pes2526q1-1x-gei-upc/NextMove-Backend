@@ -7,8 +7,12 @@ const recorridosRepo = new RecorridosRepository();
 export const recorridosResolver = {
 
   Query: {
-    recorridos: async () => {
+    recorridos: async (_, __, context) => {
       try {
+        //verificamos si se trata del user que ejecuta la funcionalidad para garantizar seguridad al sistema: 
+        if (!context || !context.user) {
+          throw new Error("No estás autenticado, debes inciar sesión!"); 
+        }
         const recorridos = await recorridosRepo.getAllRecorridos(); 
         if (recorridos.length === 0) {
           throw new Error("RecorridoResolver: No existen recorridos en tú sistema actualmente!"); 
@@ -20,8 +24,11 @@ export const recorridosResolver = {
       }
     },
 
-    recorrido: async (_, {id}) => {
+    recorrido: async (_, {id}, context) => {
       try {
+        if (!context || !context.user) {
+          throw new Error("RecorridoResolver: No existen recorridos en tú sistema actualmente!"); 
+        }
         const recorrido = await recorridosRepo.getRecorridoById(id); 
         if (!recorrido) {
           throw new Error("RecorridoResolver: El recorrido con ese ID no existe en el sistema!"); 
@@ -32,8 +39,11 @@ export const recorridosResolver = {
       } 
     },
 
-    recorridosByUser: async (_, {user_email}) => {
+    recorridosByUser: async (_, {user_email}, context) => {
       try {
+        if (!context || !context.user) {
+          throw new Error("No estás autenticado, debes inciar sesión!"); 
+        }
         const recorridos = await recorridosRepo.getRecorridosByUser(user_email); 
         if (recorridos.length === 0) {
           throw new Error("RecorridoResolver: El user no ha realizaod ningún recorrido!!!"); 
@@ -46,8 +56,11 @@ export const recorridosResolver = {
   },
 
   Mutation: {
-    createRecorrido: async (_, { input }) => {
+    createRecorrido: async (_, { input }, context) => {
       try {
+        if (!context || !context.user) {
+          throw new Error("No estás autenticado, debes inciar sesión!"); 
+        }
         const result = await recorridosRepo.saveRecorrido(input); 
         console.log("RecorridoResolver: Recorrido creado correctamente!"); 
         return result; 
@@ -70,8 +83,11 @@ export const recorridosResolver = {
       }
     },
 
-    updateRecorrido: async (_, { id, input}) => {
+    updateRecorrido: async (_, { id, input}, context) => {
       try {
+        if (!context || !context.user) {
+          throw new Error("No estás autenticado, debes inciar sesión!"); 
+        }
         //para evitar hacer consultas innecesarias contra la BD, miramos en primera instancia si existe algún cambio
         const hayCambios = Object.values(input).some(v => v !== undefined); 
         if (!hayCambios) {
@@ -110,8 +126,11 @@ export const recorridosResolver = {
 
     },
 
-    deleteRecorrido: async (_, { id }) => {
+    deleteRecorrido: async (_, { id }, context) => {
       try {
+        if (!context || !context.user) {
+          throw new Error("No estás autenticado, debes inciar sesión!"); 
+        }
         //sabemos que si se elimina rowCount retorna 1, sino 0. 
         const deleted = await recorridosRepo.deleteRecorrido(id); 
         if (!deleted) {
