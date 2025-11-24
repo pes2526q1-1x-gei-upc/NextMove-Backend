@@ -32,7 +32,7 @@ export function getEstacionById(id) {
 }
 
 
-//Método para obtener las estaciones ordenadas por distancia: 
+//Método para obtener las estaciones ordenadas por distancia (fixeado): 
 export function getEstacionesBicingCercanas(location) {
   const lat = location.coordinates.latitude; 
   const lon = location.coordinates.longitude; 
