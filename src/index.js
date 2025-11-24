@@ -23,42 +23,11 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+initGraphQL();
 
-app.options('/graphql', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.sendStatus(200);
-});
-
-app.all(
-  '/graphql',
-  (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-  },
-  createHandler({
-    schema: schema,
-    context: (req, res) => createContext(req, res),
-  }),
-);
-
-
-app.get('/api/gql/playground', (_req, res) => {
-  res.type('html');
-  res.end(ruruHTML({ endpoint: '/graphql' }));
-});
-
-// Routing API routes
+// Routing API routes, and swagger docs
 app.use('/api/routing', routingRoutes);
-
-// Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'NextMove API Documentation'
-}));
+initSwagger();
 
 app.get('/', (req, res) => {
   res.send('NextMove Backend funcionando');
@@ -86,3 +55,70 @@ process.on('SIGINT', () => {
   syncWorker.stop();
   process.exit(0);
 });
+
+
+function initGraphQL() {
+  app.options('/graphql', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+  });
+
+  app.all(
+    '/graphql',
+    (req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      next();
+    },
+    createHandler({
+      schema: schema,
+      context: (req, res) => createContext(req, res),
+    }),
+  );
+
+
+  app.get('/api/gql/playground', (_req, res) => {
+    res.type('html');
+    res.end(ruruHTML({ endpoint: '/graphql' }));
+  });
+
+}
+
+
+function initSwagger() {
+
+  const swaggerOptions = {
+    explorer: true,
+    swaggerOptions: {
+      persistAuthorization: true,
+
+      docExpansion: 'list', // 'none', 'list', 'full'
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+      
+      // Esto hace que Swagger UI muestre el candado y el botón "Authorize"
+      oauth2RedirectUrl: undefined,
+    },
+    
+    customCss: `
+      .swagger-ui .topbar { 
+        background-color: #2c3e50; 
+      }
+      .swagger-ui .info .title {
+        color: #2c3e50;
+      }
+    `,
+
+    customSiteTitle: "NextMove Routing API - Documentación",
+  };
+
+  // Swagger UI
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'NextMove API Documentation'
+  }, swaggerOptions));
+}
