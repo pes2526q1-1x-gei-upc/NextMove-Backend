@@ -52,7 +52,7 @@ export const recorridosResolver = {
         console.log("RecorridoResolver: Recorrido creado correctamente!"); 
         return result; 
       } catch (error) {
-        //VIOLACIÓN FK: 
+      //VIOLACIÓN FK: 
         if (error.code === '23503') {
           throw new Error('El usuario especificado no existe, por favor revisa el email introducido.'); 
         }
@@ -72,7 +72,7 @@ export const recorridosResolver = {
 
     updateRecorrido: async (_, { id, input}) => {
       try {
-        //para evitar hacer consultas innecesarias contra la BD, miramos en primera instancia si existe algún cambio
+      //para evitar hacer consultas innecesarias contra la BD, miramos en primera instancia si existe algún cambio
         const hayCambios = Object.values(input).some(v => v !== undefined); 
         if (!hayCambios) {
           console.log("No se presenta ningún cambio en el recorrido precisado."); 
@@ -83,7 +83,7 @@ export const recorridosResolver = {
           return recorrido; 
         } 
         else {
-          //en este caso sí que hay modificaciones en recorrido
+        //en este caso sí que hay modificaciones en recorrido
           const recorridoModificado = await recorridosRepo.updateRecorrido(id, input); 
           //miramos que la modificación fue exitosa
           if (!recorridoModificado) {
@@ -127,4 +127,4 @@ export const recorridosResolver = {
       }
     } 
   }
-};
+}; 
