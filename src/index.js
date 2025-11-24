@@ -1,5 +1,3 @@
-//SOY UNA PRUEBA
-
 // src/index.js
 import 'dotenv/config';
 import express from 'express';
