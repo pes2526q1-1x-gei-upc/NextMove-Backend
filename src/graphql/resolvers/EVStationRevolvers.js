@@ -73,6 +73,21 @@ const StationsResolvers = {
       }
     },
 
+    stationsByAddress: async (_, { address }) => {
+      try {
+        const stations = await stationsService.getStationsByAddress(address);
+        return stations;
+      } catch (error) {
+        console.error('Error in stationsByAddress resolver:', error);
+        throw new GraphQLError('Failed to fetch stations by address', {
+          extensions: { 
+            code: 'INTERNAL_SERVER_ERROR',
+            originalError: error.message,
+          },
+        });
+      }
+    },
+
     stationsByCity: async (_, { city }) => {
       try {
         const stations = await stationsService.getStationsByCity(city);

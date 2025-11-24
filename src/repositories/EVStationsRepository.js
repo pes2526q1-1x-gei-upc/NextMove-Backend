@@ -274,6 +274,35 @@ async getStationById(id) {
     }
   }
 
+  async getStationsByAddress(address) {
+    const query = `
+      SELECT
+        id,
+        external_id,
+        name,
+        address,
+        city,
+        ST_X(coordinates::geometry) as longitude,
+        ST_Y(coordinates::geometry) as latitude,
+        ccs_power_kw,
+        chademo_power_kw,
+        mennekes_power_kw,
+        schuko_power_kw
+      FROM ev_stations
+      WHERE address ILIKE $1
+      ORDER BY name;
+    `;
+    
+    try {
+      const result = await pool.query(query, [`%${address}%`]);
+      return result.rows;
+    }
+    catch (error) {
+      console.error('Error fetching stations by address:', error);
+      throw error;
+    }
+  }
+
   async getStationsInBounds(north, south, east, west) {
     const query = `
       SELECT 
