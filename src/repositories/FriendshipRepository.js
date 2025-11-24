@@ -10,9 +10,9 @@ class FriendshipRepository {
     const result = await pool.query(`
         SELECT CASE WHEN nickname1 =$1 THEN nickname2 
         ELSE nickname1 
-        END AS name
-        FROM amigos
-        WHERE nickname1 = $1 OR nickname2 = $1
+        END AS name, u.photo
+        FROM amigos a, users u
+        WHERE (a.nickname1 = $1 and a.nickname2 = u.nickname) OR (a.nickname2 = $1 and a.nickname1 = u.nickname)
         `, [nickname]);
     console.log("resultados de la query de amistades", result.rows);
     return result.rows;
@@ -53,9 +53,9 @@ class FriendshipRepository {
         SELECT nickname FROM users WHERE email = $1
         `, [email]);
     const result = await pool.query(`
-        SELECT nickname2 AS blocked
-        FROM bloqueados
-        WHERE nickname1 = $1
+        SELECT b.nickname2 AS blocked, u.photo
+        FROM bloqueados b, users u
+        WHERE b.nickname1 = $1 AND b.nickname2 = u.nickname
         `, [user.rows[0].nickname]);
     return result.rows;
   }
