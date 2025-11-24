@@ -52,6 +52,15 @@ export default class StationsService {
     }
   }
 
+  async getStationsByAddress(address) {  
+    const dbStations = await this.repository.getStationsByAddress(address);
+    
+    return dbStations.map(dbStation => {
+      const dynamicData = dynamicCache.get(dbStation.id);  
+      return mapRepositoryToGraphQL(dbStation, dynamicData);
+    })
+  }
+
   async getStationsInBounds(bounds) {
     try {
       const dbStations = await this.repository.getStationsInBounds(
