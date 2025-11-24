@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - release/*
+      - 'release/*'
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
         run: |
           if [ "${GITHUB_REF##*/}" == "main" ]; then
             echo "servicio=pro-backend" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF##*/}" == release/* ]]; then
+          elif [[ "${GITHUB_REF}" == refs/heads/release/* ]]; then
             echo "servicio=pre-backend" >> $GITHUB_OUTPUT
           elif [ "${GITHUB_REF##*/}" == "dev" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
