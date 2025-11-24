@@ -1,10 +1,10 @@
-"""
-API de enrutamiento y geocodificación usando Google Maps.
-Se necesita estar autenticado para usar estas consultas.
-Se espera que en el header de la request haya: "Authorization": "Bearer <token>"
-"""
+
+# API de enrutamiento y geocodificación usando Google Maps.
+# Se necesita estar autenticado para usar estas consultas.
+# Se espera que en el header de la request haya: "Authorization": "Bearer <token>"
 
 extend type Query {
+  
   """
   Calcula una o varias rutas entre dos ubicaciones usando Google Routes API.
   Devuelve la ruta recomendada (priorizando opciones eco-friendly) y rutas alternativas si están disponibles.
