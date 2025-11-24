@@ -58,7 +58,7 @@ Todas las respuestas incluyen un campo \`success\` (boolean) y, en caso de error
         description: 'Servidor de desarrollo'
       },
       {
-        url: 'http://51.94.90.40:3002',
+        url: 'http://51.94.90.40:3003',
         description: 'Servidor de producción NextMove'
       }
     ],
