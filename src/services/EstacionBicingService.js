@@ -32,10 +32,12 @@ export function getEstacionById(id) {
 }
 
 
-//Método para obtener las estaciones ordenadas por distancia: 
+//Método para obtener las estaciones ordenadas por distancia (fixeado): 
 export function getEstacionesBicingCercanas(location) {
-  const {lat, lon} = location;
+  const lat = location.coordinates.latitude; 
+  const lon = location.coordinates.longitude; 
   const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+  console.log("Número de estacione cacheadas en cercanas antes de filtrar ni retornar nada: " + estaciones.length); 
   if (!estaciones || estaciones === null) {
     console.log("SERVICE BICING: No tenemos estaciones cacheadas para ser ordenadas"); 
     return [];
@@ -43,7 +45,8 @@ export function getEstacionesBicingCercanas(location) {
   const estacionesCercanas = estaciones
     .map(estacion => {
       // Asegúrate de que calculateDistance recibe los parámetros en el orden correcto
-      const distance = calculateDistance(lat, lon, estacion.coordenadas.lat, estacion.coordenadas.lon); 
+      const distance = calculateDistance(lat, lon, estacion.coordenadas.latitude, estacion.coordenadas.longitude); 
+      console.log("distancia calcuada para la estacion " + estacion.id + " es " + distance);
       return {
         ...estacion,
         distanciaKm: distance
