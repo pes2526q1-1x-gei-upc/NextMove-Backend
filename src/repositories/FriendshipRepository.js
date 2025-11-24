@@ -1,7 +1,12 @@
 import pool from '../config/database.js';
 class FriendshipRepository {
   /*Obtener todas las amistades de un usuario */
-  async getFriendships(nickname){
+  async getFriendships(email){
+    console.log("obteniendo amistades de ", email);
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname = user.rows[0].nickname;
     const result = await pool.query(`
         SELECT CASE WHEN nickname1 =$1 THEN nickname2 
         ELSE nickname1 
