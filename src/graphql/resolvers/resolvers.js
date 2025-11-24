@@ -18,6 +18,7 @@ import { createSourceEventStream } from 'graphql';
       stations: EVStationResolvers.Query.stations,
       station: EVStationResolvers.Query.station,
       nearbyStations: EVStationResolvers.Query.nearbyStations,
+      stationsByAddress: EVStationResolvers.Query.stationsByAddress,
 
       getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
       getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
