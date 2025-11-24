@@ -44,25 +44,9 @@ jobs:
 
     - name: Upload test report
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: junit-report
         path: test-reports/junit.xml
 
-  notify-on-failure:
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    if: failure()
 
-    steps:
-    - name: Send failure notification email
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.example.com
-        server_port: 587
-        username: ${{ secrets.SMTP_USERNAME }}
-        password: ${{ secrets.SMTP_PASSWORD }}
-        subject: "GitHub Actions CI Failure for Backend"
-        to: your-email@example.com
-        from: github-actions@example.com
-        body: "The CI job for the backend has failed. Please check the logs: ${{ github.run_url }}"
