@@ -4,7 +4,10 @@ const assessmentRepository = new AssessmentRepository();
 
 export const assessmentResolver = {
   Query:{
-    getAssessmentsByStationId: async (_, { id }) => {
+    getAssessmentsByStationId: async (_, { id }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
       try {
         return await assessmentRepository.getAssessmentsByStationId(id);
       } catch (error) {
@@ -14,7 +17,10 @@ export const assessmentResolver = {
         throw error;
       }
     },
-    getStationAssessmentInfo: async (_, { id }) => {
+    getStationAssessmentInfo: async (_, { id }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
       try {
         return await assessmentRepository.getStationAssessmentInfo(id);
       } catch (error) {
@@ -26,9 +32,12 @@ export const assessmentResolver = {
     }
   },
   Mutation:{
-    createAssessment: async (_, { nickname, station_id, score, comments }) => {
+    createAssessment: async (_, { station_id, score, comments }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
       try {
-        const assessmentData = { nickname, station_id, score, comments };
+        const assessmentData = { email:context.user.email, station_id, score, comments };
         return await assessmentRepository.createAssessment(assessmentData);
       } catch (error) {   
         if (error.code === '23503'){
@@ -45,18 +54,24 @@ export const assessmentResolver = {
         }
       }
     },
-    deleteAssessment: async (_, { nickname, station_id }) => {
+    deleteAssessment: async (_, {  station_id }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
       try {
-        const assessmentData = { nickname, station_id };
+        const assessmentData = { email:context.user.email, station_id };
         return await assessmentRepository.DeleteAssessment(assessmentData);
       }
       catch (error){
         throw error;
       }
     },
-    editAssessment: async (_, { nickname, station_id, score, comments }) => {
+    editAssessment: async (_, { station_id, score, comments }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
       try {
-        const assessmentData = { nickname, station_id, score, comments };
+        const assessmentData = { email:context.user.email, station_id, score, comments };
         return await assessmentRepository.EditAssessment(assessmentData);
       } catch (error) {
         if (error.code === '23503'){

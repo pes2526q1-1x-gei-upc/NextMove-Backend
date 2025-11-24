@@ -1,7 +1,12 @@
 import pool from '../config/database.js';
 class FriendshipRepository {
   /*Obtener todas las amistades de un usuario */
-  async getFriendships(nickname){
+  async getFriendships(email){
+    console.log("obteniendo amistades de ", email);
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname = user.rows[0].nickname;
     const result = await pool.query(`
         SELECT CASE WHEN nickname1 =$1 THEN nickname2 
         ELSE nickname1 
@@ -18,7 +23,11 @@ class FriendshipRepository {
         `);
     return result.rows;
   }
-  async addFriendship(nickname1, nickname2){
+  async addFriendship(email, nickname2){
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname1 = user.rows[0].nickname;
     const result = await pool.query(`
         INSERT INTO amigos (nickname1, nickname2)
         VALUES ($1, $2)
@@ -26,14 +35,18 @@ class FriendshipRepository {
         `, [nickname1, nickname2]);
     return result.rows[0];
   }
-  async removeFriendship(nickname1, nickname2){
-    const result = await pool.query(`
+  async removeFriendship(email, nickname2){
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname1 = user.rows[0].nickname;
+    await pool.query(`
         DELETE FROM amigos
         WHERE (nickname1 = $1 AND nickname2 = $2) OR (nickname1 = $2 AND nickname2 = $1)
         RETURNING *
         `, [nickname1, nickname2]);
         
-    return result.rowCount > 0;
+    return nickname1;
   }
   async getBlockList(email){   //nickname1=blocker, nickname2=blocked
     const user = await pool.query(`
@@ -47,14 +60,11 @@ class FriendshipRepository {
     return result.rows;
   }
   async blockUser(email, nickname2){
-    const user = await pool.query(`
-        SELECT nickname FROM users WHERE email = $1
-        `, [email]);
-    await this.removeFriendship(user.rows[0].nickname, nickname2);
+    const nickname1 = await this.removeFriendship(email, nickname2);
     const result = await pool.query(`
         INSERT INTO bloqueados (nickname1, nickname2)
         VALUES ($1, $2)
-        `, [user.rows[0].nickname, nickname2]);
+        `, [nickname1, nickname2]);
     return result.rowCount > 0;
   }
   async unBlockUser(email, nickname2){

@@ -19,7 +19,7 @@ extend type Query{
 }
 
 extend type Mutation{
-    createAssessment(nickname: String!, station_id: String!, score: Int!, comments: String): Float
-    deleteAssessment(nickname: String!, station_id: String!): Float
-    editAssessment(nickname: String!, station_id: String!, score: Int, comments: String): Float
+    createAssessment(station_id: String!, score: Int!, comments: String): Float
+    deleteAssessment(station_id: String!): Float
+    editAssessment(station_id: String!, score: Int, comments: String): Float
 }

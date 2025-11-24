@@ -4,8 +4,11 @@ const friendshipRepository = new FriendshipRepository();
 
 export const friendshipResolvers = {
   Query: {
-    ListFriends: async (_, { nickname }) => {
-      return await friendshipRepository.getFriendships(nickname);
+    ListFriends: async (_, __, context) => {
+      if(!context.user) {
+        throw new Error('No autenticado');
+      }
+      return await friendshipRepository.getFriendships(context.user.email);
     },
     AllFriends: async () => {
       return await friendshipRepository.getAllFriendships();
@@ -18,10 +21,13 @@ export const friendshipResolvers = {
     }
   },
   Mutation:{
-    AddFriendship: async (_, { nickname1, nickname2 }) => {
+    AddFriendship: async (_, { nickname }, context) => {
       console.log("starting to add friendship");
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
       try {
-        return await friendshipRepository.addFriendship(nickname1, nickname2);
+        return await friendshipRepository.addFriendship(context.user.email, nickname);
       }
       catch (error){
         if (error.code === '23505'){
@@ -33,8 +39,8 @@ export const friendshipResolvers = {
         throw error;
       }
     },
-    RemoveFriendship: async (_, { nickname1, nickname2 }) => {
-      return await friendshipRepository.removeFriendship(nickname1, nickname2);
+    RemoveFriendship: async (_, { nickname }, context) => {
+      return await friendshipRepository.removeFriendship(context.user.email, nickname);
     },
     BlockUser: async (_, { nickname }, context) => {
       try {

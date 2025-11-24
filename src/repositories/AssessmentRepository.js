@@ -6,8 +6,12 @@ class AssessmentRepository{
 
   async createAssessment(AssessmentData)
   {
-    const {nickname, station_id, score, comments} = AssessmentData;
+    const {email, station_id, score, comments} = AssessmentData;
     this.AssessmentInfocache.delete(station_id);
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname = user.rows[0].nickname;
     await pool.query(`
         INSERT INTO valoracion (nickname, station_id, score, description)
         VALUES ($1, $2, $3, $4)
@@ -21,7 +25,11 @@ class AssessmentRepository{
 
   async DeleteAssessment(AssessmentData)
   {
-    const {nickname, station_id} = AssessmentData;
+    const {email, station_id} = AssessmentData;
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname = user.rows[0].nickname;
     await pool.query(`
         DELETE FROM valoracion
         WHERE nickname = $1 AND station_id = $2
@@ -35,7 +43,11 @@ class AssessmentRepository{
 
   async EditAssessment(AssessmentData)
   {
-    const {nickname, station_id, score, comments} = AssessmentData;
+    const {email, station_id, score, comments} = AssessmentData;
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+        `, [email]);
+    const nickname = user.rows[0].nickname;
     const fields = [];
     const values = [];
     let index = 1;
