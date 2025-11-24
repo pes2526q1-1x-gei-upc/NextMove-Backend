@@ -92,18 +92,6 @@ function initSwagger() {
 
   const swaggerOptions = {
     explorer: true,
-    swaggerOptions: {
-      persistAuthorization: true,
-
-      docExpansion: 'list', // 'none', 'list', 'full'
-      filter: true,
-      showExtensions: true,
-      showCommonExtensions: true,
-      
-      // Esto hace que Swagger UI muestre el candado y el botón "Authorize"
-      oauth2RedirectUrl: undefined,
-    },
-    
     customCss: `
       .swagger-ui .topbar { 
         background-color: #2c3e50; 
@@ -112,13 +100,20 @@ function initSwagger() {
         color: #2c3e50;
       }
     `,
-
     customSiteTitle: "NextMove Routing API - Documentación",
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'list',
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+    }
   };
 
-  // Swagger UI
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'NextMove API Documentation'
-  }, swaggerOptions));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
+  
+  app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
 }
