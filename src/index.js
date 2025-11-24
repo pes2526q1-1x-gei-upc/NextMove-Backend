@@ -1,5 +1,8 @@
 // src/index.js
 import 'dotenv/config';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
+
 import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/express';
 import { ruruHTML } from 'ruru/server';
@@ -48,6 +51,12 @@ app.get('/api/gql/playground', (_req, res) => {
   res.end(ruruHTML({ endpoint: '/graphql' }));
 });
 
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'NextMove API Documentation'
+}));
+
 app.get('/', (req, res) => {
   res.send('NextMove Backend funcionando');
 });
@@ -59,6 +68,7 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
   console.log(`GraphQL Playground: http://localhost:${PORT}/api/gql/playground`);
+  console.log(`API Documentation at http://localhost:${PORT}/api-docs`);
 
   syncWorker.start();
   bicingSyncWorker.start();
