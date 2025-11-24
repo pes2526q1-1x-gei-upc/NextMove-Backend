@@ -26,7 +26,6 @@ jobs:
           elif [[ "${GITHUB_REF}" == refs/heads/release/* ]]; then
             echo "servicio=pre-backend" >> $GITHUB_OUTPUT
             echo "git_branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
- # release/X.X.X
           elif [ "${GITHUB_REF##*/}" == "dev" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
             echo "git_branch=dev" >> $GITHUB_OUTPUT
