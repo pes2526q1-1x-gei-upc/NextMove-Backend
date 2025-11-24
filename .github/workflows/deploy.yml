@@ -22,31 +22,36 @@ jobs:
         run: |
           if [ "${GITHUB_REF##*/}" == "main" ]; then
             echo "servicio=pro-backend" >> $GITHUB_OUTPUT
+            echo "git_branch=main" >> $GITHUB_OUTPUT
           elif [[ "${GITHUB_REF}" == refs/heads/release/* ]]; then
             echo "servicio=pre-backend" >> $GITHUB_OUTPUT
+            echo "git_branch=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT  # release/X.X.X
           elif [ "${GITHUB_REF##*/}" == "dev" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF##*/}" == "refactor/linters" ]; then
-            echo "servicio=test-backend" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF##*/}" == "test-CD" ]; then
-            echo "servicio=test-backend" >> $GITHUB_OUTPUT
+            echo "git_branch=dev" >> $GITHUB_OUTPUT
           else
             echo "servicio=none" >> $GITHUB_OUTPUT
+            echo "git_branch=none" >> $GITHUB_OUTPUT
           fi
 
       - name: Desplegar servicio en EC2
         if: steps.vars.outputs.servicio != 'none'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # recuerda NO usar GITHUB_TOKEN
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GIT_BRANCH: ${{ steps.vars.outputs.git_branch }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            cd /home/ubuntu/BeMotion  # Cambia la ruta si tu repo está en otro sitio
+            cd /home/ubuntu
+            if [ ! -d BeMotion/.git ]; then
+              git clone https://github.com/pes2526q1-1x-gei-upc/NextMove-Backend.git BeMotion
+            fi
+            cd BeMotion
             git fetch --all
-            git checkout ${{ github.ref_name }}
-            git pull origin ${{ github.ref_name }}
+            git checkout ${GIT_BRANCH}
+            git pull origin ${GIT_BRANCH}
             docker-compose build \
               --build-arg GITHUB_TOKEN=${GH_TOKEN} \
-              --build-arg GIT_BRANCH=${{ github.ref_name }} \
+              --build-arg GIT_BRANCH=${GIT_BRANCH} \
               ${{ steps.vars.outputs.servicio }}
             docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
           EOF
