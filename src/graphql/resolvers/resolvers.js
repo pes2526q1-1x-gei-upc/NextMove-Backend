@@ -4,7 +4,8 @@ import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js';
 import { friendshipResolvers } from './FriendshipResolvers.js';
 import { recorridosResolver } from './RecorridoResolver.js';
 import { assessmentResolver } from './AssessmentResolvers.js';
-import { createSourceEventStream } from 'graphql';
+import routingResolvers  from './routingResolvers.js'
+
 
 
   export const resolvers = {
@@ -29,6 +30,7 @@ import { createSourceEventStream } from 'graphql';
       recorridos: recorridosResolver.Query.recorridos, 
       recorrido: recorridosResolver.Query.recorrido, 
       recorridosByUser: recorridosResolver.Query.recorridosByUser,
+      ...routingResolvers.Query,
 
       getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
       getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
@@ -40,17 +42,22 @@ import { createSourceEventStream } from 'graphql';
       deleteMe: userResolvers.Mutation.deleteMe,
       updateUser: userResolvers.Mutation.updateUser,
       deleteUser: userResolvers.Mutation.deleteUser,
+
       AddFriendship: friendshipResolvers.Mutation.AddFriendship,
       RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship,
+
       createRecorrido: recorridosResolver.Mutation.createRecorrido,
       updateRecorrido: recorridosResolver.Mutation.updateRecorrido,
       deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido, 
+
       createEstacionDeBicing: estacionDeBicingResolver.Mutation.createEstacionDeBicing,
       updateEstacionDeBicing:  estacionDeBicingResolver.Mutation.updateEstacionDeBicing,
       deleteEstacionDeBicing: estacionDeBicingResolver.Mutation.deleteEstacionDeBicing,
+
       createAssessment: assessmentResolver.Mutation.createAssessment,
       deleteAssessment: assessmentResolver.Mutation.deleteAssessment,
       editAssessment: assessmentResolver.Mutation.editAssessment,
+
       BlockUser: friendshipResolvers.Mutation.BlockUser,
       UnBlockUser: friendshipResolvers.Mutation.UnBlockUser,
     }

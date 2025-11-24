@@ -8,6 +8,7 @@ import StationsService from './services/EVstationsService.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
 import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 import { createContext } from './graphql/context.js';
+import routingRoutes from './routes/routingRoutes.js';
 
 const stationsService = new StationsService();
 const app = express();
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+app.use('/api/routing', routingRoutes);
 
 app.options('/graphql', (req, res) => {
   res.header('Access-Control-Allow-Origin', '*');
