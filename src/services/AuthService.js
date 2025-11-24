@@ -1,4 +1,7 @@
 import admin from 'firebase-admin';
+import crypto from 'crypto';
+import CompanyRepository  from '../repositories/CompanyRepository.js';
+
 let instance = null;
 
 class AuthService {
@@ -13,6 +16,7 @@ class AuthService {
   constructor() {
     this.validateEnvironment();
     this.initializeFirebase();
+    this.companyRepo = CompanyRepository;
   }
 
   validateEnvironment() {
@@ -41,11 +45,12 @@ class AuthService {
     }
   }
 
+  // ==================== FIREBASE AUTH ====================
+
   /**
    * Verifica y decodifica un token de Firebase
    */
   async verifyToken(token) {
- 
     if (!token) {
       throw new Error('Token no proporcionado');
     }
@@ -128,6 +133,87 @@ class AuthService {
       throw new Error(`Error actualizando email: ${error.message}`);
     }
   }
+
+  // ==================== API KEY AUTH DE MOMENTO SON LAS EMPRESAS ==================== //
+
+  /**
+   * Genera una nueva API key
+   * Formato: nextmove_live_[48 caracteres hex]
+   */
+  generateApiKey() {
+    const randomBytes = crypto.randomBytes(24).toString('hex');
+    return `nextmove_live_${randomBytes}`;
+  }
+
+  /**
+   * Hashea una API key usando SHA-256
+   */
+  hashApiKey(apiKey) {
+    return crypto.createHash('sha256').update(apiKey).digest('hex');
+  }
+
+  /**
+   * Crea una nueva API key para una empresa
+  *La API key solo se muestra UNA VEZ
+   */
+  async createApiKey(companyName, rateLimitPerHour = 1000) {
+    const apiKey = this.generateApiKey();
+    const keyHash = this.hashApiKey(apiKey);
+
+    const company = await this.companyRepo.createApiKey(
+      companyName,
+      keyHash,
+      rateLimitPerHour
+    );
+
+    return {
+      ...company,
+      apiKey 
+    };
+  }
+
+  /**
+   * Verifica una API key e incrementa el contador de uso
+   */
+  async verifyApiKey(apiKey) {
+    if (!apiKey || !apiKey.startsWith('nextmove_live_')) {
+      return null;
+    }
+
+    const keyHash = this.hashApiKey(apiKey);
+    return await this.companyRepo.verifyAndIncrementApiKey(keyHash);
+  }
+
+  /**
+   * Lista todas las API keys
+   */
+  async listApiKeys() {
+    return await this.companyRepo.getAllApiKeys();
+  }
+
+  /**
+   * Obtiene estadísticas de una API key
+   */
+  async getApiKeyStats(apiKey) {
+    const keyHash = this.hashApiKey(apiKey);
+    return await this.companyRepo.getApiKeyStats(keyHash);
+  }
+
+  /**
+   * Actualiza el rate limit de una empresa
+   */
+  async updateApiKeyRateLimit(apiKey, newRateLimit) {
+    const keyHash = this.hashApiKey(apiKey);
+    return await this.companyRepo.updateRateLimit(keyHash, newRateLimit);
+  }
+
+  /**
+   * Elimina una API key
+   */
+  async deleteApiKey(apiKey) {
+    const keyHash = this.hashApiKey(apiKey);
+    return await this.companyRepo.deleteApiKey(keyHash);
+  }
 }
 
-export default new AuthService();
+export default AuthService.getInstance();

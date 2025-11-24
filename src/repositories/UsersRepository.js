@@ -1,4 +1,3 @@
-// src/repositories/UsersRepository.js
 import  pool  from '../config/database.js';
 
 class UsersRepository {
