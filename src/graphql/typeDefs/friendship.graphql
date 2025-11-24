@@ -12,14 +12,14 @@ type blockedUser{
 }
 
 extend type Query{
-    ListFriends(nickname: String!): [friend!]
+    ListFriends: [friend!]
     AllFriends: [friendship!]
     BlockList: [blockedUser!]
 }
 
 extend type Mutation {
-    AddFriendship(nickname1: String!, nickname2: String!): friendship!
-    RemoveFriendship(nickname1: String!, nickname2: String!): Boolean!
+    AddFriendship(nickname: String!): friendship!
+    RemoveFriendship(nickname: String!): Boolean!
     BlockUser(nickname: String!): Boolean!
     UnBlockUser(nickname: String!): Boolean!
 }
