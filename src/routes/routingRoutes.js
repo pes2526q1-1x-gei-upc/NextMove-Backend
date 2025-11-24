@@ -1,20 +1,31 @@
-// src/routes/routingRoutes.js
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import googleMapsService from '../services/googleMapsService.js';
+import { requireApiKey } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const routesLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50,
-  message: {
-    success: false,
-    error: 'Demasiadas peticiones. Por favor, intenta de nuevo más tarde.'
-  }
+const companyRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: async (req) => {
+    return req.company?.rateLimitPerHour || 100;
+  },
+  keyGenerator: (req) => {
+    return `company_${req.company.id}`;
+  },
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: `Límite de ${req.company.rateLimitPerHour} peticiones por hora excedido para ${req.company.companyName}`
+    });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-router.use(routesLimiter);
+// Aplicar autenticación con API Key a todas las rutas
+router.use(requireApiKey);
+router.use(companyRateLimiter);
 
 /**
  * @swagger
@@ -22,58 +33,21 @@ router.use(routesLimiter);
  *   post:
  *     summary: Calcula una ruta entre dos ubicaciones
  *     description: |
- *       Calcula una o varias rutas entre dos puntos usando Google Routes API.
- *       Devuelve la ruta recomendada (priorizando opciones eco-friendly) y rutas alternativas.
+ *       **Requiere API Key de empresa**
+ *       Incluye el header `X-API-Key` con tu clave de acceso.
  *       
- *       **Notas importantes:**
- *       - Para BICYCLE y WALK solo se devuelve 1 ruta (no hay alternativas)
+ *       Notas importantes:
+ *       - Para BICYCLE y WALK solo se devuelve 1 ruta
  *       - routingPreference solo funciona con DRIVE y TWO_WHEELER
- *       - El polyline devuelto debe decodificarse para pintarlo en el mapa
  *     tags: [Routing]
+ *     security:
+ *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/RouteRequest'
- *           examples:
- *             gironaBarcelona:
- *               summary: Ruta Girona a Barcelona en coche
- *               value:
- *                 origin:
- *                   latitude: 41.9794
- *                   longitude: 2.8214
- *                 destination:
- *                   latitude: 41.3851
- *                   longitude: 2.1734
- *                 preferences:
- *                   travelMode: DRIVE
- *                   routingPreference: TRAFFIC_AWARE_OPTIMAL
- *                   avoidTolls: false
- *             bicycleRoute:
- *               summary: Ruta en bicicleta (corta distancia)
- *               value:
- *                 origin:
- *                   latitude: 41.9794
- *                   longitude: 2.8214
- *                 destination:
- *                   latitude: 41.9810
- *                   longitude: 2.8220
- *                 preferences:
- *                   travelMode: BICYCLE
- *             avoidTolls:
- *               summary: Ruta evitando peajes y autopistas
- *               value:
- *                 origin:
- *                   latitude: 41.9794
- *                   longitude: 2.8214
- *                 destination:
- *                   latitude: 41.3851
- *                   longitude: 2.1734
- *                 preferences:
- *                   travelMode: DRIVE
- *                   avoidTolls: true
- *                   avoidHighways: true
  *     responses:
  *       200:
  *         description: Rutas calculadas correctamente
@@ -81,42 +55,19 @@ router.use(routesLimiter);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/RouteResponse'
- *       400:
- *         description: Error en los parámetros de entrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               missingParams:
- *                 summary: Faltan parámetros
- *                 value:
- *                   success: false
- *                   error: Se requieren origen y destino
- *               invalidCoords:
- *                 summary: Coordenadas inválidas
- *                 value:
- *                   success: false
- *                   error: Coordenadas fuera de rango válido
+ *       401:
+ *         description: API key faltante o inválida
  *       429:
- *         description: Demasiadas peticiones (rate limit excedido)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               success: false
- *               error: Demasiadas peticiones. Por favor, intenta de nuevo más tarde.
+ *         description: Límite de peticiones excedido
  *       500:
- *         description: Error del servidor o de Google Routes API
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         description: Error del servidor
  */
 router.post('/routes', async (req, res) => {
   try {
     const { origin, destination, preferences } = req.body;
+
+    // Log de uso por empresa
+    console.log(`[${new Date().toISOString()}] Route request from ${req.company.companyName} (${req.company.totalRequests} total requests)`);
 
     if (!origin || !destination) {
       return res.status(400).json({
@@ -125,7 +76,6 @@ router.post('/routes', async (req, res) => {
       });
     }
 
-    // Aceptar tanto {lat, lng} como {latitude, longitude}
     const originCoords = {
       latitude: origin.latitude || origin.lat,
       longitude: origin.longitude || origin.lng
@@ -140,7 +90,7 @@ router.post('/routes', async (req, res) => {
         !destCoords.latitude || !destCoords.longitude) {
       return res.status(400).json({
         success: false,
-        error: 'Formato de coordenadas inválido. Se espera {latitude: number, longitude: number} o {lat: number, lng: number}'
+        error: 'Formato de coordenadas inválido. Se espera {latitude: number, longitude: number}'
       });
     }
 
@@ -193,48 +143,29 @@ router.post('/routes', async (req, res) => {
  * @swagger
  * /api/routing/geocode:
  *   get:
- *     summary: Convierte una dirección en coordenadas (Geocoding)
- *     description: |
- *       Busca una ubicación a partir de una dirección en texto y devuelve sus coordenadas GPS.
- *       Útil para búsquedas de destinos, autocompletar direcciones, etc.
- *       
- *       **Ejemplos de búsquedas válidas:**
- *       - "Plaça Independència, Girona"
- *       - "Sagrada Família, Barcelona"
- *       - "Carrer Major 15, Girona"
- *       - "17001" (código postal)
+ *     summary: Convierte una dirección en coordenadas
+ *     description: Requiere API Key de empresa
  *     tags: [Geocoding]
+ *     security:
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: query
  *         name: address
  *         required: true
  *         schema:
  *           type: string
- *         description: Dirección a buscar
  *         example: Plaça de la Independència, Girona
  *     responses:
  *       200:
  *         description: Ubicaciones encontradas
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LocationResponse'
- *       400:
- *         description: Falta el parámetro address
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Error del servidor o de Google Geocoding API
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: API key inválida
  */
 router.get('/geocode', async (req, res) => {
   try {
     const { address } = req.query;
+
+    console.log(`[${new Date().toISOString()}] Geocode request from ${req.company.companyName}`);
 
     if (!address) {
       return res.status(400).json({
@@ -262,65 +193,33 @@ router.get('/geocode', async (req, res) => {
  * @swagger
  * /api/routing/reverse-geocode:
  *   get:
- *     summary: Convierte coordenadas en una dirección (Reverse Geocoding)
- *     description: |
- *       Obtiene la dirección más cercana a unas coordenadas GPS.
- *       Útil para mostrar la dirección cuando el usuario hace clic en el mapa.
+ *     summary: Convierte coordenadas en una dirección
+ *     description: Requiere API Key de empresa
  *     tags: [Geocoding]
+ *     security:
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: query
  *         name: latitude
- *         required: false
  *         schema:
  *           type: number
- *           format: double
- *         description: Latitud (también acepta "lat")
  *         example: 41.9794
  *       - in: query
  *         name: longitude
- *         required: false
  *         schema:
  *           type: number
- *           format: double
- *         description: Longitud (también acepta "lng")
  *         example: 2.8214
- *       - in: query
- *         name: lat
- *         required: false
- *         schema:
- *           type: number
- *           format: double
- *         description: Latitud (forma abreviada)
- *       - in: query
- *         name: lng
- *         required: false
- *         schema:
- *           type: number
- *           format: double
- *         description: Longitud (forma abreviada)
  *     responses:
  *       200:
  *         description: Dirección encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ReverseGeocodeResponse'
- *       400:
- *         description: Faltan coordenadas o son inválidas
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Error del servidor o de Google Geocoding API
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: API key inválida
  */
 router.get('/reverse-geocode', async (req, res) => {
   try {
     const { lat, latitude, lng, longitude } = req.query;
+
+    console.log(`[${new Date().toISOString()}] Reverse geocode request from ${req.company.companyName}`);
 
     const finalLat = latitude || lat;
     const finalLng = longitude || lng;
@@ -328,7 +227,7 @@ router.get('/reverse-geocode', async (req, res) => {
     if (!finalLat || !finalLng) {
       return res.status(400).json({
         success: false,
-        error: 'Se requieren parámetros "latitude" y "longitude" (o "lat" y "lng")'
+        error: 'Se requieren parámetros "latitude" y "longitude"'
       });
     }
 

@@ -1,4 +1,3 @@
-// src/index.js
 import 'dotenv/config';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.js';
@@ -23,7 +22,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use('/api/routing', routingRoutes);
+
 
 app.options('/graphql', (req, res) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -46,10 +45,14 @@ app.all(
   }),
 );
 
+
 app.get('/api/gql/playground', (_req, res) => {
   res.type('html');
   res.end(ruruHTML({ endpoint: '/graphql' }));
 });
+
+// Routing API routes
+app.use('/api/routing', routingRoutes);
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -60,9 +63,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 app.get('/', (req, res) => {
   res.send('NextMove Backend funcionando');
 });
-
-
-
 
 // Start server and worker
 app.listen(PORT, () => {

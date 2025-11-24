@@ -1,4 +1,3 @@
-// src/services/googleMapsService.js
 import axios from 'axios';
 
 class GoogleMapsService {
