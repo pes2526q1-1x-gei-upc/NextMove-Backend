@@ -42,6 +42,8 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
           cd /home/ubuntu/BeMotion
+          docker-compose stop ${{ steps.vars.outputs.servicio }}
+          docker-compose rm -f ${{ steps.vars.outputs.servicio }}
           docker-compose build --no-cache --build-arg GITHUB_TOKEN=${GH_TOKEN} --build-arg GIT_BRANCH=${GIT_BRANCH} ${{ steps.vars.outputs.servicio }}
           docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
           EOF
