@@ -44,7 +44,7 @@ jobs:
             git fetch --all
             git checkout ${{ github.ref_name }}
             git pull origin ${{ github.ref_name }}
-            docker-compose build \
+            docker-compose build --no-cache\
               --build-arg GITHUB_TOKEN=${GH_TOKEN} \
               --build-arg GIT_BRANCH=${{ github.ref_name }} \
               ${{ steps.vars.outputs.servicio }}
