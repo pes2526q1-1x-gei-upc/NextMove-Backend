@@ -191,29 +191,164 @@ router.get('/geocode', async (req, res) => {
 
 /**
  * @swagger
- * /api/routing/reverse-geocode:
- *   get:
- *     summary: Convierte coordenadas en una dirección
- *     description: Requiere API Key de empresa
- *     tags: [Geocoding]
+ * /api/routing/routes:
+ *   post:
+ *     summary: Calcula una ruta entre dos ubicaciones
+ *     description: |
+ *       **Requiere API Key de empresa**
+ *       
+ *       Calcula una o varias rutas entre dos puntos usando Google Routes API.
+ *       Devuelve la ruta recomendada (priorizando opciones eco-friendly) y rutas alternativas.
+ *       
+ *       **Autenticación:**
+ *       - Incluye el header `X-API-Key` con tu clave de acceso
+ *       - Cada empresa tiene un límite personalizado de peticiones por hora
+ *       - El límite se resetea cada hora
+ *       
+ *       **Notas importantes:**
+ *       - Para BICYCLE y WALK solo se devuelve 1 ruta (no hay rutas alternativas)
+ *       - routingPreference solo funciona con DRIVE y TWO_WHEELER
+ *       - El polyline devuelto debe decodificarse para pintarlo en el mapa
+ *       - Las rutas se ordenan priorizando eco-friendly y luego por distancia más corta
+ *     tags: [Routing]
  *     security:
  *       - ApiKeyAuth: []
- *     parameters:
- *       - in: query
- *         name: latitude
- *         schema:
- *           type: number
- *         example: 41.9794
- *       - in: query
- *         name: longitude
- *         schema:
- *           type: number
- *         example: 2.8214
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RouteRequest'
+ *           examples:
+ *             gironaBarcelona:
+ *               summary: Ruta Girona a Barcelona en coche
+ *               value:
+ *                 origin:
+ *                   latitude: 41.9794
+ *                   longitude: 2.8214
+ *                 destination:
+ *                   latitude: 41.3851
+ *                   longitude: 2.1734
+ *                 preferences:
+ *                   travelMode: DRIVE
+ *                   routingPreference: TRAFFIC_AWARE_OPTIMAL
+ *                   avoidTolls: false
+ *             bicycleRoute:
+ *               summary: Ruta en bicicleta (corta distancia)
+ *               value:
+ *                 origin:
+ *                   latitude: 41.9794
+ *                   longitude: 2.8214
+ *                 destination:
+ *                   latitude: 41.9810
+ *                   longitude: 2.8220
+ *                 preferences:
+ *                   travelMode: BICYCLE
+ *             avoidTolls:
+ *               summary: Ruta evitando peajes y autopistas
+ *               value:
+ *                 origin:
+ *                   latitude: 41.9794
+ *                   longitude: 2.8214
+ *                 destination:
+ *                   latitude: 41.3851
+ *                   longitude: 2.1734
+ *                 preferences:
+ *                   travelMode: DRIVE
+ *                   avoidTolls: true
+ *                   avoidHighways: true
  *     responses:
  *       200:
- *         description: Dirección encontrada
+ *         description: Rutas calculadas correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RouteResponse'
+ *             example:
+ *               success: true
+ *               data:
+ *                 routes:
+ *                   - distance: "103.2 km"
+ *                     distanceMeters: 103218
+ *                     duration: "1h 31min"
+ *                     durationSeconds: 5470
+ *                     polyline: "encodedPolylineString..."
+ *                     isEcoFriendly: true
+ *                     routeLabels: ["ECO_FRIENDLY"]
+ *                     travelAdvisory:
+ *                       hasTollRoads: true
+ *                       estimatedTollPrice: "5.50 EUR"
+ *                     startLocation:
+ *                       latitude: 41.9794
+ *                       longitude: 2.8214
+ *                     endLocation:
+ *                       latitude: 41.3851
+ *                       longitude: 2.1734
+ *                 recommendedRoute:
+ *                   distance: "103.2 km"
+ *                   distanceMeters: 103218
+ *                   duration: "1h 31min"
+ *                   durationSeconds: 5470
+ *                   isEcoFriendly: true
+ *                 alternativeRoutesCount: 2
+ *                 ecoFriendlyOptionsCount: 1
+ *       400:
+ *         description: Error en los parámetros de entrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               missingParams:
+ *                 summary: Faltan parámetros requeridos
+ *                 value:
+ *                   success: false
+ *                   error: Se requieren origen y destino
+ *               invalidFormat:
+ *                 summary: Formato de coordenadas inválido
+ *                 value:
+ *                   success: false
+ *                   error: "Formato de coordenadas inválido. Se espera {latitude: number, longitude: number}"
+ *               invalidRange:
+ *                 summary: Coordenadas fuera de rango
+ *                 value:
+ *                   success: false
+ *                   error: Coordenadas fuera de rango válido
  *       401:
- *         description: API key inválida
+ *         description: API key faltante o inválida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               missingKey:
+ *                 summary: API key no proporcionada
+ *                 value:
+ *                   success: false
+ *                   error: API key requerida
+ *               invalidKey:
+ *                 summary: API key inválida
+ *                 value:
+ *                   success: false
+ *                   error: API key inválida
+ *       429:
+ *         description: Límite de peticiones excedido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               error: Límite de 100 peticiones por hora excedido para Tu Empresa SL
+ *       500:
+ *         description: Error del servidor o de Google Routes API
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               error: Error al calcular la ruta
  */
 router.get('/reverse-geocode', async (req, res) => {
   try {

@@ -6,7 +6,47 @@ const options = {
     info: {
       title: 'NextMove Routing API',
       version: '1.0.0',
-      description: 'API REST para cálculo de rutas, geocodificación y navegación usando Google Routes API. Diseñada para aplicaciones de movilidad sostenible con vehículos eléctricos y bicicletas.',
+      description: `
+# API REST para NextMove
+
+API REST para cálculo de rutas, geocodificación y navegación usando Google Routes API.
+Diseñada para aplicaciones de movilidad sostenible con vehículos eléctricos y bicicletas.
+
+## Autenticación
+
+Todos los endpoints requieren autenticación mediante API Key. Para obtener acceso:
+
+1. Contacta con el equipo de NextMove para registrar tu empresa
+2. Recibirás una API Key única para tu empresa
+3. Incluye el header \`X-API-Key: tu_api_key\` en todas las peticiones
+
+### Cómo probar en Swagger UI
+
+1. Haz clic en el botón **"Authorize"** (icono de candado) en la parte superior derecha
+2. Ingresa tu API Key en el campo "Value"
+3. Haz clic en "Authorize" y luego "Close"
+4. Ahora puedes probar los endpoints usando el botón "Try it out" y "Execute"
+5. Tu API Key se incluirá automáticamente en todas las peticiones
+
+## Rate Limiting
+
+Cada empresa tiene un límite personalizado de peticiones por hora. El límite se resetea cada hora.
+Las cabeceras de respuesta incluyen información sobre tu límite actual:
+
+- \`RateLimit-Limit\`: Límite total de peticiones por hora
+- \`RateLimit-Remaining\`: Peticiones restantes en esta ventana
+- \`RateLimit-Reset\`: Timestamp cuando se resetea el límite
+
+## Códigos de respuesta
+
+- \`200\`: Operación exitosa
+- \`400\`: Error en los parámetros de entrada
+- \`401\`: API key faltante o inválida
+- \`429\`: Límite de peticiones excedido
+- \`500\`: Error del servidor o de Google APIs
+
+Todas las respuestas incluyen un campo \`success\` (boolean) y, en caso de error, un campo \`error\` con la descripción.
+      `,
       contact: {
         name: 'NextMove Team',
         email: 'eric.moreno@estudiantat.upc.edu'
@@ -18,8 +58,8 @@ const options = {
         description: 'Servidor de desarrollo'
       },
       {
-        url: 'http://51.94.90.40:3002/',
-        description: 'Servidor de NextMove'
+        url: 'http://51.94.90.40:3002',
+        description: 'Servidor de producción NextMove'
       }
     ],
     tags: [
@@ -33,6 +73,14 @@ const options = {
       }
     ],
     components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key',
+          description: 'API Key proporcionada por NextMove para autenticación de empresas'
+        }
+      },
       schemas: {
         Coordinates: {
           type: 'object',
@@ -81,12 +129,12 @@ const options = {
                   type: 'string',
                   enum: ['TRAFFIC_UNAWARE', 'TRAFFIC_AWARE', 'TRAFFIC_AWARE_OPTIMAL'],
                   default: 'TRAFFIC_AWARE_OPTIMAL',
-                  description: 'Preferencia de enrutamiento. Solo para DRIVE y TWO_WHEELER'
+                  description: 'Preferencia de enrutamiento. Solo funciona con DRIVE y TWO_WHEELER'
                 },
                 avoidTolls: {
                   type: 'boolean',
                   default: false,
-                  description: 'Evitar peajes'
+                  description: 'Evitar carreteras de peaje'
                 },
                 avoidHighways: {
                   type: 'boolean',
@@ -142,12 +190,12 @@ const options = {
             },
             polyline: {
               type: 'string',
-              description: 'Polyline codificado de Google que representa la geometría de la ruta. Decodificar con flutter_polyline_points para pintar en el mapa.'
+              description: 'Polyline codificado de Google que representa la geometría de la ruta. Debe decodificarse con flutter_polyline_points o similar para pintar en el mapa.'
             },
             isEcoFriendly: {
               type: 'boolean',
               example: true,
-              description: 'Indica si Google marcó esta ruta como eco-friendly (optimizada para menor consumo)'
+              description: 'Indica si Google marcó esta ruta como eco-friendly (optimizada para menor consumo de combustible)'
             },
             routeLabels: {
               type: 'array',
@@ -165,13 +213,15 @@ const options = {
               items: {
                 $ref: '#/components/schemas/RouteStep'
               },
-              description: 'Lista de pasos de navegación turn-by-turn'
+              description: 'Lista de pasos de navegación turn-by-turn. Puede estar vacía si no se solicitaron.'
             },
             startLocation: {
-              $ref: '#/components/schemas/Coordinates'
+              $ref: '#/components/schemas/Coordinates',
+              description: 'Coordenadas exactas del inicio de la ruta'
             },
             endLocation: {
-              $ref: '#/components/schemas/Coordinates'
+              $ref: '#/components/schemas/Coordinates',
+              description: 'Coordenadas exactas del fin de la ruta'
             },
             viewport: {
               $ref: '#/components/schemas/Viewport'
@@ -183,19 +233,19 @@ const options = {
           properties: {
             hasTollRoads: {
               type: 'boolean',
-              description: 'Indica si la ruta incluye peajes'
+              description: 'Indica si la ruta incluye carreteras de peaje'
             },
             estimatedTollPrice: {
               type: 'string',
               nullable: true,
               example: '5.50 EUR',
-              description: 'Precio estimado de peajes'
+              description: 'Precio estimado de los peajes (cuando está disponible)'
             },
             fuelConsumption: {
               type: 'string',
               nullable: true,
               example: '8.5 L',
-              description: 'Consumo estimado de combustible'
+              description: 'Consumo estimado de combustible (cuando está disponible)'
             }
           }
         },
@@ -209,30 +259,36 @@ const options = {
             },
             distance: {
               type: 'string',
-              example: '0.5 km'
+              example: '0.5 km',
+              description: 'Distancia del paso en formato legible'
             },
             distanceMeters: {
               type: 'integer',
-              example: 500
+              example: 500,
+              description: 'Distancia del paso en metros'
             },
             duration: {
               type: 'string',
-              example: '2min'
+              example: '2min',
+              description: 'Duración del paso en formato legible'
             },
             durationSeconds: {
               type: 'integer',
-              example: 120
+              example: 120,
+              description: 'Duración del paso en segundos'
             },
             startLocation: {
-              $ref: '#/components/schemas/Coordinates'
+              $ref: '#/components/schemas/Coordinates',
+              description: 'Coordenadas donde comienza este paso'
             },
             endLocation: {
-              $ref: '#/components/schemas/Coordinates'
+              $ref: '#/components/schemas/Coordinates',
+              description: 'Coordenadas donde termina este paso'
             },
             polyline: {
               type: 'string',
               nullable: true,
-              description: 'Polyline codificado de este paso específico'
+              description: 'Polyline codificado específico para este paso'
             }
           }
         },
@@ -242,11 +298,11 @@ const options = {
           properties: {
             low: {
               $ref: '#/components/schemas/Coordinates',
-              description: 'Esquina inferior izquierda (suroeste)'
+              description: 'Esquina inferior izquierda (suroeste) del rectángulo'
             },
             high: {
               $ref: '#/components/schemas/Coordinates',
-              description: 'Esquina superior derecha (noreste)'
+              description: 'Esquina superior derecha (noreste) del rectángulo'
             }
           }
         },
@@ -255,7 +311,8 @@ const options = {
           properties: {
             success: {
               type: 'boolean',
-              example: true
+              example: true,
+              description: 'Indica si la operación fue exitosa'
             },
             data: {
               type: 'object',
@@ -265,21 +322,21 @@ const options = {
                   items: {
                     $ref: '#/components/schemas/Route'
                   },
-                  description: 'Todas las rutas calculadas'
+                  description: 'Todas las rutas calculadas, ordenadas priorizando eco-friendly y luego por distancia'
                 },
                 recommendedRoute: {
                   $ref: '#/components/schemas/Route',
-                  description: 'Ruta recomendada (prioriza eco-friendly)'
+                  description: 'Ruta recomendada (prioriza eco-friendly, luego más corta)'
                 },
                 alternativeRoutesCount: {
                   type: 'integer',
                   example: 2,
-                  description: 'Número de rutas alternativas'
+                  description: 'Número de rutas alternativas disponibles'
                 },
                 ecoFriendlyOptionsCount: {
                   type: 'integer',
                   example: 1,
-                  description: 'Número de rutas eco-friendly disponibles'
+                  description: 'Número de rutas marcadas como eco-friendly'
                 }
               }
             }
@@ -291,15 +348,16 @@ const options = {
             formattedAddress: {
               type: 'string',
               example: 'Plaça de la Independència, 17001 Girona, España',
-              description: 'Dirección completa formateada'
+              description: 'Dirección completa formateada por Google'
             },
             coordinates: {
-              $ref: '#/components/schemas/Coordinates'
+              $ref: '#/components/schemas/Coordinates',
+              description: 'Coordenadas GPS de la ubicación'
             },
             placeId: {
               type: 'string',
               example: 'ChIJz7H9NskUpRIRGfpJIiLRnQ8',
-              description: 'Identificador único de Google Maps'
+              description: 'Identificador único de Google Maps (Place ID)'
             },
             types: {
               type: 'array',
@@ -307,7 +365,7 @@ const options = {
                 type: 'string'
               },
               example: ['street_address', 'political'],
-              description: 'Tipos de lugar según Google Maps'
+              description: 'Tipos de lugar según la clasificación de Google Maps'
             }
           }
         },
@@ -316,13 +374,15 @@ const options = {
           properties: {
             success: {
               type: 'boolean',
-              example: true
+              example: true,
+              description: 'Indica si la operación fue exitosa'
             },
             data: {
               type: 'array',
               items: {
                 $ref: '#/components/schemas/Location'
-              }
+              },
+              description: 'Lista de ubicaciones encontradas. Puede contener múltiples resultados si la dirección es ambigua.'
             }
           }
         },
@@ -331,17 +391,20 @@ const options = {
           properties: {
             success: {
               type: 'boolean',
-              example: true
+              example: true,
+              description: 'Indica si la operación fue exitosa'
             },
             data: {
               type: 'object',
               properties: {
                 address: {
                   type: 'string',
-                  example: 'Plaça de la Independència, 17001 Girona, España'
+                  example: 'Plaça de la Independència, 17001 Girona, España',
+                  description: 'Dirección formateada más cercana a las coordenadas'
                 },
                 coordinates: {
-                  $ref: '#/components/schemas/Coordinates'
+                  $ref: '#/components/schemas/Coordinates',
+                  description: 'Coordenadas que se utilizaron para la búsqueda (eco de la petición)'
                 }
               }
             }
@@ -349,14 +412,17 @@ const options = {
         },
         Error: {
           type: 'object',
+          required: ['success', 'error'],
           properties: {
             success: {
               type: 'boolean',
-              example: false
+              example: false,
+              description: 'Siempre false en respuestas de error'
             },
             error: {
               type: 'string',
-              example: 'Se requieren origen y destino'
+              example: 'Se requieren origen y destino',
+              description: 'Mensaje de error descriptivo'
             }
           }
         }
