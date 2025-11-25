@@ -33,8 +33,9 @@ export const estacionDeBicingResolver = {
       console.log(location);
       const { coordinates, radiusKm = 5 } = location;
       console.log("valor de coods: ", coordinates);
+      console.log("radio utilizado: ", radiusKm, "km");
       const { latitude, longitude } = coordinates;
-      return getEstacionesBicingCercanas({ coordinates: { latitude, longitude }, radiusKm });
+      return getEstacionesBicingCercanas({ coordinates: { latitude, longitude } }, radiusKm);
     }
   }, 
 

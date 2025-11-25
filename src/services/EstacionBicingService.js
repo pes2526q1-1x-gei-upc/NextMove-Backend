@@ -32,8 +32,8 @@ export function getEstacionById(id) {
 }
 
 
-//Método para obtener las estaciones ordenadas por distancia (fixeado): 
-export function getEstacionesBicingCercanas(location) {
+//Método para obtener las estaciones ordenadas por distancia: 
+export function getEstacionesBicingCercanas(location, radiusKm = 5) {
   const lat = location.coordinates.latitude; 
   const lon = location.coordinates.longitude; 
   const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
@@ -52,7 +52,7 @@ export function getEstacionesBicingCercanas(location) {
         distanciaKm: distance
       }; 
     })
-    .filter(estacion => estacion.distanciaKm <= 5) 
+    .filter(estacion => estacion.distanciaKm <= radiusKm) 
     .sort((a, b) => a.distanciaKm - b.distanciaKm); 
     
   console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
