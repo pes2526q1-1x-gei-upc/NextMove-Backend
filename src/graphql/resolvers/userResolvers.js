@@ -10,8 +10,8 @@ export const userResolvers = {
           throw new Error('No autenticado');
         }
         
-        const user = context.user;
-        let dbUser = await usersRepo.getUserByEmail(context.user.email);
+        //const user = context.user;
+        const dbUser = await usersRepo.getUserByEmail(context.user.email);
         
         return dbUser;
         
