@@ -35,24 +35,55 @@ export const userResolvers = {
       return await usersRepo.getAllUsers();
     },
 
-    UsersByNickname: async (_, { nickname }, context) => {
+  UsersByNickname: async (_, { nickname }, context) => {
+      console.log(`\n--- [DEBUG] Buscando usuarios por: "${nickname}" ---`);
+      
       const users = await usersRepo.getUsersByNickname(nickname);
+      console.log(`[DEBUG] Candidatos iniciales encontrados: ${users.length}`);
 
-      if (context.user) {
-        try {
-          // Obtener lista de usuarios bloqueados por el usuario actual
-          const blockedList = await friendshipRepo.getBlockList(context.user.email);
-          const blockedNicknames = blockedList.map(b => b.blocked);
+      if (!context.user) return users;
 
-          // Filtrar usuarios que están en la lista de bloqueados
-          return users.filter(user => !blockedNicknames.includes(user.nickname));
-        } catch (error) {
-          console.error('Error filtrando usuarios bloqueados:', error);
-          return users;
-        }
+      try {
+        const myEmail = context.user.email;
+        const myProfile = await usersRepo.getUserByEmail(myEmail); 
+        myNickname = myProfile.nickname; 
+        let myNickname = context.user.nickname; 
+
+        // Obtener a quién he bloqueado yo
+        const myBlocks = await friendshipRepo.getBlockList(myEmail);
+        const usersIBlocked = new Set(myBlocks.map(b => b.blocked));
+        
+        // Filtramos
+        const finalResults = await Promise.all(users.map(async (candidateUser) => {
+            
+            // 1. Si YO lo bloqueé, fuera
+            if (usersIBlocked.has(candidateUser.nickname)) {
+                return null;
+            }
+
+            // 2. Si yo NO lo bloqueé, verificamos si ÉL me bloqueó a mí.
+            try {
+                const candidateBlockList = await friendshipRepo.getBlockList(candidateUser.email);
+                const isMeBlocked = candidateBlockList.some(b => b.blocked === myNickname);
+                if (isMeBlocked) {
+                    console.log(`[DEBUG] Ocultando a ${candidateUser.nickname} -> Me tiene bloqueado en su lista:`, candidateBlockList);
+                    return null; 
+                }
+                return candidateUser;
+            } catch (err) {
+                console.error(`[ERROR] Fallo verificando bloqueos de ${candidateUser.nickname}`, err);
+                return candidateUser; 
+            }
+        }));
+
+        const filteredUsers = finalResults.filter(u => u !== null);
+        console.log(`[DEBUG] Usuarios devueltos tras filtros: ${filteredUsers.length}`);
+        return filteredUsers;
+
+      } catch (error) {
+        console.error('[ERROR] Error general filtrando usuarios:', error);
+        return users;
       }
-
-      return users;
     }
   },
 
