@@ -1,6 +1,8 @@
 import UsersRepository from "../../repositories/UsersRepository.js";
+import FriendshipRepository from "../../repositories/FriendshipRepository.js";
 
 const usersRepo = new UsersRepository();
+const friendshipRepo = new FriendshipRepository();
 
 export const userResolvers = {
   Query: {
@@ -9,18 +11,18 @@ export const userResolvers = {
         if (!context.user) {
           throw new Error('No autenticado');
         }
-        
+
         const user = context.user;
         const dbUser = await usersRepo.getUserByEmail(context.user.email);
-        
+
         return dbUser;
-        
+
       } catch (err) {
         console.error('Error en me():', err.message);
         throw err;
       }
     },
-    
+
     User: async (_, { email }) => {
       const user = await usersRepo.getUserByEmail(email);
       if (!user) {
@@ -28,36 +30,52 @@ export const userResolvers = {
       }
       return user;
     },
-    
+
     Users: async () => {
       return await usersRepo.getAllUsers();
     },
 
-    UsersByNickname: async (_, { nickname }) => {
-      return await usersRepo.getUsersByNickname(nickname);
+    UsersByNickname: async (_, { nickname }, context) => {
+      const users = await usersRepo.getUsersByNickname(nickname);
+
+      if (context.user) {
+        try {
+          // Obtener lista de usuarios bloqueados por el usuario actual
+          const blockedList = await friendshipRepo.getBlockList(context.user.email);
+          const blockedNicknames = blockedList.map(b => b.blocked);
+
+          // Filtrar usuarios que están en la lista de bloqueados
+          return users.filter(user => !blockedNicknames.includes(user.nickname));
+        } catch (error) {
+          console.error('Error filtrando usuarios bloqueados:', error);
+          return users;
+        }
+      }
+
+      return users;
     }
   },
 
-  
+
   Mutation: {
     createUser: async (_, { createInfo }) => {
       try {
         const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = createInfo;
         console.log('Entramos en createUser. Esto es usuario: ', createInfo);
-        
+
         const existingUserByEmail = await usersRepo.getUserByEmail(email);
         console.log('Existing user by email check: ', existingUserByEmail);
         if (existingUserByEmail) {
           throw new Error(`Ya existe un usuario con el email: ${email}`);
         }
-        
+
         const existingUserByNickname = await usersRepo.existsUserByNickname(nickname);
         console.log('Existing user by nickname check: ', existingUserByNickname);
         // getUsersByNickname returns an array; an empty array means no user found
         if (existingUserByNickname) {
           throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
         }
-        
+
         const newUser = await usersRepo.createUser({
           email,
           name,
@@ -68,17 +86,17 @@ export const userResolvers = {
           bioDescription: bioDescription || null,
           birthDate: birthDate || null,
         });
-        
+
         console.log(`Usuario creado exitosamente: ${email}`);
         return newUser;
-        
+
       } catch (error) {
         console.error('Error creando usuario:', error.message);
         console.log('Error details: ', error.code);
         throw error;
       }
     },
-    
+
     updateMe: async (
       _,
       {
@@ -142,43 +160,43 @@ export const userResolvers = {
         throw error;
       }
     },
-        
+
     deleteMe: async (_, __, context) => {
       try {
         if (!context.user) {
           throw new Error('No autenticado');
         }
-        
+
         const userEmail = context.user.email;
         const deleted = await usersRepo.deleteUser(userEmail);
-        
+
         return deleted;
       } catch (error) {
         console.error('Error eliminando usuario:', error.message);
         return false;
       }
     },
-    
+
     updateUser: async (_, { email, name, preferredMode }) => {
       try {
         const user = await usersRepo.getUserByEmail(email);
         if (!user) {
           throw new Error('Usuario no encontrado');
         }
-        
+
         const changingData = {};
         if (name !== undefined) changingData.name = name;
         if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
-        
+
         const updatedUser = await usersRepo.updateUser(email, changingData);
-        
+
         return updatedUser;
       } catch (error) {
         console.error('Error actualizando usuario:', error.message);
         throw error;
       }
     },
-    
+
     deleteUser: async (_, { email }) => {
       try {
         const deleted = await usersRepo.deleteUser(email);
