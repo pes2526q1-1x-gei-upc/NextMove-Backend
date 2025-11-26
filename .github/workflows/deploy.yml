@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Echo workflow_run info
+        run: |
+          echo "Workflow run head_branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Workflow run conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+
       - name: Setup SSH Key
         uses: webfactory/ssh-agent@v0.7.0
         with:
