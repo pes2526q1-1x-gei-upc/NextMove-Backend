@@ -3,14 +3,14 @@ name: CI Backend
 on:
   push:
     branches:
-      - develop
+      - dev
       - 'feature-*/**'
       - 'release/*'
       - 'hotfix/*'
       - 'fix/*'
   pull_request:
     branches:
-      - develop
+      - dev
       - 'feature-*/**'
       - 'release/*'
       - 'hotfix/*'
