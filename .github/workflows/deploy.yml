@@ -5,10 +5,6 @@ on:
     workflows: ["CI Backend"]
     types:
       - completed
-    branches:
-      - main
-      - dev
-      - 'release/*'
 
 jobs:
   deploy:
@@ -24,13 +20,14 @@ jobs:
       - name: Definir servicio según rama
         id: vars
         run: |
-          if [ "${GITHUB_REF##*/}" == "main" ]; then
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          if [ "$BRANCH" == "main" ]; then
             echo "servicio=pro-backend" >> $GITHUB_OUTPUT
             echo "git_branch=main" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF}" == refs/heads/release/* ]]; then
+          elif [[ "$BRANCH" == release/* ]]; then
             echo "servicio=pre-backend" >> $GITHUB_OUTPUT
-            echo "git_branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
-          elif [ "${GITHUB_REF##*/}" == "dev" ]; then
+            echo "git_branch=$BRANCH" >> $GITHUB_OUTPUT
+          elif [ "$BRANCH" == "dev" ]; then
             echo "servicio=test-backend" >> $GITHUB_OUTPUT
             echo "git_branch=dev" >> $GITHUB_OUTPUT
           else
