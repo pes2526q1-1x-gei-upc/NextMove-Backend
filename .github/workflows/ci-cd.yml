@@ -1,0 +1,101 @@
+name: CI + Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - release/*
+      - 'feature-*/**'
+      - 'hotfix/*'
+      - 'fix/*'
+  pull_request:
+    branches:
+      - dev
+      - 'feature-*/**'
+      - 'release/*'
+      - 'hotfix/*'
+      - 'fix/*'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint linter and generate report
+        run: npx eslint . -f checkstyle -o eslint-report.xml
+
+      - name: Upload ESLint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-report
+          path: eslint-report.xml
+
+      - name: Run tests with report
+        run: |
+          mkdir -p test-reports
+          npm test -- --reporters=default --reporters=jest-junit
+        env:
+          CI: true
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: test-reports/junit.xml
+
+  deploy:
+    needs: lint-and-test
+    if: |
+      needs.lint-and-test.result == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Definir servicio según rama
+        id: vars
+        run: |
+          BRANCH="${GITHUB_REF##*/}"
+          if [ "$BRANCH" == "main" ]; then
+            echo "servicio=pro-backend" >> $GITHUB_OUTPUT
+          elif [[ "$BRANCH" == release/* ]]; then
+            echo "servicio=pre-backend" >> $GITHUB_OUTPUT
+          elif [ "$BRANCH" == "dev" ]; then
+            echo "servicio=test-backend" >> $GITHUB_OUTPUT
+          else
+            echo "servicio=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Desplegar servicio en EC2
+        if: steps.vars.outputs.servicio != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            cd /home/ubuntu/BeMotion
+            git fetch --all
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+            docker-compose build \
+              --build-arg GITHUB_TOKEN=${GH_TOKEN} \
+              --build-arg GIT_BRANCH=${{ github.ref_name }} \
+              ${{ steps.vars.outputs.servicio }}
+            docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
+          EOF
