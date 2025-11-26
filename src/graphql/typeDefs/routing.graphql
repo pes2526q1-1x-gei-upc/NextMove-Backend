@@ -1,0 +1,268 @@
+
+# API de enrutamiento y geocodificación usando Google Maps.
+# Se necesita estar autenticado para usar estas consultas.
+# Se espera que en el header de la request haya: "Authorization": "Bearer <token>"
+
+extend type Query {
+  
+  """
+  Calcula una o varias rutas entre dos ubicaciones usando Google Routes API.
+  Devuelve la ruta recomendada (priorizando opciones eco-friendly) y rutas alternativas si están disponibles.
+  El polyline devuelto es una cadena codificada que representa la geometría de la ruta para pintarla en un mapa.
+  Útil para: mostrar rutas a estaciones, calcular distancias y tiempos de viaje.
+  """
+  computeRoute(input: RouteInput!): RouteResponse!
+  
+  """
+  Busca una ubicación a partir de una dirección en texto (se le llama geocoding address -> coords).
+  Devuelve una lista de posibles ubicaciones con sus coordenadas y un placeId único de Google Maps.
+  Útil para: autocompletar búsquedas de destinos, convertir direcciones a coordenadas.
+  Ejemplo de uso: buscar "Carrer Jordi Girona" para obtener sus coordenadas exactas. 
+  Ten en cuenta que los outputs son muy sensibles al input dado. Por ej: para "Carrer Jordi Girona" saldría
+  una calle "Jordi" que está en Girona, no obstante para "Carrer Jordi Girona, " sale la calle de la UPC.
+
+  """
+  searchLocation(address: String!): [Location!]!
+  
+  """
+  Convierte coordenadas geográficas en una dirección legible (reverse geocoding).
+  Devuelve la dirección más cercana a las coordenadas proporcionadas.
+  Ejemplo: (41.9794, 2.8214) → "Plaça de la Independència, 17001 Girona, España"
+  No creo que lo uséis mucho, pero no costaba hacerlo y pues lo implemento por si acaso.
+  """
+  reverseGeocode(coordinates: CoordinatesInput!): String!
+}
+
+"""
+Parámetros de entrada para calcular una ruta.
+origin y destination son obligatorios, el resto son opcionales y modifican el comportamiento del cálculo.
+"""
+input RouteInput {
+  """Punto de partida de la ruta (coordenadas: latitude, longitude)"""
+  origin: CoordinatesInput!
+  
+  """Punto de llegada de la ruta (coordenadas: : latitude, longitude)"""
+  destination: CoordinatesInput!
+  
+  """
+  Modo de transporte. Por defecto: DRIVE (coche).
+  Afecta las carreteras utilizables y la velocidad estimada del viaje.
+  """
+  travelMode: TravelMode
+  
+  """
+  Preferencia de enrutamiento. Por defecto: TRAFFIC_AWARE_OPTIMAL.
+  Controla si se considera el tráfico en tiempo real para calcular la ruta.
+  """
+  routingPreference: RoutingPreference
+}
+
+"""
+Modos de transporte disponibles para calcular rutas.
+Cada modo usa diferentes tipos de vías y velocidades.
+"""
+enum TravelMode {
+  """Coche. Usa carreteras para vehículos motorizados"""
+  DRIVE
+  
+  """Bicicleta. Prioriza carriles bici y rutas seguras para ciclistas"""
+  BICYCLE
+}
+
+"""
+Preferencias para el cálculo de rutas que afectan cómo se considera el tráfico.
+"""
+enum RoutingPreference {
+  """Ignora el tráfico actual. Más rápido de calcular pero menos preciso"""
+  TRAFFIC_UNAWARE
+  
+  """Considera el tráfico actual. Más preciso pero puede tardar más en calcular"""
+  TRAFFIC_AWARE
+  
+  """Balancea tráfico y distancia para la ruta óptima. Recomendado para la mayoría de casos"""
+  TRAFFIC_AWARE_OPTIMAL
+}
+
+"""
+Respuesta completa del cálculo de rutas.
+Incluye todas las rutas encontradas y estadísticas útiles.
+"""
+type RouteResponse {
+  """Todas las rutas calculadas (normalmente 1-3 rutas alternativas)"""
+  routes: [Route!]!
+  
+  """
+  La ruta recomendada por el sistema.
+  Prioriza rutas eco-friendly y luego la más corta en distancia.
+  """
+  recommendedRoute: Route!
+  
+  """Número de rutas alternativas disponibles (excluyendo la recomendada)"""
+  alternativeRoutesCount: Int!
+  
+  """Número de rutas marcadas como eco-friendly (menor consumo de energía)"""
+  ecoFriendlyOptionsCount: Int!
+}
+
+"""
+Representa una ruta completa entre origen y destino.
+Incluye toda la información necesaria para mostrarla en un mapa y al usuario.
+"""
+type Route {
+  """Distancia total en km """
+  distance: String!
+  
+  """Distancia total en metros. Usar para cálculos y comparaciones"""
+  distanceMeters: Int!
+  
+  """Duración estimada en formato legible (ej: "1h 15min")"""
+  duration: String!
+  
+  """Duración estimada en segundos. Usar para cálculos y comparaciones"""
+  durationSeconds: Int!
+  
+  """
+  Polyline codificado de Google Maps que representa la ruta completa de la ruta.
+  Podríamos usar con flutter_polyline_points para decodificarlo y pintarlo en el mapa?
+  """
+  polyline: String!
+  
+  """
+  Indica si Google marcó esta ruta como eco-friendly (optimizada para menor consumo).
+  Las rutas eco-friendly usan carreteras con menos pendientes y tráfico fluido.
+  """
+  isEcoFriendly: Boolean!
+  
+  """
+  Etiquetas que Google asigna a la ruta. Valores comunes:
+  - "DEFAULT_ROUTE": Ruta estándar
+  - "ECO_FRIENDLY": Ruta optimizada para menor consumo
+  - "DEFAULT_ROUTE_ALTERNATE": Ruta alternativa
+  """
+  routeLabels: [String!]!
+  
+  """
+  Información adicional sobre peajes y consumo estimado.
+  Puede ser null si no hay información disponible.
+  """
+  travelAdvisory: TravelAdvisory
+  
+  """
+  Lista de pasos de navegación turn-by-turn.
+  Cada paso incluye una instrucción (ej: "Gira a la izquierda en...").
+  """
+  steps: [RouteStep!]!
+  
+  """Coordenadas exactas del punto de inicio de la ruta"""
+  startLocation: Coordinates
+  
+  """Coordenadas exactas del punto final de la ruta"""
+  endLocation: Coordinates
+  
+  """
+  Rectángulo que contiene toda la ruta (bounding box).
+  Útil para ajustar automáticamente el zoom del mapa para mostrar la ruta completa.
+  """
+  viewport: Viewport
+}
+
+"""
+Información adicional sobre la ruta: peajes, costos estimados y consumo.
+"""
+type TravelAdvisory {
+  """Indica si la ruta incluye carreteras de peaje"""
+  hasTollRoads: Boolean!
+  
+  """
+  Precio estimado total de los peajes en la ruta (ej: "5.50 EUR").
+  Puede ser null si no hay peajes o la información no está disponible.
+  """
+  estimatedTollPrice: String
+  
+  """
+  Consumo estimado de combustible en litros (ej: "8.5 L").
+  Puede ser null si la información no está disponible.
+  """
+  fuelConsumption: String
+}
+
+"""
+Un paso individual de navegación dentro de una ruta.
+Representa una maniobra específica (girar, continuar recto, tomar salida, etc.).
+"""
+type RouteStep {
+  """
+  Instrucción de navegación en texto (ej: "Gira a la izquierda en Carrer Major").
+  """
+  instruction: String!
+  
+  """Distancia de este paso en formato legible (ej: "0.5 km")"""
+  distance: String!
+  
+  """Distancia de este paso en metros"""
+  distanceMeters: Int!
+  
+  """Duración estimada de este paso en formato legible (ej: "2min")"""
+  duration: String!
+  
+  """Duración estimada de este paso en segundos"""
+  durationSeconds: Int!
+  
+  """Coordenadas donde comienza este paso"""
+  startLocation: Coordinates
+  
+  """Coordenadas donde termina este paso"""
+  endLocation: Coordinates
+  
+  """
+  Polyline: cadena de texto codificada que contiene TODAS las coordenadas del paso.
+  Es como un "dibujo comprimido" de la línea que sigue la ruta en ese tramo.
+  Google lo comprime para ahorrar espacio (en lugar de enviar miles de coordenadas).
+  En Flutter: usar flutter_polyline_points.decodePolyline() para convertirlo en puntos
+  y luego pintar la línea azul sobre el mapa que muestra el camino exacto.
+  """
+  polyline: String
+}
+
+"""
+Viewport: "rectángulo imaginario" que encierra toda la ruta en el mapa.
+Sirve para que el mapa haga zoom automático y muestre la ruta completa.
+Low = esquina abajo-izquierda (suroeste), High = esquina arriba-derecha (noreste).
+En Flutter: usar estos puntos para ajustar la cámara? No sé si haría falta.
+"""
+type Viewport {
+  """Esquina suroeste del rectángulo (latitud y longitud mínimas)"""
+  low: Coordinates!
+  
+  """Esquina noreste del rectángulo (latitud y longitud máximas)"""
+  high: Coordinates!
+}
+
+"""
+Representa una ubicación encontrada mediante búsqueda de texto.
+"""
+type Location {
+  """
+  Dirección completa formateada según estándares locales.
+  Ejemplo: "Plaça de la Independència, 17001 Girona, España"
+  """
+  formattedAddress: String!
+  
+  """Coordenadas GPS exactas de la ubicación"""
+  coordinates: Coordinates!
+  
+  """
+  Identificador único de Google Maps para este lugar.
+  Útil para referencias futuras y búsquedas más precisas.
+  """
+  placeId: String!
+  
+  """
+  Tipos de lugar según la clasificación de Google. Ejemplos:
+  - "street_address": Dirección de calle
+  - "locality": Ciudad o pueblo
+  - "point_of_interest": Punto de interés
+  - "establishment": Establecimiento comercial
+  """
+  types: [String!]!
+}

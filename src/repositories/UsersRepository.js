@@ -1,4 +1,3 @@
-// src/repositories/UsersRepository.js
 import  pool  from '../config/database.js';
 
 class UsersRepository {
@@ -11,7 +10,7 @@ class UsersRepository {
       SELECT
         id,
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
         birth_date AS "birthDate",
@@ -33,10 +32,10 @@ class UsersRepository {
     const result = await pool.query(`
       SELECT 
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
-        birth_date AS "birthDate",
+        TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate", 
         phone_number AS "phoneNumber",
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
@@ -51,11 +50,11 @@ class UsersRepository {
   /**
    * Obtener usuario por nickname
    */
-  async getUserByNickname(nickname) {
+async getUsersByNickname(nickname) {
     const result = await pool.query(`
       SELECT 
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
         birth_date AS "birthDate",
@@ -65,43 +64,61 @@ class UsersRepository {
         bio_description AS "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
       FROM users
+      WHERE nickname ILIKE $1
+      ORDER BY nickname
+    `, [`${nickname}%`]);
+    
+    // console.log("Datos:", result.rows);
+    
+    return result.rows;
+}
+
+async existsUserByNickname(nickname) {
+    const result = await pool.query(`
+      SELECT 1
+      FROM users
       WHERE nickname = $1
     `, [nickname]);
-    return result.rows[0];
-  }
+    return result.rows.length > 0;
+}
 
   /**
    * Crear nuevo usuario
    */
   async createUser(userData) {
-    const { email, fullName, nickname, phoneNumber, preferredMode } = userData;
+    const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = userData;
+    console.log('Creating user with data:', userData);
 
-    if (!email || !fullName || !nickname || !preferredMode) {
-      throw new Error('Los campos email, fullName, nickname y preferredMode son obligatorios');
+    if (!email || !name || !nickname || !preferredMode) {
+      throw new Error('Los campos email, name, nickname y preferredMode son obligatorios');
     }
 
     try {
+      console.log('Birth date: ', birthDate);
       const result = await pool.query(`
         INSERT INTO users (
           email,
-          fullname,
+          name,
           nickname,
           phone_number,
-          preferred_mode
+          preferred_mode,
+          preferred_language,
+          bio_description,
+          birth_date
         )
-        VALUES ($1, $2, $3, $4, $5::mode)
+        VALUES ($1, $2, $3, $4, $5::"MODE" , $6, $7, $8::date)
         RETURNING 
           email,
-          fullname AS "fullName",
+          name AS "name",
           nickname,
           photo,
-          birth_date AS "birthDate",
           phone_number AS "phoneNumber",
           preferred_mode AS "preferredMode",
           preferred_language AS "preferredLanguage",
           bio_description AS "bioDescription",
+          TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
           TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
-      `, [email, fullName, nickname, phoneNumber || null, preferredMode]); 
+      `, [email, name, nickname, phoneNumber || null, preferredMode, preferredLanguage || "ESP", bioDescription || null, birthDate || null]); 
 
       return result.rows[0];
     } catch (error) {
@@ -125,9 +142,9 @@ class UsersRepository {
     const values = [];
     let paramIndex = 1;
 
-    if (changingData.fullName !== undefined) {
-      fields.push(`fullname = $${paramIndex++}`);
-      values.push(changingData.fullName);
+    if (changingData.name !== undefined) {
+      fields.push(`name = $${paramIndex++}`);
+      values.push(changingData.name);
     }
     if (changingData.nickname !== undefined) {
       fields.push(`nickname = $${paramIndex++}`);
@@ -146,7 +163,7 @@ class UsersRepository {
       values.push(changingData.bioDescription);
     }
     if (changingData.preferredMode !== undefined) {
-      fields.push(`preferred_mode = $${paramIndex++}::mode`);
+      fields.push(`preferred_mode = $${paramIndex++}::"MODE"`);
       values.push(changingData.preferredMode);
     }
     if (changingData.preferredLanguage !== undefined) {
@@ -170,10 +187,10 @@ class UsersRepository {
       WHERE email = $${paramIndex}
       RETURNING 
         email,
-        fullname AS "fullName",
+        name AS "name",
         nickname,
         photo,
-        birth_date AS "birthDate",
+        TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
         phone_number AS "phoneNumber",
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage", 

@@ -1,0 +1,25 @@
+
+
+type Assessment{
+    nickname: String!
+    station_id: String!
+    score: Int!
+    comments: String
+    created_at: String!
+}
+
+type AssessmentInfo{
+    averageScore: Float!
+    totalAssessments: Int!
+}
+
+extend type Query{
+    getAssessmentsByStationId(id: String!): [Assessment]!
+    getStationAssessmentInfo(id: String!): AssessmentInfo!
+}
+
+extend type Mutation{
+    createAssessment(station_id: String!, score: Int!, comments: String): Float
+    deleteAssessment(station_id: String!): Float
+    editAssessment(station_id: String!, score: Int, comments: String): Float
+}

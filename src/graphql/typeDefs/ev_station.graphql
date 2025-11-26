@@ -140,6 +140,30 @@ extend type Query {
   """
   nearbyStations(location: LocationInput!): [Station!]!
   
+  """
+  Busca estaciones de carga que coincidan con una dirección dada (por matching parcial, que contenga el input).
+  query StationsByAddress($address: String!) {
+    stationsByAddress (address: $address) {
+      id
+      name
+      address
+      city
+      coordinates{
+        longitude
+        latitude
+      }
+      isSuperFast
+      lastUpdated
+      distance
+      connectors {
+        type
+        powerKw
+        status
+      }
+    }
+  }
+  """
+  stationsByAddress(address: String!): [Station!]!  
 
   # QUERIES NO IMPLEMENTADAS Y QUE TAMPOCO NOS IMPORTAN POR EL MOMENTO
   stationsInBounds(bounds: BoundsInput!): [Station!]!
