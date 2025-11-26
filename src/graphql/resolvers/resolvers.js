@@ -4,62 +4,62 @@ import { estacionDeBicingResolver } from './EstacionDeBicingResolver.js';
 import { friendshipResolvers } from './FriendshipResolvers.js';
 import { recorridosResolver } from './RecorridoResolver.js';
 import { assessmentResolver } from './AssessmentResolvers.js';
-import routingResolvers  from './routingResolvers.js'
+import routingResolvers  from './routingResolvers.js';
 
 
 
-  export const resolvers = {
-    Query: {
-      hello: () => 'Hello world!',
-      me: userResolvers.Query.me,
-      User: userResolvers.Query.User,
-      Users: userResolvers.Query.Users,
-      UsersByNickname: userResolvers.Query.UsersByNickname,
+export const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+    me: userResolvers.Query.me,
+    User: userResolvers.Query.User,
+    Users: userResolvers.Query.Users,
+    UsersByNickname: userResolvers.Query.UsersByNickname,
       
-      stations: EVStationResolvers.Query.stations,
-      station: EVStationResolvers.Query.station,
-      nearbyStations: EVStationResolvers.Query.nearbyStations,
-      stationsByAddress: EVStationResolvers.Query.stationsByAddress,
+    stations: EVStationResolvers.Query.stations,
+    station: EVStationResolvers.Query.station,
+    nearbyStations: EVStationResolvers.Query.nearbyStations,
+    stationsByAddress: EVStationResolvers.Query.stationsByAddress,
 
-      getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
-      getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
-      getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
+    getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
+    getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
+    getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
       
-      ListFriends: friendshipResolvers.Query.ListFriends,
-      AllFriends: friendshipResolvers.Query.AllFriends,
+    ListFriends: friendshipResolvers.Query.ListFriends,
+    AllFriends: friendshipResolvers.Query.AllFriends,
 
-      recorridos: recorridosResolver.Query.recorridos, 
-      recorrido: recorridosResolver.Query.recorrido, 
-      recorridosByUser: recorridosResolver.Query.recorridosByUser,
-      ...routingResolvers.Query,
+    recorridos: recorridosResolver.Query.recorridos, 
+    recorrido: recorridosResolver.Query.recorrido, 
+    recorridosByUser: recorridosResolver.Query.recorridosByUser,
+    ...routingResolvers.Query,
 
-      getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
-      getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
-      BlockList: friendshipResolvers.Query.BlockList,
-    },
-    Mutation: {
-      createUser: userResolvers.Mutation.createUser,
-      updateMe: userResolvers.Mutation.updateMe,
-      deleteMe: userResolvers.Mutation.deleteMe,
-      updateUser: userResolvers.Mutation.updateUser,
-      deleteUser: userResolvers.Mutation.deleteUser,
+    getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
+    getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
+    BlockList: friendshipResolvers.Query.BlockList,
+  },
+  Mutation: {
+    createUser: userResolvers.Mutation.createUser,
+    updateMe: userResolvers.Mutation.updateMe,
+    deleteMe: userResolvers.Mutation.deleteMe,
+    updateUser: userResolvers.Mutation.updateUser,
+    deleteUser: userResolvers.Mutation.deleteUser,
 
-      AddFriendship: friendshipResolvers.Mutation.AddFriendship,
-      RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship,
+    AddFriendship: friendshipResolvers.Mutation.AddFriendship,
+    RemoveFriendship: friendshipResolvers.Mutation.RemoveFriendship,
 
-      createRecorrido: recorridosResolver.Mutation.createRecorrido,
-      updateRecorrido: recorridosResolver.Mutation.updateRecorrido,
-      deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido, 
+    createRecorrido: recorridosResolver.Mutation.createRecorrido,
+    updateRecorrido: recorridosResolver.Mutation.updateRecorrido,
+    deleteRecorrido: recorridosResolver.Mutation.deleteRecorrido, 
 
-      createEstacionDeBicing: estacionDeBicingResolver.Mutation.createEstacionDeBicing,
-      updateEstacionDeBicing:  estacionDeBicingResolver.Mutation.updateEstacionDeBicing,
-      deleteEstacionDeBicing: estacionDeBicingResolver.Mutation.deleteEstacionDeBicing,
+    createEstacionDeBicing: estacionDeBicingResolver.Mutation.createEstacionDeBicing,
+    updateEstacionDeBicing:  estacionDeBicingResolver.Mutation.updateEstacionDeBicing,
+    deleteEstacionDeBicing: estacionDeBicingResolver.Mutation.deleteEstacionDeBicing,
 
-      createAssessment: assessmentResolver.Mutation.createAssessment,
-      deleteAssessment: assessmentResolver.Mutation.deleteAssessment,
-      editAssessment: assessmentResolver.Mutation.editAssessment,
+    createAssessment: assessmentResolver.Mutation.createAssessment,
+    deleteAssessment: assessmentResolver.Mutation.deleteAssessment,
+    editAssessment: assessmentResolver.Mutation.editAssessment,
 
-      BlockUser: friendshipResolvers.Mutation.BlockUser,
-      UnBlockUser: friendshipResolvers.Mutation.UnBlockUser,
-    }
-  };
+    BlockUser: friendshipResolvers.Mutation.BlockUser,
+    UnBlockUser: friendshipResolvers.Mutation.UnBlockUser,
+  }
+};

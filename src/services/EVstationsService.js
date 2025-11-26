@@ -58,7 +58,7 @@ export default class StationsService {
     return dbStations.map(dbStation => {
       const dynamicData = dynamicCache.get(dbStation.id);  
       return mapRepositoryToGraphQL(dbStation, dynamicData);
-    })
+    });
   }
 
   async getStationsInBounds(bounds) {

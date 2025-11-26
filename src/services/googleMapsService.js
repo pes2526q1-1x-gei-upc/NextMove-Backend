@@ -40,7 +40,7 @@ class GoogleMapsService {
         units: 'METRIC'
       };
 
-    // Solo añadir routingPreference para modos de vehículos motorizados
+      // Solo añadir routingPreference para modos de vehículos motorizados
       // BICYCLE y WALK no soportan routingPreference
 
       if (requestBody.travelMode === 'DRIVE' || requestBody.travelMode === 'TWO_WHEELER') {

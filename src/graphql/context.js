@@ -13,6 +13,7 @@ export async function createContext(req, res) {
   let user = null;
   // console.log(token);
   if (token) {
+    // eslint-disable-next-line no-useless-catch
     try {
       user = await authService.verifyToken(token);
     } catch (error) {

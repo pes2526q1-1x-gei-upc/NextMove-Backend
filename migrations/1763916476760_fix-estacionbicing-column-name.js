@@ -25,6 +25,6 @@ export const up = (pgm) => {
 export const down = (pgm) => {
   pgm.dropConstraint('estacionbicing', 'estacionbicing_plazastotales_check', { ifExists: true });
   pgm.renameColumn('estacionbicing', 'plazastotales', 'plazasTotales');
-	pgm.renameColumn('estacionbicing', 'estacioncargaelectrica', 'estacionCargaElectrica');
+  pgm.renameColumn('estacionbicing', 'estacioncargaelectrica', 'estacionCargaElectrica');
   pgm.addConstraint('estacionbicing', 'estacionbicing_plazasTotales_check', 'CHECK ("plazasTotales" >= 0)');
 };

@@ -91,14 +91,14 @@ export function extractDynamicData(icaenFeature) {
 
 function mapStatus(estatCode) {
   switch (estatCode) {
-    case '0':
-      return 'OCCUPIED';
-    case '1':
-      return 'AVAILABLE';
-    case '-':
-      return 'UNAVAILABLE';
-    default:
-      return 'UNAVAILABLE';
+  case '0':
+    return 'OCCUPIED';
+  case '1':
+    return 'AVAILABLE';
+  case '-':
+    return 'UNAVAILABLE';
+  default:
+    return 'UNAVAILABLE';
   }
 }
 

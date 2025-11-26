@@ -1,36 +1,59 @@
-name: Node.js CI
+name: CI Backend
 
 on:
   push:
     branches:
-      - main
-      - dev
-      - 'feature/**'
+      - develop
+      - 'feature-*/**'
+      - 'release/*'
+      - 'hotfix/*'
+      - 'fix/*'
   pull_request:
     branches:
-      - main
-      - dev
+      - develop
+      - 'feature-*/**'
+      - 'release/*'
+      - 'hotfix/*'
+      - 'fix/*'
 
 jobs:
-  build:
+  lint-and-test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20.x]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm install
 
-      - name: Run tests
-        run: npm test
+    - name: Run ESLint linter and generate report
+      run: npx eslint . -f checkstyle -o eslint-report.xml
+
+    - name: Upload ESLint report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: eslint-report
+        path: eslint-report.xml
+
+    - name: Run tests with report
+      run: |
+        mkdir -p test-reports
+        npm test -- --reporters=default --reporters=jest-junit
+      env:
+        CI: true
+
+    - name: Upload test report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-report
+        path: test-reports/junit.xml
+
+

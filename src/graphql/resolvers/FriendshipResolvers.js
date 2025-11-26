@@ -5,7 +5,7 @@ const friendshipRepository = new FriendshipRepository();
 export const friendshipResolvers = {
   Query: {
     ListFriends: async (_, __, context) => {
-      if(!context.user) {
+      if (!context.user) {
         throw new Error('No autenticado');
       }
       return await friendshipRepository.getFriendships(context.user.email);

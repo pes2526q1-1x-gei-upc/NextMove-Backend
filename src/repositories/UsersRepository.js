@@ -50,7 +50,7 @@ class UsersRepository {
   /**
    * Obtener usuario por nickname
    */
-async getUsersByNickname(nickname) {
+  async getUsersByNickname(nickname) {
     const result = await pool.query(`
       SELECT 
         email,
@@ -71,16 +71,16 @@ async getUsersByNickname(nickname) {
     // console.log("Datos:", result.rows);
     
     return result.rows;
-}
+  }
 
-async existsUserByNickname(nickname) {
+  async existsUserByNickname(nickname) {
     const result = await pool.query(`
       SELECT 1
       FROM users
       WHERE nickname = $1
     `, [nickname]);
     return result.rows.length > 0;
-}
+  }
 
   /**
    * Crear nuevo usuario

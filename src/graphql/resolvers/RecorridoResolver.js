@@ -123,27 +123,26 @@ export const recorridosResolver = {
         //en el caso que no se den estos errores derivados de bd: 
         throw new Error('No se pudo realizar la modificación del recorrido de forma correcta.'); 
       }
-
     },
+  },
 
-    deleteRecorrido: async (_, { id }, context) => {
-      try {
-        if (!context || !context.user) {
-          throw new Error("No estás autenticado, debes inciar sesión!"); 
-        }
-        //sabemos que si se elimina rowCount retorna 1, sino 0. 
-        const deleted = await recorridosRepo.deleteRecorrido(id); 
-        if (!deleted) {
-          throw new Error("RecorridoResolver: Error no se ha eliminado el recorrido porque no existe"); 
-        }
-        else return deleted; 
-      } catch (error) {
-        if (error.code === '23503') {
-          throw new Error('No se puede eliminar el recorrido porqie otros datos dependen de él.'); 
-        }
-        console.error("Error desconocido al eliminar recorrido.", error); 
-        throw new Error("No se puede eliminar el recorrido precisado!"); 
+  deleteRecorrido: async (_, { id }, context) => {
+    try {
+      if (!context || !context.user) {
+        throw new Error("No estás autenticado, debes inciar sesión!"); 
       }
-    } 
-  }
+      //sabemos que si se elimina rowCount retorna 1, sino 0. 
+      const deleted = await recorridosRepo.deleteRecorrido(id); 
+      if (!deleted) {
+        throw new Error("RecorridoResolver: Error no se ha eliminado el recorrido porque no existe"); 
+      }
+      else return deleted; 
+    } catch (error) {
+      if (error.code === '23503') {
+        throw new Error('No se puede eliminar el recorrido porqie otros datos dependen de él.'); 
+      }
+      console.error("Error desconocido al eliminar recorrido.", error); 
+      throw new Error("No se puede eliminar el recorrido precisado!"); 
+    }
+  } 
 };

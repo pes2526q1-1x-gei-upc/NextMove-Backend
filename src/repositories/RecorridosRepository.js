@@ -90,7 +90,8 @@ class RecorridosRepository {
   async saveRecorrido(recorridoData) {
     const pointOrigen = formatToPgPoint(recorridoData.origen); 
     const  pointDestino = formatToPgPoint(recorridoData.destino); 
-    //console.log('datos de recorrido: ' + recorridoData); 
+    //console.log('datos de recorrido: ' + recorridoData);
+    // eslint-disable-next-line no-useless-catch 
     try {
       let fechaParam = recorridoData.fecha_recorrido;
       // Si no se proporciona fecha_recorrido, usar la fecha actual en ISO
@@ -189,6 +190,7 @@ class RecorridosRepository {
             WHERE id = $${paramIndex}
             RETURNING *
             `;
+    // eslint-disable-next-line no-useless-catch
     try {
       const result = await pool.query(query, values); 
       return this._transformRecorrido(result.rows[0]) || null; 
