@@ -10,7 +10,7 @@ import authService from '../services/AuthService.js';
 export async function createContext(req, res) {
   const authHeader = req?.headers?.authorization;
   const token = authService.extractToken(authHeader);
-   let user = null;
+  let user = null;
   // console.log(token);
   if (token) {
     // eslint-disable-next-line no-useless-catch
