@@ -105,7 +105,7 @@ export const userResolvers = {
   Mutation: {
     createUser: async (_, { createInfo }) => {
       try {
-        const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = createInfo;
+        const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = createInfo;
         console.log('Entramos en createUser. Esto es usuario: ', createInfo);
 
         const existingUserByEmail = await usersRepo.getUserByEmail(email);
@@ -122,6 +122,7 @@ export const userResolvers = {
 
         const newUser = await usersRepo.createUser({
           email,
+          photo,
           name,
           nickname,
           phoneNumber: phoneNumber || null,
@@ -281,3 +282,4 @@ export const userResolvers = {
     },
   },
 };
+
