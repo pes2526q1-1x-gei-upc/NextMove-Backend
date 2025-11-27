@@ -31,6 +31,7 @@ export default class StationsRepository {
     */      
    
         const offset = index * 11;
+        const stationId = `${station.arrayIndex}_CAR`;
         placeholders.push(
           `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, 
           ST_SetSRID(ST_MakePoint($${offset + 6}, $${offset + 7}), 4326),
@@ -38,7 +39,7 @@ export default class StationsRepository {
         );
       
         values.push(
-          station.arrayIndex,
+          stationId,
           station.id,
           station.name,
           station.address,
@@ -52,6 +53,14 @@ export default class StationsRepository {
         );
       });
     
+      const stationIds = stationsData.map(s => `${s.arrayIndex}_CAR`);
+      const stationsPlaceholders = stationIds.map((_, i) => `($${i + 1})`).join(', ');
+      
+      await client.query(
+        `INSERT INTO stations (id) VALUES ${stationsPlaceholders} ON CONFLICT (id) DO NOTHING`,
+        stationIds
+      );
+      
       const query = `
       INSERT INTO ev_stations (
         id, external_id, name, address, city, coordinates,
