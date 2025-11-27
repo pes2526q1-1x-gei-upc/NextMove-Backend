@@ -24,13 +24,14 @@ export const resolvers = {
     getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
     getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
     getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
+    getEstacionesDeBicingPorDireccion: estacionDeBicingResolver.Query.getEstacionesDeBicingPorDireccion,
       
     ListFriends: friendshipResolvers.Query.ListFriends,
     AllFriends: friendshipResolvers.Query.AllFriends,
 
     recorridos: recorridosResolver.Query.recorridos, 
     recorrido: recorridosResolver.Query.recorrido, 
-    recorridosByUser: recorridosResolver.Query.recorridosByUser,
+    recorridosByUser: recorridosResolver.Query.recorridosByUser, 
     ...routingResolvers.Query,
 
     getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
