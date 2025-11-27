@@ -207,32 +207,58 @@ class StationsSyncWorker {
     console.log(`Syncing ${icaenStations.length} stations to database...`);
 
     try {
-    // 1. Limpiar tabla
-      console.log('Clearing existing stations...');
-      await this.repository.deleteAllStations();
-    
-      // 2. Mapear con índice como ID
-      const mappedStations = icaenStations.map((feature, index) => ({
-        ...mapICAENToRepository(feature),
-        arrayIndex: index  // Agregar índice
-      }));
+      const currentDbIds = new Set(await this.repository.getAllStationIds());
+      console.log(`Current DB stations: ${currentDbIds.size}`);
 
-      // 3. Insertar en batch
+      const newApiIds = new Set(
+        icaenStations.map((_, index) => `${index}_CAR`)
+      );
+      console.log(`API stations: ${newApiIds.size}`);
 
-      console.log('Inserting stations in batch...');
-      const successCount = await this.repository.batchInsertStations(mappedStations);
-    
+      const idsToDelete = [...currentDbIds].filter(id => !newApiIds.has(id));
+      const idsToInsert = [...newApiIds].filter(id => !currentDbIds.has(id));
+
+      console.log(`\nChanges detected:`);
+      console.log(`  To delete: ${idsToDelete.length}`);
+      console.log(`  To insert: ${idsToInsert.length}`);
+      console.log(`  Unchanged: ${currentDbIds.size - idsToDelete.length}`);
+
+      let deletedCount = 0;
+      let insertedCount = 0;
+
+      if (idsToDelete.length > 0) {
+        console.log(`\nDeleting ${idsToDelete.length} removed stations...`);
+        deletedCount = await this.repository.deleteStationsByIds(idsToDelete);
+        console.log(`Deleted: ${deletedCount}`);
+      }
+
+      if (idsToInsert.length > 0) {
+        console.log(`\nInserting ${idsToInsert.length} new stations...`);
+      
+        const stationsToInsert = icaenStations
+          .map((feature, index) => ({
+            ...mapICAENToRepository(feature),
+            arrayIndex: index
+          }))
+          .filter(station => idsToInsert.includes(`${station.arrayIndex}_CAR`));
+
+        insertedCount = await this.repository.batchInsertStations(stationsToInsert);
+        console.log(`Inserted: ${insertedCount}`);
+      }
 
       const duration = Date.now() - startTime;
-    
+  
       console.log(`\nDatabase sync completed:`);
-      console.log(`  Stations inserted: ${successCount}`);
+      console.log(`  Stations deleted: ${deletedCount}`);
+      console.log(`  Stations inserted: ${insertedCount}`);
+      console.log(`  Total in DB: ${currentDbIds.size - deletedCount + insertedCount}`);
       console.log(`  Duration: ${duration}ms`);
 
       return {
         success: true,
-        successCount,
-        errorCount: 0,
+        deletedCount,
+        insertedCount,
+        unchangedCount: currentDbIds.size - deletedCount,
         duration
       };
 
@@ -240,7 +266,7 @@ class StationsSyncWorker {
       const duration = Date.now() - startTime;
       console.error(`Database sync failed after ${duration}ms:`, error);
       this.stats.lastDbSyncSuccess = false;
-    
+  
       throw error;
     }
   }

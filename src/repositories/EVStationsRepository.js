@@ -2,7 +2,39 @@ import pool from '../config/database.js';
 
 export default class StationsRepository {
 
+  async getAllStationIds() {
+    const query = 'SELECT id FROM ev_stations ORDER BY id';
+    
+    try {
+      const result = await pool.query(query);
+      return result.rows.map(row => row.id);
+    } catch (error) {
+      console.error('Error getting all station IDs:', error);
+      throw error;
+    }
+  }
+
+  async deleteStationsByIds(ids) {
+    if (!ids || ids.length === 0) {
+      return 0;
+    }
+
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+    const query = `DELETE FROM ev_stations WHERE id IN (${placeholders})`;
+    
+    try {
+      const result = await pool.query(query, ids);
+      return result.rowCount;
+    } catch (error) {
+      console.error('Error deleting stations by IDs:', error);
+      throw error;
+    }
+  }
+
   async batchInsertStations(stationsData) {
+    if (!stationsData || stationsData.length === 0) {
+      return 0;
+    }
     const client = await pool.connect();
   
     try {
@@ -32,7 +64,6 @@ export default class StationsRepository {
    
         const offset = index * 11;
         const stationId = `${station.arrayIndex}_CAR`;
-
         placeholders.push(
           `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, 
           ST_SetSRID(ST_MakePoint($${offset + 6}, $${offset + 7}), 4326),
@@ -62,7 +93,6 @@ export default class StationsRepository {
         `INSERT INTO stations (id) VALUES ${stationsPlaceholders} ON CONFLICT (id) DO NOTHING`,
         stationIds
       );
-
       const query = `
       INSERT INTO ev_stations (
         id, external_id, name, address, city, coordinates,
