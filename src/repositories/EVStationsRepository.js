@@ -2,7 +2,39 @@ import pool from '../config/database.js';
 
 export default class StationsRepository {
 
+    async getAllStationIds() {
+    const query = 'SELECT id FROM ev_stations ORDER BY id';
+    
+    try {
+      const result = await pool.query(query);
+      return result.rows.map(row => row.id);
+    } catch (error) {
+      console.error('Error getting all station IDs:', error);
+      throw error;
+    }
+  }
+
+  async deleteStationsByIds(ids) {
+    if (!ids || ids.length === 0) {
+      return 0;
+    }
+
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+    const query = `DELETE FROM ev_stations WHERE id IN (${placeholders})`;
+    
+    try {
+      const result = await pool.query(query, ids);
+      return result.rowCount;
+    } catch (error) {
+      console.error('Error deleting stations by IDs:', error);
+      throw error;
+    }
+  }
+
   async batchInsertStations(stationsData) {
+    if (!stationsData || stationsData.length === 0) {
+      return 0;
+    }
     const client = await pool.connect();
   
     try {
