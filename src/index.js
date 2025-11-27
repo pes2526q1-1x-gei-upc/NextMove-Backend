@@ -11,10 +11,19 @@ import syncWorker from './workers/EVstationsSyncWorker.js';
 import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 import { createContext } from './graphql/context.js';
 import routingRoutes from './routes/routingRoutes.js';
+import uploadProfilePhotoRouter from './routes/uploadProfilePhoto.js'; // Ajusta ruta según ubicación
+
+
 
 //const stationsService = new StationsService();
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+
+// dotenv already loaded by import 'dotenv/config'; no need to call dotenv.config again here
+
+app.use('/api', uploadProfilePhotoRouter);
+
 
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
