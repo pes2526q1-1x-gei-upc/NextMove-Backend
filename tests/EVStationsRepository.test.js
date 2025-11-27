@@ -1,7 +1,7 @@
 import { applyDatabaseMock, mockQuery, mockClient } from './helpers/databaseMock.js';
 await applyDatabaseMock();
 const { default: EVStationsRepository } = await import('../src/repositories/EVStationsRepository.js');
-
+import { jest } from '@jest/globals';
 // Datos mock reutilizables
 const mockStationInput = {
   arrayIndex: 0,
@@ -124,12 +124,14 @@ describe('EVStationsRepository - CRUD (mocked pool)', () => {
     const count = await repo.batchInsertStations(stations);
 
     expect(count).toBe(2);
-    expect(mockClient.query).toHaveBeenCalledTimes(3);
+    expect(mockClient.query).toHaveBeenCalledTimes(4);
     expect(mockClient.release).toHaveBeenCalled();
   });
 
   test('batchInsertStations: hace ROLLBACK si falla una inserción', async () => {
     const stations = [mockStationInput];
+    
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     
     mockClient.query
       .mockResolvedValueOnce({}) // BEGIN
@@ -138,10 +140,11 @@ describe('EVStationsRepository - CRUD (mocked pool)', () => {
     const repo = new EVStationsRepository();
     await expect(repo.batchInsertStations(stations)).rejects.toThrow('Insert failed');
     
-    // Verifica que se llamó ROLLBACK
     const calls = mockClient.query.mock.calls;
     expect(calls.some(call => call[0] === 'ROLLBACK')).toBe(true);
     expect(mockClient.release).toHaveBeenCalled();
+    
+    consoleErrorSpy.mockRestore();
   });
 
   test('batchInsertStations: maneja estaciones sin conectores opcionales', async () => {
@@ -162,12 +165,18 @@ describe('EVStationsRepository - CRUD (mocked pool)', () => {
     const count = await repo.batchInsertStations([stationNoConnectors]);
 
     expect(count).toBe(1);
+      expect(mockClient.query).toHaveBeenCalledTimes(4); 
+
   });
 
   test('batchInsertStations: propaga errores de base de datos', async () => {
-    mockClient.query.mockRejectedValueOnce(new Error('DB connection failed'));
-    
-    const repo = new EVStationsRepository();
-    await expect(repo.batchInsertStations([mockStationInput])).rejects.toThrow('DB connection failed');
+  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  
+  mockClient.query.mockRejectedValueOnce(new Error('DB connection failed'));
+  
+  const repo = new EVStationsRepository();
+  await expect(repo.batchInsertStations([mockStationInput])).rejects.toThrow('DB connection failed');
+  
+  consoleErrorSpy.mockRestore();
   });
 });

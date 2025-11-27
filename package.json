@@ -11,7 +11,7 @@
     "migrate:create": "node-pg-migrate create",
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
-    "lint:fix": "npx eslint --fix src/**"
+    "lint:fix": "npx eslint --fix ."
   },
   "keywords": [],
   "author": "",
