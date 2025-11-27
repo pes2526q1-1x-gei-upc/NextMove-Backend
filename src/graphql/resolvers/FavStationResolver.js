@@ -12,7 +12,6 @@ const favStationResolver = {
                 return await favStationRepo.getFavStations(context.user.email, 'BIKE');
             }
             catch(error){
-                throw error;
                 throw new Error('Error retrieving favorite bike stations.');
             }
         },
@@ -24,7 +23,6 @@ const favStationResolver = {
                 return await favStationRepo.getFavStations(context.user.email, 'CAR');
             }
             catch(error){
-                throw error;
                 throw new Error('Error retrieving favorite car stations.');
             }
         }
@@ -44,7 +42,6 @@ const favStationResolver = {
                 if (error.code === '23503'){
                     throw new Error('Station or userdoes not exist.');
                 }
-                throw error;
                 throw new Error('Error adding favorite station.');
             }
         },

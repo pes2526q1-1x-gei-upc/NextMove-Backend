@@ -1,8 +1,8 @@
 export const up = (pgm) => {
   pgm.addColumn('favstation', { station_type: { type: '"MODE"', notNull: true } });
-    pgm.addConstraint('favstation', 'favstation_pkey', {
-      primaryKey: ['email', 'station_id', 'station_type']
-    });
+  pgm.addConstraint('favstation', 'favstation_pkey', {
+    primaryKey: ['email', 'station_id', 'station_type']
+  });
   
 };
 
