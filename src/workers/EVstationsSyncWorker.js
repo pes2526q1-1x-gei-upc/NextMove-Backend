@@ -109,9 +109,9 @@ class StationsSyncWorker {
 
       icaenFeatures.forEach((feature, index) => {
         const dynamicData = extractDynamicData(feature);
-        dynamicDataMap.set(index, dynamicData);
+        dynamicDataMap.set(index+"_CAR", dynamicData);
       });
-    
+      // console.log(dynamicDataMap);
       console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
 
 
@@ -129,7 +129,7 @@ class StationsSyncWorker {
         const crypto = await import('crypto');
         const newIdsChecksum = crypto
           .createHash('md5')
-          .update(icaenFeatures.map(f => f.properties?.id).filter(Boolean).join(','))
+          .update(icaenFeatures.map(f => f.properties?.id).filter(Boolean).sort().join(','))
           .digest('hex'); 
 
         const dbIdsChecksum = await this.repository.getExternalIdsChecksum();
@@ -142,7 +142,7 @@ class StationsSyncWorker {
       const shouldSyncDb = (!this.lastDbSync || 
                          (Date.now() - this.lastDbSync >= this.dbSyncInterval) ||
                           forceRefresh
-      )
+                    )
                          && process.env.NODE_ENV === 'prod';
 
       // const shouldSyncDb = forceRefresh && process.env.NODE_ENV === 'prod';
