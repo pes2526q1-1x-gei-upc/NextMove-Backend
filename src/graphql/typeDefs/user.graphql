@@ -121,4 +121,9 @@ extend type Mutation {
   Elimina tu cuenta.
   """
   deleteMe: Boolean!
+
+  """
+  Borrar foto de perfil
+  """
+  deleteProfilePhoto: User!
 }
