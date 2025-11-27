@@ -130,15 +130,15 @@ class UsersRepository {
           TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
           TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
       `, [
-          email,
-          name,
-          nickname,
-          photo || null,          
-          phoneNumber || null,
-          preferredMode,
-          preferredLanguage || "ESP",
-          bioDescription || null,
-          birthDate || null       
+        email,
+        name,
+        nickname,
+        photo || null,          
+        phoneNumber || null,
+        preferredMode,
+        preferredLanguage || "ESP",
+        bioDescription || null,
+        birthDate || null       
       ]); 
 
       return result.rows[0];

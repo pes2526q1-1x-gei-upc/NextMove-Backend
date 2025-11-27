@@ -2,7 +2,7 @@ import pool from '../config/database.js';
 
 export default class StationsRepository {
 
-    async getAllStationIds() {
+  async getAllStationIds() {
     const query = 'SELECT id FROM ev_stations ORDER BY id';
     
     try {

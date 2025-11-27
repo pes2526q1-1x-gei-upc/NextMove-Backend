@@ -109,7 +109,7 @@ class StationsSyncWorker {
 
       icaenFeatures.forEach((feature, index) => {
         const dynamicData = extractDynamicData(feature);
-        dynamicDataMap.set(index+"_CAR", dynamicData);
+        dynamicDataMap.set(index + "_CAR", dynamicData);
       });
       // console.log(dynamicDataMap);
       console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
@@ -142,7 +142,7 @@ class StationsSyncWorker {
       const shouldSyncDb = (!this.lastDbSync || 
                          (Date.now() - this.lastDbSync >= this.dbSyncInterval) ||
                           forceRefresh
-                    )
+      )
                          && process.env.NODE_ENV === 'prod';
 
       // const shouldSyncDb = forceRefresh && process.env.NODE_ENV === 'prod';
@@ -202,74 +202,74 @@ class StationsSyncWorker {
     }
   }
 
-async syncToDatabase(icaenStations) {
-  const startTime = Date.now();
-  console.log(`Syncing ${icaenStations.length} stations to database...`);
+  async syncToDatabase(icaenStations) {
+    const startTime = Date.now();
+    console.log(`Syncing ${icaenStations.length} stations to database...`);
 
-  try {
-    const currentDbIds = new Set(await this.repository.getAllStationIds());
-    console.log(`Current DB stations: ${currentDbIds.size}`);
+    try {
+      const currentDbIds = new Set(await this.repository.getAllStationIds());
+      console.log(`Current DB stations: ${currentDbIds.size}`);
 
-    const newApiIds = new Set(
-      icaenStations.map((_, index) => `${index}_CAR`)
-    );
-    console.log(`API stations: ${newApiIds.size}`);
+      const newApiIds = new Set(
+        icaenStations.map((_, index) => `${index}_CAR`)
+      );
+      console.log(`API stations: ${newApiIds.size}`);
 
-    const idsToDelete = [...currentDbIds].filter(id => !newApiIds.has(id));
-    const idsToInsert = [...newApiIds].filter(id => !currentDbIds.has(id));
+      const idsToDelete = [...currentDbIds].filter(id => !newApiIds.has(id));
+      const idsToInsert = [...newApiIds].filter(id => !currentDbIds.has(id));
 
-    console.log(`\nChanges detected:`);
-    console.log(`  To delete: ${idsToDelete.length}`);
-    console.log(`  To insert: ${idsToInsert.length}`);
-    console.log(`  Unchanged: ${currentDbIds.size - idsToDelete.length}`);
+      console.log(`\nChanges detected:`);
+      console.log(`  To delete: ${idsToDelete.length}`);
+      console.log(`  To insert: ${idsToInsert.length}`);
+      console.log(`  Unchanged: ${currentDbIds.size - idsToDelete.length}`);
 
-    let deletedCount = 0;
-    let insertedCount = 0;
+      let deletedCount = 0;
+      let insertedCount = 0;
 
-    if (idsToDelete.length > 0) {
-      console.log(`\nDeleting ${idsToDelete.length} removed stations...`);
-      deletedCount = await this.repository.deleteStationsByIds(idsToDelete);
-      console.log(`Deleted: ${deletedCount}`);
-    }
+      if (idsToDelete.length > 0) {
+        console.log(`\nDeleting ${idsToDelete.length} removed stations...`);
+        deletedCount = await this.repository.deleteStationsByIds(idsToDelete);
+        console.log(`Deleted: ${deletedCount}`);
+      }
 
-    if (idsToInsert.length > 0) {
-      console.log(`\nInserting ${idsToInsert.length} new stations...`);
+      if (idsToInsert.length > 0) {
+        console.log(`\nInserting ${idsToInsert.length} new stations...`);
       
-      const stationsToInsert = icaenStations
-        .map((feature, index) => ({
-          ...mapICAENToRepository(feature),
-          arrayIndex: index
-        }))
-        .filter(station => idsToInsert.includes(`${station.arrayIndex}_CAR`));
+        const stationsToInsert = icaenStations
+          .map((feature, index) => ({
+            ...mapICAENToRepository(feature),
+            arrayIndex: index
+          }))
+          .filter(station => idsToInsert.includes(`${station.arrayIndex}_CAR`));
 
-      insertedCount = await this.repository.batchInsertStations(stationsToInsert);
-      console.log(`Inserted: ${insertedCount}`);
+        insertedCount = await this.repository.batchInsertStations(stationsToInsert);
+        console.log(`Inserted: ${insertedCount}`);
+      }
+
+      const duration = Date.now() - startTime;
+  
+      console.log(`\nDatabase sync completed:`);
+      console.log(`  Stations deleted: ${deletedCount}`);
+      console.log(`  Stations inserted: ${insertedCount}`);
+      console.log(`  Total in DB: ${currentDbIds.size - deletedCount + insertedCount}`);
+      console.log(`  Duration: ${duration}ms`);
+
+      return {
+        success: true,
+        deletedCount,
+        insertedCount,
+        unchangedCount: currentDbIds.size - deletedCount,
+        duration
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`Database sync failed after ${duration}ms:`, error);
+      this.stats.lastDbSyncSuccess = false;
+  
+      throw error;
     }
-
-    const duration = Date.now() - startTime;
-  
-    console.log(`\nDatabase sync completed:`);
-    console.log(`  Stations deleted: ${deletedCount}`);
-    console.log(`  Stations inserted: ${insertedCount}`);
-    console.log(`  Total in DB: ${currentDbIds.size - deletedCount + insertedCount}`);
-    console.log(`  Duration: ${duration}ms`);
-
-    return {
-      success: true,
-      deletedCount,
-      insertedCount,
-      unchangedCount: currentDbIds.size - deletedCount,
-      duration
-    };
-
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error(`Database sync failed after ${duration}ms:`, error);
-    this.stats.lastDbSyncSuccess = false;
-  
-    throw error;
   }
-}
 
   getStats() {
     return {
