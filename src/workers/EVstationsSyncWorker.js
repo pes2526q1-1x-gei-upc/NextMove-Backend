@@ -109,7 +109,7 @@ class StationsSyncWorker {
 
       icaenFeatures.forEach((feature, index) => {
         const dynamicData = extractDynamicData(feature);
-        dynamicDataMap.set(index+"_CAR", dynamicData);
+        dynamicDataMap.set(index + "_CAR", dynamicData);
       });
       // console.log(dynamicDataMap);
       console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
@@ -142,7 +142,7 @@ class StationsSyncWorker {
       const shouldSyncDb = (!this.lastDbSync || 
                          (Date.now() - this.lastDbSync >= this.dbSyncInterval) ||
                           forceRefresh
-                    )
+      )
                          && process.env.NODE_ENV === 'prod';
 
       // const shouldSyncDb = forceRefresh && process.env.NODE_ENV === 'prod';
