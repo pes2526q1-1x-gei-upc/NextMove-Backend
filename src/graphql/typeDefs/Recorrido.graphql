@@ -9,10 +9,15 @@ type Recorrido {
     user_email: String!
     distancia: Float!
     velocidad_media: Float!
+    velocidad_maxima: Float!
+    elevacion_postitiva: Float!
+    elevacion_negativa: Float!
     co2: Float!
     kcal: Float!
     origen: Coordinates!
     destino: Coordinates!
+    timempo_inicio: String!
+    tiempo_fin: String!
     fecha_recorrido: String!
 }
 
@@ -20,10 +25,15 @@ input CreateRecorridoInput {
     user_email: String!
     distancia: Float!
     velocidad_media: Float!
+    velocidad_maxima: Float!
+    elevacion_positiva: Float!
+    elevacion_negativa: Float!
     co2: Float!
     kcal: Float!
     origen: CoordinatesInput!
-    destino: CoordinatesInput!  
+    destino: CoordinatesInput!
+    tiempo_inicio: String!
+    tiempo_fin: String!  
     fecha_recorrido: String
 }
 
