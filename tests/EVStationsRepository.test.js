@@ -124,7 +124,7 @@ describe('EVStationsRepository - CRUD (mocked pool)', () => {
     const count = await repo.batchInsertStations(stations);
 
     expect(count).toBe(2);
-    expect(mockClient.query).toHaveBeenCalledTimes(3);
+    expect(mockClient.query).toHaveBeenCalledTimes(4);
     expect(mockClient.release).toHaveBeenCalled();
   });
 

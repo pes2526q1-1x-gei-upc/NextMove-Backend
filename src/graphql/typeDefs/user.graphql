@@ -38,6 +38,7 @@ input CreateUserInput {
   email: String!
   name: String!
   nickname: String!
+  photo: String
   phoneNumber: String
   preferredMode: Mode!
   preferredLanguage: Language
