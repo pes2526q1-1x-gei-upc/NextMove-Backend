@@ -4,25 +4,38 @@ const favStationRepo = new FavStationRepository();
 
 const favStationResolver = {
   Query: {
-    getFavStations: async (_, __, context) => {
+    getFavBikeStations: async (_, __, context) => {
       if (!context.user) {
         throw new Error('No autenticado');
       }
       try {
-        return await favStationRepo.getFavStations(context.user.email);
+        return await favStationRepo.getFavStations(context.user.email, 'BIKE');
       }
       catch (error){
-        throw new Error('Error retrieving favorite stations.', error);
+        console.error(error);
+        throw new Error('Error retrieving favorite bike stations.');
       }
     },
-  },
-  Mutation:{
-    addFavStation: async (_, { stationId }, context) => {
+    getFavCarStations: async (_, __, context) => {
       if (!context.user) {
         throw new Error('No autenticado');
       }
       try {
-        return await favStationRepo.addFavStation(context.user.email, stationId);
+        return await favStationRepo.getFavStations(context.user.email, 'CAR');
+      }
+      catch (error){
+        console.error(error);
+        throw new Error('Error retrieving favorite car stations.');
+      }
+    }
+  },
+  Mutation:{
+    addFavStation: async (_, { station_id,type }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+      try {
+        return await favStationRepo.addFavStation(context.user.email, station_id, type);
       }
       catch (error){
         if (error.code === '23505'){
@@ -34,15 +47,16 @@ const favStationResolver = {
         throw new Error('Error adding favorite station.');
       }
     },
-    deleteFavStation: async (_, { stationId }, context) => {
+    deleteFavStation: async (_, { stationId, type }, context) => {
       if (!context.user) {
         throw new Error('No autenticado');
       }
       try {
-        return await favStationRepo.deleteFavStation(context.user.email, stationId);
+        return await favStationRepo.deleteFavStation(context.user.email, stationId, type);
       }
       catch (error){
-        throw new Error('Error deleting favorite station.', error);
+        console.error(error);
+        throw new Error('Error deleting favorite station.');
       }
     }
   }
