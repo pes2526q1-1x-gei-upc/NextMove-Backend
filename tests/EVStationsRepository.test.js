@@ -165,18 +165,18 @@ describe('EVStationsRepository - CRUD (mocked pool)', () => {
     const count = await repo.batchInsertStations([stationNoConnectors]);
 
     expect(count).toBe(1);
-      expect(mockClient.query).toHaveBeenCalledTimes(4); 
+    expect(mockClient.query).toHaveBeenCalledTimes(4); 
 
   });
 
   test('batchInsertStations: propaga errores de base de datos', async () => {
-  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   
-  mockClient.query.mockRejectedValueOnce(new Error('DB connection failed'));
+    mockClient.query.mockRejectedValueOnce(new Error('DB connection failed'));
   
-  const repo = new EVStationsRepository();
-  await expect(repo.batchInsertStations([mockStationInput])).rejects.toThrow('DB connection failed');
+    const repo = new EVStationsRepository();
+    await expect(repo.batchInsertStations([mockStationInput])).rejects.toThrow('DB connection failed');
   
-  consoleErrorSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });
