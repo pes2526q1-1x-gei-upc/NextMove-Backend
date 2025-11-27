@@ -11,10 +11,8 @@ export const userResolvers = {
         if (!context.user) {
           throw new Error('No autenticado');
         }
-        
-        //const user = context.user;
+
         const dbUser = await usersRepo.getUserByEmail(context.user.email);
-        
         return dbUser;
 
       } catch (err) {
@@ -48,25 +46,19 @@ export const userResolvers = {
         const myProfile = await usersRepo.getUserByEmail(myEmail); 
         const myNickname = myProfile.nickname; 
 
-        // Si no tenemos nickname, no podemos filtrar bloqueos basados en nickname
         if (!myNickname) {
           console.warn('[WARN] No se pudo determinar mi nickname, devuelvo lista sin filtrar.');
           return users;
         }
 
-        //Obtener a quién he bloqueado YO
         const myBlocks = await friendshipRepo.getBlockList(myEmail);
         const usersIBlocked = new Set(myBlocks.map(b => b.blocked));
         
-        //Filtrar
         const finalResults = await Promise.all(users.map(async (candidateUser) => {
-            
-          // Si YO lo bloqueé, fuera
           if (usersIBlocked.has(candidateUser.nickname)) {
             return null;
           }
 
-          // Si yo NO lo bloqueé, verificamos si ÉL me bloqueó a mí.
           try {
             const candidateBlockList = await friendshipRepo.getBlockList(candidateUser.email);
             const isMeBlocked = candidateBlockList.some(b => b.blocked === myNickname);
@@ -95,7 +87,6 @@ export const userResolvers = {
     }
   },
 
-
   Mutation: {
     createUser: async (_, { createInfo }) => {
       try {
@@ -110,7 +101,6 @@ export const userResolvers = {
 
         const existingUserByNickname = await usersRepo.existsUserByNickname(nickname);
         console.log('Existing user by nickname check: ', existingUserByNickname);
-        // getUsersByNickname returns an array; an empty array means no user found
         if (existingUserByNickname) {
           throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
         }
@@ -196,6 +186,35 @@ export const userResolvers = {
 
       } catch (error) {
         console.error('Error en updateMe:', error.message);
+        throw error;
+      }
+    },
+
+    // NUEVO: eliminar foto de perfil (pone photo a null)
+    deleteProfilePhoto: async (_, __, context) => {
+      try {
+        if (!context.user) {
+          throw new Error('No autenticado');
+        }
+
+        const userEmail = context.user.email;
+
+        const user = await usersRepo.getUserByEmail(userEmail);
+        if (!user) {
+          throw new Error('Usuario no encontrado');
+        }
+
+        const updatedUser = await usersRepo.updateUser(userEmail, { photo: null });
+
+        if (!updatedUser) {
+          throw new Error('Error al actualizar el usuario');
+        }
+
+        console.log(`Foto de perfil eliminada para ${userEmail}`);
+        return updatedUser;
+
+      } catch (error) {
+        console.error('Error en deleteProfilePhoto:', error.message);
         throw error;
       }
     },
