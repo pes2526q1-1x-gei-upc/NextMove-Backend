@@ -136,7 +136,7 @@ type Query {
 }
    """
 
-    getEstacionesDeBicingPorDireccion(address: String!): EstacionBicing!
+    getEstacionesDeBicingPorDireccion(address: String!): [EstacionBicing!]!
 }
 
 type Mutation {

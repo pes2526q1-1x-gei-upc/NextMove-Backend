@@ -84,9 +84,7 @@ class EstacionDeBicingRepository {
     return result.rows.map(estacion => this._transformEstacion(estacion));
   }
 
-
-
-  /** MÉTOD QUE OBTIENE LA ESTACIÓN CON EL ID QUE SE PRECISA */
+  /** MÉTODO QUE OBTIENE LA ESTACIÓN CON EL ID QUE SE PRECISA */
   async getEstacionDeBicingById(id) {
     const result = await pool.query(`
             SELECT *
@@ -94,6 +92,24 @@ class EstacionDeBicingRepository {
             WHERE (id = $1)
             `, [id]);
     return this._transformEstacion(result.rows[0]) || null;
+  }
+
+  /** MÉTODO QUE OBTIENE LAS ESTACIONES DADA UNA DIRECCIÓN CÓMO PARAÁMETRO DE ENTRADA */
+  async getEstacionesPorDireccion(address) {
+    const query = `
+      SELECT *
+      FROM estacionbicing
+      WHERE direccion ILIKE $1
+      ORDER BY nombre
+    `; 
+    try {
+      const result = await pool.query(query, [`%${address}%`]); 
+      console.log('REPO, NUMERO DE TUPLAS DESPUES DE BUSCAR POR DIR ' + result.rowCount);
+      return result.rows.map(estacion => this._transformEstacion(estacion));
+    } catch (error){
+      console.error('Error al buscar estaciones por dirección'); 
+      throw error; 
+    }
   }
 
   /** MÉTODO QUE INSERTA LA ESTACIÓN EN LA BD */

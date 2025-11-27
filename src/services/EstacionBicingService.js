@@ -1,5 +1,8 @@
 import EstacionDeBicingSyncWorker from "../workers/EstacionDeBicingSyncWorker.js";
+import EstacionDeBicingRepository from "../repositories/estacionDeBicingRepository.js";
 import { calculateDistance } from "../utils/maths.js";
+
+const estacionRepo = new EstacionDeBicingRepository(); 
 
 //Método para obtener todas las estaciones de bicing de nuestro sistema: 
 export function getEstaciones() {
@@ -60,22 +63,30 @@ export function getEstacionesBicingCercanas(location, radiusKm = 5) {
 }
 
 
-//Método para obtener las estaciones por dirección : 
-export function getEstacioesDeBicingPorDireccion(address) {
+//Método para obtener las estaciones por dirección: 
+export async function getEstacionesPorDireccion(address) {
+  console.log("Bicing Service: El patrón que estamos buscando es " + address); 
+
   //obtenemos las estaciones cacheadas en nuesrto sistema: 
-  const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
-  if (!estaciones || estaciones === null) {
-    console.log("Bicing Service: No hay estaciones cacheadas por el momento!"); 
+  const estaciones = await estacionRepo.getEstacionesPorDireccion(address);
+  
+  console.log("SERVICE: El repo me ha retornado este numeros de estaciones con ese patron de dir: " + estaciones.length);
+  if (!Array.isArray(estaciones) || estaciones.length === 0) {
+    console.log("Bicing Service: No hay estaciones para esta dir"); 
+    return []; 
+  }
+  
+  //Ahora haremos que retornen todas las estaciones con datos dinámicos también
+  const estacionesResultantes = []; 
+  for (let i = 0; i < estaciones.length; i++) {
+    estacionesResultantes.push(getEstacionById(estaciones[i].id)); 
+  }
+  
+  if (!estacionesResultantes || estacionesResultantes.length === 0) {
+    console.log("Bicing Service: NO HAY ESTACIONES HALLADAS PARA ESTA DIRECCIÓN!"); 
   }
   else {
-    //buscamos la estación/es que estén: 
-    const estaciones_encontradas = estaciones.find(est => est.direccion === address); 
-    if (!estaciones_encontradas) {
-      console.log("Bicing Service: No se han encontrado estaciones con esa dirección"); 
-      return null; 
-    }
-    else {
-      return estaciones_encontradas; 
-    }
+    console.log("Bicing Service: Las estaciones que tienen ese patrón es: " + estacionesResultantes.length); 
+    return estacionesResultantes; 
   }
 }
