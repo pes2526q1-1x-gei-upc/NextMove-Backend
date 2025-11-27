@@ -15,6 +15,7 @@ export const resolvers = {
     User: userResolvers.Query.User,
     Users: userResolvers.Query.Users,
     UsersByNickname: userResolvers.Query.UsersByNickname,
+    UsersSearchHistory: userResolvers.Query.UsersSearchHistory,
       
     stations: EVStationResolvers.Query.stations,
     station: EVStationResolvers.Query.station,
@@ -24,13 +25,14 @@ export const resolvers = {
     getEstacionesDeBicing: estacionDeBicingResolver.Query.getEstacionesDeBicing,
     getEstacionDeBicing: estacionDeBicingResolver.Query.getEstacionDeBicing,
     getEstacionesDeBicingCercanas: estacionDeBicingResolver.Query.getEstacionesDeBicingCercanas,
+    getEstacionesDeBicingPorDireccion: estacionDeBicingResolver.Query.getEstacionesDeBicingPorDireccion,
       
     ListFriends: friendshipResolvers.Query.ListFriends,
     AllFriends: friendshipResolvers.Query.AllFriends,
 
     recorridos: recorridosResolver.Query.recorridos, 
     recorrido: recorridosResolver.Query.recorrido, 
-    recorridosByUser: recorridosResolver.Query.recorridosByUser,
+    recorridosByUser: recorridosResolver.Query.recorridosByUser, 
     ...routingResolvers.Query,
 
     getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,

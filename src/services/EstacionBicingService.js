@@ -58,3 +58,24 @@ export function getEstacionesBicingCercanas(location, radiusKm = 5) {
   console.log("ESTACIONES OBTENIDAS CERCA DE MI: " + estacionesCercanas.length); 
   return estacionesCercanas; 
 }
+
+
+//Método para obtener las estaciones por dirección : 
+export function getEstacioesDeBicingPorDireccion(address) {
+  //obtenemos las estaciones cacheadas en nuesrto sistema: 
+  const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache(); 
+  if (!estaciones || estaciones === null) {
+    console.log("Bicing Service: No hay estaciones cacheadas por el momento!"); 
+  }
+  else {
+    //buscamos la estación/es que estén: 
+    const estaciones_encontradas = estaciones.find(est => est.direccion === address); 
+    if (!estaciones_encontradas) {
+      console.log("Bicing Service: No se han encontrado estaciones con esa dirección"); 
+      return null; 
+    }
+    else {
+      return estaciones_encontradas; 
+    }
+  }
+}
