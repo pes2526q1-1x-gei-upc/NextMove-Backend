@@ -5,7 +5,7 @@ import { friendshipResolvers } from './FriendshipResolvers.js';
 import { recorridosResolver } from './RecorridoResolver.js';
 import { assessmentResolver } from './AssessmentResolvers.js';
 import routingResolvers  from './routingResolvers.js';
-
+import favStationResolver from './FavStationResolver.js';
 
 
 export const resolvers = {
@@ -36,6 +36,9 @@ export const resolvers = {
     getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
     getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
     BlockList: friendshipResolvers.Query.BlockList,
+    
+    getFavBikeStations: favStationResolver.Query.getFavBikeStations,
+    getFavCarStations: favStationResolver.Query.getFavCarStations,
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -61,5 +64,8 @@ export const resolvers = {
 
     BlockUser: friendshipResolvers.Mutation.BlockUser,
     UnBlockUser: friendshipResolvers.Mutation.UnBlockUser,
+
+    addFavStation: favStationResolver.Mutation.addFavStation,
+    deleteFavStation: favStationResolver.Mutation.deleteFavStation,
   }
 };

@@ -1,0 +1,34 @@
+
+type bicycleStationInfo{
+    station_id: String!
+    nombre: String!
+    direccion: String!
+    plazastotales: Int!
+    latitude: Float!
+    longitude: Float!
+    estacioncargaelectrica: Boolean!
+}
+
+type carStationInfo{
+    station_id: String!
+    name: String!
+    address: String
+    city: String
+    latitude: Float!
+    longitude: Float!
+    ccs_power_kw: Float
+    chademo_power_kw: Float
+    mennekes_power_kw: Float
+    schuko_power_kw: Float
+}
+
+
+extend type Query{
+    getFavBikeStations: [bicycleStationInfo]!
+    getFavCarStations: [carStationInfo]!
+}
+
+extend type Mutation{
+    addFavStation(station_id: String!, type: String!): Boolean!
+    deleteFavStation(station_id: String!, type: String!): Boolean!
+}
