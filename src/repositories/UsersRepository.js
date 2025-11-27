@@ -86,7 +86,7 @@ class UsersRepository {
    * Crear nuevo usuario
    */
   async createUser(userData) {
-    const { email, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = userData;
+    const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = userData;
     console.log('Creating user with data:', userData);
 
     if (!email || !name || !nickname || !preferredMode) {
@@ -97,16 +97,27 @@ class UsersRepository {
       console.log('Birth date: ', birthDate);
       const result = await pool.query(`
         INSERT INTO users (
-          email,
-          name,
-          nickname,
-          phone_number,
-          preferred_mode,
-          preferred_language,
-          bio_description,
-          birth_date
+          email,                -- $1
+          name,                 -- $2
+          nickname,             -- $3
+          photo,                -- $4
+          phone_number,         -- $5
+          preferred_mode,       -- $6 
+          preferred_language,   -- $7
+          bio_description,      -- $8
+          birth_date            -- $9 
         )
-        VALUES ($1, $2, $3, $4, $5::"MODE" , $6, $7, $8::date)
+        VALUES (
+          $1, 
+          $2, 
+          $3, 
+          $4, 
+          $5,            
+          $6::"MODE",     
+          $7, 
+          $8, 
+          $9::date        
+        )
         RETURNING 
           email,
           name AS "name",
@@ -118,7 +129,17 @@ class UsersRepository {
           bio_description AS "bioDescription",
           TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
           TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
-      `, [email, name, nickname, phoneNumber || null, preferredMode, preferredLanguage || "ESP", bioDescription || null, birthDate || null]); 
+      `, [
+          email,
+          name,
+          nickname,
+          photo || null,          
+          phoneNumber || null,
+          preferredMode,
+          preferredLanguage || "ESP",
+          bioDescription || null,
+          birthDate || null       
+      ]); 
 
       return result.rows[0];
     } catch (error) {
