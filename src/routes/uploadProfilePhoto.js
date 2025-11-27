@@ -43,7 +43,7 @@ router.post('/upload-profile-photo', requireUserAuth, upload.single('file'), asy
 
   } catch (error) {
     console.error('Error uploading profile photo:', error);
-    return res.status(500).send('Error uploading image');
+    return res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
