@@ -1,6 +1,8 @@
 import StationsService from '../../services/EVstationsService.js';
+import UsersRepository from '../../repositories/UsersRepository.js';
 import { GraphQLError } from 'graphql';
 
+const usersRepo = new UsersRepository();
 const stationsService = new StationsService();
 
 const StationsResolvers = {
@@ -73,9 +75,15 @@ const StationsResolvers = {
       }
     },
 
-    stationsByAddress: async (_, { address }) => {
+    stationsByAddress: async (_, { address }, context) => {
       try {
+
+        if (!context.user) {
+          throw new GraphQLError('No autenticado', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        // context.user = { email: 'aaaa@gmail.com'};
         const stations = await stationsService.getStationsByAddress(address);
+        await usersRepo.addUserSearchHistory(context.user.email, address);
         return stations;
       } catch (error) {
         console.error('Error in stationsByAddress resolver:', error);

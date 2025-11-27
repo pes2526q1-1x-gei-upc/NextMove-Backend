@@ -1,5 +1,7 @@
 import pool from '../config/database.js';
+import UsersRepository from './UsersRepository.js';
 
+const usersRepo = new UsersRepository();
 export default class StationsRepository {
 
   async batchInsertStations(stationsData) {

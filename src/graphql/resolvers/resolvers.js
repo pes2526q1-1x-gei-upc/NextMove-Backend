@@ -15,6 +15,7 @@ export const resolvers = {
     User: userResolvers.Query.User,
     Users: userResolvers.Query.Users,
     UsersByNickname: userResolvers.Query.UsersByNickname,
+    UsersSearchHistory: userResolvers.Query.UsersSearchHistory,
       
     stations: EVStationResolvers.Query.stations,
     station: EVStationResolvers.Query.station,

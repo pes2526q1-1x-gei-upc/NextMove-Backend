@@ -92,6 +92,21 @@ export const userResolvers = {
         console.error('[ERROR] Error general filtrando usuarios:', error);
         return users;
       }
+    },
+
+    UsersSearchHistory: async (_, __, context) => {
+
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+      // context.user = { email: 'aaaa@gmail.com'};
+
+      try {
+        return await usersRepo.getUserSearchHistory(context.user.email);
+      }
+      catch (error){
+        throw new Error('Error retrieving user search history.', error);
+      }
     }
   },
 
