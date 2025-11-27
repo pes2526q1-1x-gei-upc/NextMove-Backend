@@ -10,7 +10,7 @@ export const shorthands = undefined;
  */
 export const up = (pgm) => {
   // Añadir la primary key compuesta
-pgm.dropConstraint('favstation', 'favstation_pkey');
+  pgm.dropConstraint('favstation', 'favstation_pkey');
   pgm.addConstraint('favstation', 'favstation_pkey', {
     primaryKey: ['email', 'station_id']
   });
