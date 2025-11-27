@@ -17,44 +17,47 @@ const formatToPgPoint = (coords) => {
     return null;
   }
 
+  if (!coords || coords.latitude === undefined || coords.longitude === undefined) {
+    return null;
+  }
+
   // Formato de cadena (x, y) donde x=Longitude (lon) e y=Latitude (lat)
   return `(${coords.longitude}, ${coords.latitude})`;
 };
 
 //Método que nos parse el contenido que recibimos por parte de la API a contenido insertable para la BD: 
-const parseApiToDbFormat = (apiData) => {
-  if (!apiData) return null;
-  //Prefiere primero station_id, sino id, sino null. 
-  const id = apiData.station_id || apiData.id || null;
-  //ídem. para nombre.
-  const nombre = apiData.name || apiData.nombre || null;
-  //ídem. para dirección. 
-  const direccion = apiData.address || apiData.direccion || null;
-  //ídem para plazasTotales.
-  const plazasTotales = apiData.capacity || apiData.plazasTotales || null;
+// const parseApiToDbFormat = (apiData) => {
+//   if (!apiData) return null;
+//   //Prefiere primero station_id, sino id, sino null. 
+//   const id = apiData.station_id || apiData.id || null;
+//   //ídem. para nombre.
+//   const nombre = apiData.name || apiData.nombre || null;
+//   //ídem. para dirección. 
+//   const direccion = apiData.address || apiData.direccion || null;
+//   //ídem para plazasTotales.
+//   const plazasTotales = apiData.capacity || apiData.plazasTotales || null;
 
-  // Coordenadas: intenta lat/lon directo o alternativas sencillas
-  const lat = apiData.lat || apiData.latitude || (apiData.coordenadas && (apiData.coordenadas.latitude || apiData.coordenadas.lat)) || null;
-  const lon = apiData.lon || apiData.longitude || (apiData.coordenadas && (apiData.coordenadas.longitude || apiData.coordenadas.lon)) || null;
-  const coordenadas = (lat && lon) ? formatToPgPoint({latitude: lat, longitude: lon}) : null;
+//   // Coordenadas: intenta lat/lon directo o alternativas sencillas
+//   const lat = apiData.lat || apiData.latitude || (apiData.coordenadas && (apiData.coordenadas.latitude || apiData.coordenadas.lat)) || null;
+//   const lon = apiData.lon || apiData.longitude || (apiData.coordenadas && (apiData.coordenadas.longitude || apiData.coordenadas.lon)) || null;
+//   const coordenadas = (lat && lon) ? formatToPgPoint({latitude: lat, longitude: lon}) : null;
 
-  const estacionCargaElectrica = (apiData.physical_configuration === "ELECTRICBIKESTATION") || (apiData.is_charging_station === true);
+//   const estacionCargaElectrica = (apiData.physical_configuration === "ELECTRICBIKESTATION") || (apiData.is_charging_station === true);
 
-  return {
-    id,
-    nombre,
-    direccion,
-    plazasTotales,
-    coordenadas,
-    estacionCargaElectrica
-  };
-};
+//   return {
+//     id,
+//     nombre,
+//     direccion,
+//     plazasTotales,
+//     coordenadas,
+//     estacionCargaElectrica
+//   };
+// };
 
 //////////////////////////////////////////////////////////////////////////////////
 
 class EstacionDeBicingRepository {
   /** clase que realiza l as operaciones de acceso a los datos de la BD y a su almacenado */
-   
   /** Método auxiliar para transofrmar la salida de BD a a objeto JS / GraphQL */
   _transformEstacion(estacion) {
     if (!estacion) return null;
@@ -97,6 +100,7 @@ class EstacionDeBicingRepository {
   async createEstacionDeBicing(dataEstacion) {
     //parseamos las coordenadas:
     const PointCoordenadas = formatToPgPoint(dataEstacion.coordenadas);
+    // eslint-disable-next-line no-useless-catch
     try {
       const result = await pool.query(`
                 INSERT INTO EstacionBicing(id, nombre, direccion, plazastotales, coordenadas, estacioncargaelectrica)
@@ -165,6 +169,7 @@ class EstacionDeBicingRepository {
             WHERE (id = $${paramIndex})
             RETURNING *`;
 
+    // eslint-disable-next-line no-useless-catch
     try {
       const result = await pool.query(query, values);
       return this._transformEstacion(result.rows[0]) || null;  
@@ -176,6 +181,7 @@ class EstacionDeBicingRepository {
 
   /** MÉTODO QUE ELIMINA LA ESTACIÓN QUE PRECISAMOS */
   async deleteEstacionBicing(id) {
+    // eslint-disable-next-line no-useless-catch
     try {
       const result = await pool.query(`
                 DELETE FROM EstacionBicing WHERE(id = $1)`, [id]);

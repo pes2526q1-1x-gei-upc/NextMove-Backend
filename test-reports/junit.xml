@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="27" failures="0" errors="0" time="1.127">
+  <testsuite name="RecorridosRepository - CRUD (mocked pool)" errors="0" failures="0" skipped="0" timestamp="2025-11-26T04:27:05" time="0.816" tests="27">
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) getAllRecorridos: transforma correctamente puntos Postgres a {latitude, longitude} aptos para GraphQL" name="RecorridosRepository - CRUD (mocked pool) getAllRecorridos: transforma correctamente puntos Postgres a {latitude, longitude} aptos para GraphQL" time="0.01">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) getRecorridoById: retorna null si no existe" name="RecorridosRepository - CRUD (mocked pool) getRecorridoById: retorna null si no existe" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) getRecorridoById: transforma correctamente un recorrido existente" name="RecorridosRepository - CRUD (mocked pool) getRecorridoById: transforma correctamente un recorrido existente" time="0.004">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) getRecorrdiosByUser: retorna una lista transformada" name="RecorridosRepository - CRUD (mocked pool) getRecorrdiosByUser: retorna una lista transformada" time="0.004">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: llama a pool.query con POINTs correctamente formateados y retorna el objeto transformado" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: llama a pool.query con POINTs correctamente formateados y retorna el objeto transformado" time="0.003">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: obtiene recorrido existente, actualiza y verifica valores y llamadas" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: obtiene recorrido existente, actualiza y verifica valores y llamadas" time="0.005">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) deleteRecorrido: devuelve true si rowCount &gt; 0, false si 0" name="RecorridosRepository - CRUD (mocked pool) deleteRecorrido: devuelve true si rowCount &gt; 0, false si 0" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando user_email es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando user_email es null (NOT NULL)" time="0.003">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando distancia es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando distancia es null (NOT NULL)" time="0.004">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando velocidad_media es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando velocidad_media es null (NOT NULL)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando co2 es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando co2 es null (NOT NULL)" time="0.001">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando kcal es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando kcal es null (NOT NULL)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando origen es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando origen es null (NOT NULL)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando destino es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando destino es null (NOT NULL)" time="0.004">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando fecha_recorrido es null (NOT NULL)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: rechaza cuando fecha_recorrido es null (NOT NULL)" time="0.003">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: mapea error 23514 a mensaje legible (valores negativos)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: mapea error 23514 a mensaje legible (valores negativos)" time="0.012">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto)" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto)" time="0.003">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) saveRecorrido: propaga errores de la base de datos" name="RecorridosRepository - CRUD (mocked pool) saveRecorrido: propaga errores de la base de datos" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: objeto vacío retorna el mismo recorrido (sin UPDATE)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: objeto vacío retorna el mismo recorrido (sin UPDATE)" time="0.004">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 23514 a mensaje legible (valores negativos en distancia)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 23514 a mensaje legible (valores negativos en distancia)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 23514 a mensaje legible (valores negativos en co2)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 23514 a mensaje legible (valores negativos en co2)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 23514 a mensaje legible (valores negativos en kcal)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 23514 a mensaje legible (valores negativos en kcal)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo distancia)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo distancia)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo co2)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo co2)" time="0.003">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo kcal)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo kcal)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo origen)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo origen)" time="0.002">
+    </testcase>
+    <testcase classname="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo destino)" name="RecorridosRepository - CRUD (mocked pool) updateRecorrido: mapea error 22P02 a mensaje legible (tipo incorrecto en campo destino)" time="0.002">
+    </testcase>
+  </testsuite>
+</testsuites>

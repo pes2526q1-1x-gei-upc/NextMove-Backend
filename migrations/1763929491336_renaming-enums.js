@@ -9,13 +9,13 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-    pgm.createType('MODE', ['BIKE', 'CAR'], { ifNotExists: true });
+  pgm.createType('MODE', ['BIKE', 'CAR'], { ifNotExists: true });
 
-    // 2. Change column type to the new enum
-    pgm.alterColumn('users', 'preferred_mode', { type: '"MODE"' , using: 'preferred_mode::text::"MODE"' });
+  // 2. Change column type to the new enum
+  pgm.alterColumn('users', 'preferred_mode', { type: '"MODE"' , using: 'preferred_mode::text::"MODE"' });
 
-    // 3. Drop old enum
-    pgm.dropType('preferido', { ifExists: true });
+  // 3. Drop old enum
+  pgm.dropType('preferido', { ifExists: true });
 };
 
 /**
@@ -24,11 +24,11 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-    pgm.createType('preferido', ['electrico', 'bici'], { ifNotExists: true });
+  pgm.createType('preferido', ['electrico', 'bici'], { ifNotExists: true });
 
-    // 2. Change column type back to old enum
-    pgm.alterColumn('users', 'preferred_mode', { type: 'preferido' , using: 'preferred_mode::text::preferido' });
+  // 2. Change column type back to old enum
+  pgm.alterColumn('users', 'preferred_mode', { type: 'preferido' , using: 'preferred_mode::text::preferido' });
 
-    // 3. Drop new enum
-    pgm.dropType('MODE', { ifExists: true });
+  // 3. Drop new enum
+  pgm.dropType('MODE', { ifExists: true });
 };

@@ -34,6 +34,7 @@ class AssessmentRepository{
         DELETE FROM valoracion
         WHERE nickname = $1 AND station_id = $2
         `, [nickname, station_id]);
+
     const result = await pool.query(`
         SELECT avg(score) FROM valoracion
         WHERE station_id = $1
@@ -68,6 +69,7 @@ class AssessmentRepository{
         SET ${fields.join(', ')}
         WHERE nickname = $${index} AND station_id = $${index + 1}
         `, values);
+
     const result = await pool.query(`
         SELECT avg(score) FROM valoracion
         WHERE station_id = $1
@@ -75,6 +77,7 @@ class AssessmentRepository{
     this.AssessmentInfocache.delete(station_id);
     return Number(result.rows[0].avg);
   }
+
   async getAssessmentsByStationId(station_id)
   {
     const result = await pool.query(`
@@ -84,6 +87,7 @@ class AssessmentRepository{
     console.log(result.rows);
     return result.rows;
   }
+
 
   async getStationAssessmentInfo(station_id)
   {

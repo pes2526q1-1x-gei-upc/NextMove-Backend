@@ -41,7 +41,6 @@ export const estacionDeBicingResolver = {
 
   Mutation: {
     //métodos que solo accedemos directamente desde el repo: 
-
     //Método de dar de alta una estación en el sistema. 
     createEstacionDeBicing: async (_,  { input })  => {
       try {
@@ -68,7 +67,6 @@ export const estacionDeBicingResolver = {
         throw new Error('Error desconocido al crear estación.'); 
       }
     },
-
     //Método de actualiza la estaciónn que precisamos: 
     updateEstacionDeBicing: async (_, {id, input}) => {
       try {
@@ -110,7 +108,6 @@ export const estacionDeBicingResolver = {
         throw new Error('Error desconocido al actualizar estación.'); 
       }
     }, 
-
     //Método que suprime la estación que precisamos: 
     deleteEstacionDeBicing: async (_, { id }) => {
       try {
@@ -125,4 +122,6 @@ export const estacionDeBicingResolver = {
       }
     }
   }
-}; 
+};
+
+

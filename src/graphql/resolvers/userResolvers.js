@@ -11,10 +11,10 @@ export const userResolvers = {
         if (!context.user) {
           throw new Error('No autenticado');
         }
-
-        const user = context.user;
+        
+        //const user = context.user;
         const dbUser = await usersRepo.getUserByEmail(context.user.email);
-
+        
         return dbUser;
 
       } catch (err) {
@@ -35,7 +35,7 @@ export const userResolvers = {
       return await usersRepo.getAllUsers();
     },
 
-  UsersByNickname: async (_, { nickname }, context) => {
+    UsersByNickname: async (_, { nickname }, context) => {
       console.log(`\n--- [DEBUG] Buscando usuarios por: "${nickname}" ---`);
       
       const users = await usersRepo.getUsersByNickname(nickname);
@@ -46,12 +46,12 @@ export const userResolvers = {
       try {
         const myEmail = context.user.email;
         const myProfile = await usersRepo.getUserByEmail(myEmail); 
-        let myNickname = myProfile.nickname; 
+        const myNickname = myProfile.nickname; 
 
         // Si no tenemos nickname, no podemos filtrar bloqueos basados en nickname
         if (!myNickname) {
-            console.warn('[WARN] No se pudo determinar mi nickname, devuelvo lista sin filtrar.');
-            return users;
+          console.warn('[WARN] No se pudo determinar mi nickname, devuelvo lista sin filtrar.');
+          return users;
         }
 
         //Obtener a quién he bloqueado YO
@@ -61,27 +61,27 @@ export const userResolvers = {
         //Filtrar
         const finalResults = await Promise.all(users.map(async (candidateUser) => {
             
-            // Si YO lo bloqueé, fuera
-            if (usersIBlocked.has(candidateUser.nickname)) {
-                return null;
+          // Si YO lo bloqueé, fuera
+          if (usersIBlocked.has(candidateUser.nickname)) {
+            return null;
+          }
+
+          // Si yo NO lo bloqueé, verificamos si ÉL me bloqueó a mí.
+          try {
+            const candidateBlockList = await friendshipRepo.getBlockList(candidateUser.email);
+            const isMeBlocked = candidateBlockList.some(b => b.blocked === myNickname);
+
+            if (isMeBlocked) {
+              console.log(`[DEBUG] Ocultando a ${candidateUser.nickname} -> Me tiene bloqueado en su lista:`, candidateBlockList);
+              return null; 
             }
 
-            // Si yo NO lo bloqueé, verificamos si ÉL me bloqueó a mí.
-            try {
-                const candidateBlockList = await friendshipRepo.getBlockList(candidateUser.email);
-                const isMeBlocked = candidateBlockList.some(b => b.blocked === myNickname);
+            return candidateUser;
 
-                if (isMeBlocked) {
-                    console.log(`[DEBUG] Ocultando a ${candidateUser.nickname} -> Me tiene bloqueado en su lista:`, candidateBlockList);
-                    return null; 
-                }
-
-                return candidateUser;
-
-            } catch (err) {
-                console.error(`[ERROR] Fallo verificando bloqueos de ${candidateUser.nickname}`, err);
-                return candidateUser; 
-            }
+          } catch (err) {
+            console.error(`[ERROR] Fallo verificando bloqueos de ${candidateUser.nickname}`, err);
+            return candidateUser; 
+          }
         }));
 
         const filteredUsers = finalResults.filter(u => u !== null);

@@ -123,7 +123,6 @@ export const recorridosResolver = {
         //en el caso que no se den estos errores derivados de bd: 
         throw new Error('No se pudo realizar la modificación del recorrido de forma correcta.'); 
       }
-
     },
 
     deleteRecorrido: async (_, { id }, context) => {

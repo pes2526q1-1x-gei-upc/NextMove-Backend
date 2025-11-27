@@ -6,19 +6,23 @@ import express from 'express';
 import { createHandler } from 'graphql-http/lib/use/express';
 import { ruruHTML } from 'ruru/server';
 import schema from './graphql/schema.js';
-import StationsService from './services/EVstationsService.js';
+//import StationsService from './services/EVstationsService.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
 import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 import { createContext } from './graphql/context.js';
 import routingRoutes from './routes/routingRoutes.js';
+import uploadProfilePhotoRouter from './routes/uploadProfilePhoto.js'; // Ajusta ruta según ubicación
 
-const stationsService = new StationsService();
+
+
+//const stationsService = new StationsService();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 
-dotenv.config({ path: '../.env' });
+// dotenv already loaded by import 'dotenv/config'; no need to call dotenv.config again here
 
+app.use('/api', uploadProfilePhotoRouter);
 
 
 app.use((req, res, next) => {

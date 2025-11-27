@@ -98,152 +98,152 @@ class StationsSyncWorker {
 
 
   async syncStations() {
-  const startTime = Date.now();
-  console.log(`\n[${new Date().toISOString()}] Starting station sync`);
+    const startTime = Date.now();
+    console.log(`\n[${new Date().toISOString()}] Starting station sync`);
 
-  try {
-    const icaenFeatures = await this.fetchAllStations();
+    try {
+      const icaenFeatures = await this.fetchAllStations();
     
-    // Cache usando índice del array como clave
-    const dynamicDataMap = new Map();
+      // Cache usando índice del array como clave
+      const dynamicDataMap = new Map();
 
-    icaenFeatures.forEach((feature, index) => {
-      const dynamicData = extractDynamicData(feature);
-      dynamicDataMap.set(index, dynamicData);
-    });
+      icaenFeatures.forEach((feature, index) => {
+        const dynamicData = extractDynamicData(feature);
+        dynamicDataMap.set(index, dynamicData);
+      });
     
-    console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
+      console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
 
 
-    await this.stationsService.forceRefresh(dynamicDataMap);
-    const currentDbCount = await this.repository.getStationsCount();
-    const newStationsCount = dynamicDataMap.size;
+      await this.stationsService.forceRefresh(dynamicDataMap);
+      const currentDbCount = await this.repository.getStationsCount();
+      const newStationsCount = dynamicDataMap.size;
 
-    let forceRefresh = currentDbCount !== newStationsCount;
+      let forceRefresh = currentDbCount !== newStationsCount;
     
-    if (!forceRefresh) {
+      if (!forceRefresh) {
 
-      // Hashing nos permite comparar strings más pequeños, aunque en nuestro caso no importa
-      // tanto porque aunque concatenemos 2000 ids, Node todavía puede computarlo relativamente rápido
-      // Mejor seguir buenas prácticas y además se puede hacer console.log de esta forma.
-      const crypto = await import('crypto');
-      const newIdsChecksum = crypto
-        .createHash('md5')
-        .update(icaenFeatures.map(f => f.properties?.id).filter(Boolean).join(','))
-        .digest('hex'); 
+        // Hashing nos permite comparar strings más pequeños, aunque en nuestro caso no importa
+        // tanto porque aunque concatenemos 2000 ids, Node todavía puede computarlo relativamente rápido
+        // Mejor seguir buenas prácticas y además se puede hacer console.log de esta forma.
+        const crypto = await import('crypto');
+        const newIdsChecksum = crypto
+          .createHash('md5')
+          .update(icaenFeatures.map(f => f.properties?.id).filter(Boolean).join(','))
+          .digest('hex'); 
 
-      const dbIdsChecksum = await this.repository.getExternalIdsChecksum();
+        const dbIdsChecksum = await this.repository.getExternalIdsChecksum();
       
-      forceRefresh = newIdsChecksum != dbIdsChecksum;
-      if (forceRefresh) console.log(`EV Stations: database checksum (${dbIdsChecksum}) differ from API checksum (${newIdsChecksum}), forcing refresh...`);
-    }
-    else console.log(`Current database EV stations count (${currentDbCount}) do not match API stations count (${newStationsCount}), forcing refresh...`);
+        forceRefresh = newIdsChecksum != dbIdsChecksum;
+        if (forceRefresh) console.log(`EV Stations: database checksum (${dbIdsChecksum}) differ from API checksum (${newIdsChecksum}), forcing refresh...`);
+      }
+      else console.log(`Current database EV stations count (${currentDbCount}) do not match API stations count (${newStationsCount}), forcing refresh...`);
 
-    const shouldSyncDb = (!this.lastDbSync || 
+      const shouldSyncDb = (!this.lastDbSync || 
                          (Date.now() - this.lastDbSync >= this.dbSyncInterval) ||
                           forceRefresh
-                        )
+      )
                          && process.env.NODE_ENV === 'prod';
 
-    // const shouldSyncDb = forceRefresh && process.env.NODE_ENV === 'prod';
-    // if (!forceRefresh) console.log("NOT FORCED TO REFRESH!!!");
+      // const shouldSyncDb = forceRefresh && process.env.NODE_ENV === 'prod';
+      // if (!forceRefresh) console.log("NOT FORCED TO REFRESH!!!");
 
-    if (shouldSyncDb) {
-      console.log('\nStarting database synchronization for ev stations...');
-      await this.syncToDatabase(icaenFeatures);
-      this.lastDbSync = Date.now();
-      this.stats.lastDbSyncTime = new Date();
-      this.stats.lastDbSyncSuccess = true;
-      console.log('Database sync completed');
-    } else {
-      const nextDbSync = this.lastDbSync 
-        ? new Date(this.lastDbSync + this.dbSyncInterval)
-        : new Date(Date.now() + this.dbSyncInterval);
-      console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
+      if (shouldSyncDb) {
+        console.log('\nStarting database synchronization for ev stations...');
+        await this.syncToDatabase(icaenFeatures);
+        this.lastDbSync = Date.now();
+        this.stats.lastDbSyncTime = new Date();
+        this.stats.lastDbSyncSuccess = true;
+        console.log('Database sync completed');
+      } else {
+        const nextDbSync = this.lastDbSync 
+          ? new Date(this.lastDbSync + this.dbSyncInterval)
+          : new Date(Date.now() + this.dbSyncInterval);
+        console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
+      }
+
+      const duration = Date.now() - startTime;
+      this.stats.totalSyncs++;
+      this.stats.lastSyncTime = new Date();
+      this.stats.lastSyncSuccess = true;
+      this.stats.consecutiveFailures = 0;
+
+      console.log(`\nSync completed successfully`);
+      console.log(`  Stations fetched: ${icaenFeatures.length}`);
+      console.log(`  Cache size: ${dynamicDataMap.size}`);
+      console.log(`  Duration: ${duration}ms\n`);
+
+      return {
+        success: true,
+        count: icaenFeatures.length,
+        duration,
+        dbSynced: shouldSyncDb
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      this.stats.lastSyncTime = new Date();
+      this.stats.lastSyncSuccess = false;
+      this.stats.consecutiveFailures++;
+
+      console.error(`Sync failed after ${duration}ms`);
+      console.error(`  Error: ${error.message}`);
+      console.error(`  Consecutive failures: ${this.stats.consecutiveFailures}`);
+
+      if (this.stats.consecutiveFailures >= 3) {
+        console.error(`WARNING: ${this.stats.consecutiveFailures} consecutive sync failures detected`);
+      }
+
+      return {
+        success: false,
+        error: error.message,
+        duration,
+      };
     }
-
-    const duration = Date.now() - startTime;
-    this.stats.totalSyncs++;
-    this.stats.lastSyncTime = new Date();
-    this.stats.lastSyncSuccess = true;
-    this.stats.consecutiveFailures = 0;
-
-    console.log(`\nSync completed successfully`);
-    console.log(`  Stations fetched: ${icaenFeatures.length}`);
-    console.log(`  Cache size: ${dynamicDataMap.size}`);
-    console.log(`  Duration: ${duration}ms\n`);
-
-    return {
-      success: true,
-      count: icaenFeatures.length,
-      duration,
-      dbSynced: shouldSyncDb
-    };
-
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    this.stats.lastSyncTime = new Date();
-    this.stats.lastSyncSuccess = false;
-    this.stats.consecutiveFailures++;
-
-    console.error(`Sync failed after ${duration}ms`);
-    console.error(`  Error: ${error.message}`);
-    console.error(`  Consecutive failures: ${this.stats.consecutiveFailures}`);
-
-    if (this.stats.consecutiveFailures >= 3) {
-      console.error(`WARNING: ${this.stats.consecutiveFailures} consecutive sync failures detected`);
-    }
-
-    return {
-      success: false,
-      error: error.message,
-      duration,
-    };
   }
-}
 
-async syncToDatabase(icaenStations) {
-  const startTime = Date.now();
-  console.log(`Syncing ${icaenStations.length} stations to database...`);
+  async syncToDatabase(icaenStations) {
+    const startTime = Date.now();
+    console.log(`Syncing ${icaenStations.length} stations to database...`);
 
-  try {
+    try {
     // 1. Limpiar tabla
-    console.log('Clearing existing stations...');
-    await this.repository.deleteAllStations();
+      console.log('Clearing existing stations...');
+      await this.repository.deleteAllStations();
     
-    // 2. Mapear con índice como ID
-    const mappedStations = icaenStations.map((feature, index) => ({
-      ...mapICAENToRepository(feature),
-      arrayIndex: index  // Agregar índice
-    }));
+      // 2. Mapear con índice como ID
+      const mappedStations = icaenStations.map((feature, index) => ({
+        ...mapICAENToRepository(feature),
+        arrayIndex: index  // Agregar índice
+      }));
 
-    // 3. Insertar en batch
+      // 3. Insertar en batch
 
       console.log('Inserting stations in batch...');
       const successCount = await this.repository.batchInsertStations(mappedStations);
     
 
-    const duration = Date.now() - startTime;
+      const duration = Date.now() - startTime;
     
-    console.log(`\nDatabase sync completed:`);
-    console.log(`  Stations inserted: ${successCount}`);
-    console.log(`  Duration: ${duration}ms`);
+      console.log(`\nDatabase sync completed:`);
+      console.log(`  Stations inserted: ${successCount}`);
+      console.log(`  Duration: ${duration}ms`);
 
-    return {
-      success: true,
-      successCount,
-      errorCount: 0,
-      duration
-    };
+      return {
+        success: true,
+        successCount,
+        errorCount: 0,
+        duration
+      };
 
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error(`Database sync failed after ${duration}ms:`, error);
-    this.stats.lastDbSyncSuccess = false;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`Database sync failed after ${duration}ms:`, error);
+      this.stats.lastDbSyncSuccess = false;
     
-    throw error;
+      throw error;
+    }
   }
-}
 
   getStats() {
     return {

@@ -58,6 +58,7 @@ export const assessmentResolver = {
       if (!context.user) {
         throw new Error('No autenticado');
       }
+      // eslint-disable-next-line no-useless-catch
       try {
         const assessmentData = { email:context.user.email, station_id };
         return await assessmentRepository.DeleteAssessment(assessmentData);
