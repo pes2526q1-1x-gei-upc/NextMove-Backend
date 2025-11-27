@@ -1,6 +1,6 @@
 //Resolver de EstacionDeBicing
 // Importamos el servicio como default para que funcionen los métodos
-import { getEstaciones, getEstacionById, getEstacionesBicingCercanas, getEstacioesDeBicingPorDireccion } from "../../services/EstacionBicingService.js";
+import { getEstaciones, getEstacionById, getEstacionesBicingCercanas, getEstacionesPorDireccion } from "../../services/EstacionBicingService.js";
 import EstacionDeBicingRepository from "../../repositories/estacionDeBicingRepository.js";
 
 const repo = new EstacionDeBicingRepository(); 
@@ -41,7 +41,7 @@ export const estacionDeBicingResolver = {
     //Métoodo que obtiene las estaciones de una determinada dirección
     getEstacionesDeBicingPorDireccion: async (_,  {address}) => { 
       console.log("Resolver Bicing: Dirección de estación que se quiere buscar: " + address); 
-      const estaciones_encontradas = getEstacioesDeBicingPorDireccion(address); 
+      const estaciones_encontradas = await getEstacionesPorDireccion(address); 
       if (!estaciones_encontradas) {
         //lanzamos error en caso de no encontrar alguna estación en esa dirección: 
         throw new Error("Bicing Resolver: No existe ninguna estación en esta dirección o la dirección es inválida."); 
