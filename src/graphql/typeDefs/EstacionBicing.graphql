@@ -108,6 +108,35 @@ type Query {
     }
     """
     getEstacionesDeBicingCercanas(location: LocationInput!): [EstacionBicing!]!
+
+   """ 
+   Busca estaciones de bicing que coincidan con una dirección dada como parámetro de entrada. 
+
+   Ejemplo de uso:
+
+   query buscaPorDir {
+    getEstacionesDeBicingPorDireccion(address:"PORTAL DE SANTA MADRONA, 2-4") {
+      id
+      nombre
+      direccion
+      coordenadas {
+        latitude
+        longitude
+      }
+      plazasTotales
+      estacionCargaElectrica
+      sePuedenAlquilarBicis
+      sePuedeAnclarBicis
+      plazasOcupadas
+      anclajesDisponibles
+      estado
+      bicisMecanicasDisponibles
+      bicisElectricasDisponibles
+    }
+}
+   """
+
+    getEstacionesDeBicingPorDireccion(address: String!): EstacionBicing!
 }
 
 type Mutation {

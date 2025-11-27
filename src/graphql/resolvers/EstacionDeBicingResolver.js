@@ -1,6 +1,6 @@
 //Resolver de EstacionDeBicing
 // Importamos el servicio como default para que funcionen los métodos
-import { getEstaciones, getEstacionById, getEstacionesBicingCercanas} from "../../services/EstacionBicingService.js";
+import { getEstaciones, getEstacionById, getEstacionesBicingCercanas, getEstacioesDeBicingPorDireccion } from "../../services/EstacionBicingService.js";
 import EstacionDeBicingRepository from "../../repositories/estacionDeBicingRepository.js";
 
 const repo = new EstacionDeBicingRepository(); 
@@ -36,6 +36,21 @@ export const estacionDeBicingResolver = {
       console.log("radio utilizado: ", radiusKm, "km");
       const { latitude, longitude } = coordinates;
       return getEstacionesBicingCercanas({ coordinates: { latitude, longitude } }, radiusKm);
+    },
+
+    //Métoodo que obtiene las estaciones de una determinada dirección
+    getEstacionesDeBicingPorDireccion: async (_,  {address}) => { 
+      console.log("Resolver Bicing: Dirección de estación que se quiere buscar: " + address); 
+      const estaciones_encontradas = getEstacioesDeBicingPorDireccion(address); 
+      if (!estaciones_encontradas) {
+        //lanzamos error en caso de no encontrar alguna estación en esa dirección: 
+        throw new Error("Bicing Resolver: No existe ninguna estación en esta dirección o la dirección es inválida."); 
+      }
+      else {
+        console.log("HE EJECUTADO EL MÉTODO DE BUSCAR POR DIRECCIÓN!");
+        console.log("Bicing Resolver: El número de estaciones de bicing encontradas en esa dirección es: " + estaciones_encontradas.length); 
+        return estaciones_encontradas; 
+      }
     }
   }, 
 

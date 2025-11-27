@@ -83,6 +83,7 @@ extend type Query {
   """
   UsersByNickname(nickname: String!): [User!]!
 
+  UsersSearchHistory: [String!]!
 }
 
 extend type Mutation {

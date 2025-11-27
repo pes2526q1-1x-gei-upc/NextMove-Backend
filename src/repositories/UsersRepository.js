@@ -212,6 +212,27 @@ class UsersRepository {
     
     return result.rows.length > 0;
   }
+
+  async getUserSearchHistory(email) {
+    const result = await pool.query(`
+      SELECT texto
+      FROM search_history
+      WHERE email = $1
+      ORDER BY created_at DESC
+      LIMIT 5
+    `, [email]);
+    return result.rows.map(row => row.texto);
+  }
+
+  async addUserSearchHistory(email, texto) {
+    await pool.query(`
+      INSERT INTO search_history (email, texto)
+      VALUES ($1, $2)
+    `, [email, texto]);
+  }
+  
 }
+
+
 
 export default UsersRepository;
