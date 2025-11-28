@@ -54,12 +54,13 @@ const formatToPgPoint = (coords) => {
 //   };
 // };
 
-// Nuevo helper: normaliza el id para que siempre tenga un único sufijo "_BICING"
+// Nuevo helper: normaliza el id para que siempre tenga un único sufijo "_BIKE"
 const normalizeBicingId = (rawId) => {
   if (rawId === null || rawId === undefined) return rawId;
   const s = String(rawId).trim();
-  const base = s.replace(/(_BICING)+$/i, '');
-  return `${base}_BICING`;
+  // eliminar sufijos anteriores (_BICING o _BIKE) y añadir un único _BIKE
+  const base = s.replace(/(_BICING|_BIKE)+$/i, '');
+  return `${base}_BIKE`;
 };
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -296,13 +297,13 @@ export default EstacionDeBicingRepository;
 /*
 Opcional (recomendado): crear trigger en la BD para forzar la normalización del id
 Ejecútalo como migration / psql una sola vez. Esto asegura que cualquier INSERT/UPDATE
-desde cualquier fuente almacene el id con sufijo '_BICING'.
+desde cualquier fuente almacene el id con sufijo '_BIKE'.
 
 -- SQL para migration:
 CREATE OR REPLACE FUNCTION ensure_bicing_id_suffix() RETURNS trigger AS $$
 BEGIN
   IF NEW.id IS NOT NULL THEN
-    NEW.id := regexp_replace(NEW.id::text, '(_BICING)+$', '', 'gi') || '_BICING';
+    NEW.id := regexp_replace(NEW.id::text, '(_BICING|_BIKE)+$', '', 'gi') || '_BIKE';
   END IF;
   RETURN NEW;
 END;

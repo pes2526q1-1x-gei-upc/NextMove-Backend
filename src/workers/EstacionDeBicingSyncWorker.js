@@ -15,10 +15,13 @@ const configPeticion = {
   }
 };
 
-// Reemplazar la función transformId defectuosa por una versión robusta
+// Reemplazar la función transformId defectuosa por una versión que normaliza al sufijo _BIKE
 function transformId(id) {
-	 // Asegurarse de convertir a string y añadir el sufijo requerido
-  return `${String(id)}_BICING`;
+  if (id === null || id === undefined) return id;
+  const s = String(id).trim();
+  // eliminar sufijos previos repetidos (_BICING o _BIKE) y dejar la base
+  const base = s.replace(/(_BICING|_BIKE)+$/i, '');
+  return `${base}_BIKE`;
 }
 
 function calcularEstadoEstacion(estacionEstado) {
