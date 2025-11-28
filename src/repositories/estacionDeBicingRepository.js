@@ -54,6 +54,15 @@ const formatToPgPoint = (coords) => {
 //   };
 // };
 
+// Nuevo helper: normaliza el id para que siempre tenga un único sufijo "_BIKE"
+const normalizeBicingId = (rawId) => {
+  if (rawId === null || rawId === undefined) return rawId;
+  const s = String(rawId).trim();
+  // eliminar sufijos anteriores (_BICING o _BIKE) y añadir un único _BIKE
+  const base = s.replace(/(_BICING|_BIKE)+$/i, '');
+  return `${base}_BIKE`;
+};
+
 //////////////////////////////////////////////////////////////////////////////////
 
 class EstacionDeBicingRepository {
@@ -62,6 +71,12 @@ class EstacionDeBicingRepository {
   _transformEstacion(estacion) {
     if (!estacion) return null;
     const transformed = { ...estacion };
+
+    // Normalizar id para evitar formatos mixtos (esto asegura que la caché y la fusión usen el mismo id)
+    if ('id' in transformed && transformed.id !== undefined && transformed.id !== null) {
+      transformed.id = normalizeBicingId(transformed.id);
+    }
+
     // Renombra los campos de la BD a camelCase para GraphQL/API
     if ('plazastotales' in transformed) {
       transformed.plazasTotales = transformed.plazastotales;
@@ -78,19 +93,24 @@ class EstacionDeBicingRepository {
 
   /** MÉTODO QUE OBTIENE TODAS LAS ESTACIONES DE BICING DEL SISTEMA */
   async getAllEstacionesDeBicing() {
+    // Evitar devolver duplicados accidentales y asegurar una sola fila por id
     const result = await pool.query(`
-            SELECT *
-            FROM EstacionBicing`);
+            SELECT DISTINCT ON (id) *
+            FROM EstacionBicing
+            ORDER BY id
+    `);
     return result.rows.map(estacion => this._transformEstacion(estacion));
   }
 
   /** MÉTODO QUE OBTIENE LA ESTACIÓN CON EL ID QUE SE PRECISA */
   async getEstacionDeBicingById(id) {
+    // Normalizar id de entrada para asegurar coincidencia con el formato almacenado
+    const normalizedId = normalizeBicingId(id);
     const result = await pool.query(`
             SELECT *
             FROM EstacionBicing
             WHERE (id = $1)
-            `, [id]);
+            `, [normalizedId]);
     return this._transformEstacion(result.rows[0]) || null;
   }
 
@@ -114,6 +134,8 @@ class EstacionDeBicingRepository {
 
   /** MÉTODO QUE INSERTA LA ESTACIÓN EN LA BD */
   async createEstacionDeBicing(dataEstacion) {
+    // Normalizar id antes de insertar
+    const idToInsert = normalizeBicingId(dataEstacion.id);
     //parseamos las coordenadas:
     const PointCoordenadas = formatToPgPoint(dataEstacion.coordenadas);
     // eslint-disable-next-line no-useless-catch
@@ -123,7 +145,7 @@ class EstacionDeBicingRepository {
                 VALUES($1, $2, $3, $4, $5, $6)
                 RETURNING *`,
       [
-        dataEstacion.id,
+        idToInsert,
         dataEstacion.nombre,
         dataEstacion.direccion,
         dataEstacion.plazasTotales,
@@ -177,7 +199,7 @@ class EstacionDeBicingRepository {
     }
         
     //añadimos al final de todo el id:
-    values.push(id);
+    values.push(normalizeBicingId(id));
 
     const query = `
             UPDATE EstacionBicing
@@ -199,8 +221,9 @@ class EstacionDeBicingRepository {
   async deleteEstacionBicing(id) {
     // eslint-disable-next-line no-useless-catch
     try {
+      const normalizedId = normalizeBicingId(id);
       const result = await pool.query(`
-                DELETE FROM EstacionBicing WHERE(id = $1)`, [id]);
+                DELETE FROM EstacionBicing WHERE(id = $1)`, [normalizedId]);
       return result.rowCount > 0;
     } catch (error) {
       throw error;
@@ -230,14 +253,16 @@ class EstacionDeBicingRepository {
       const values = []; 
 
       //3. PREPARAMOS LA INSERCIÓN MASIVA:
-      estacionesDataAPI.forEach((estacion, index) => {
+      // Normalizar ids al preparar el batch para evitar variaciones que creen duplicados
+      estacionesDataAPI.forEach((raw, index) => {
+        const estacion = { ...raw, id: normalizeBicingId(raw.id) };
         const start = index * 6;
         placeHolders.push(`($${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, $${start + 5}, $${start + 6})`);
         values.push(
           estacion.id,
           estacion.nombre,
-          estacion.direccion, 
-          estacion.plazasTotales, 
+          estacion.direccion,
+          estacion.plazasTotales,
           formatToPgPoint(estacion.coordenadas),
           estacion.estacionCargaElectrica
         ); 
@@ -268,3 +293,26 @@ class EstacionDeBicingRepository {
 }
 
 export default EstacionDeBicingRepository;
+
+/*
+Opcional (recomendado): crear trigger en la BD para forzar la normalización del id
+Ejecútalo como migration / psql una sola vez. Esto asegura que cualquier INSERT/UPDATE
+desde cualquier fuente almacene el id con sufijo '_BIKE'.
+
+-- SQL para migration:
+CREATE OR REPLACE FUNCTION ensure_bicing_id_suffix() RETURNS trigger AS $$
+BEGIN
+  IF NEW.id IS NOT NULL THEN
+    NEW.id := regexp_replace(NEW.id::text, '(_BICING|_BIKE)+$', '', 'gi') || '_BIKE';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_normalize_bicing_id ON "EstacionBicing";
+CREATE TRIGGER trg_normalize_bicing_id
+BEFORE INSERT OR UPDATE ON "EstacionBicing"
+FOR EACH ROW EXECUTE FUNCTION ensure_bicing_id_suffix();
+
+-- Nota: ajusta comillas o schema según tu esquema real.
+*/
