@@ -27,6 +27,7 @@ type User {
   preferredLanguage: Language
   bioDescription: String
   createdAt: String
+  regWithGoogle: Boolean!
 }
 
 """
@@ -44,6 +45,7 @@ input CreateUserInput {
   preferredLanguage: Language
   birthDate: String
   bioDescription: String
+  regWithGoogle: Boolean!
 }
 
 """

@@ -10,7 +10,7 @@ export const shorthands = undefined;
  */
 export const up = (pgm) => {
   pgm.addColumn('users', {
-    regWithGoogle: { type: 'boolean', notNull: true }
+    reg_with_google: { type: 'boolean', notNull: true }
   });
   pgm.dropConstraint('valoracion', 'valoracion_pkey');
   pgm.addConstraint('valoracion', 'valoracion_pkey', {
