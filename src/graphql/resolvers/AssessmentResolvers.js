@@ -29,7 +29,21 @@ export const assessmentResolver = {
         }
         throw error;
       }
-    }
+    },
+    checkAssessed: async (_, { station_id }, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+      try {
+        const assessmentData = { email:context.user.email, station_id };
+        return await assessmentRepository.checkAssessed(assessmentData);
+      } catch (error) {
+        if (error.code === '22P02'){
+          throw new Error('Invalid data format provided.');
+        }
+        throw error;
+      }
+    },
   },
   Mutation:{
     createAssessment: async (_, { station_id, score, comments }, context) => {
