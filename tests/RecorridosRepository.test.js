@@ -12,7 +12,13 @@ const mockInput = {
   kcal: 45,
   origen: { latitude: 41.38, longitude: 2.17 },
   destino: { latitude: 41.39, longitude: 2.18 },
-  fecha_recorrido: '2025-11-21'
+  fecha_recorrido: '2025-11-21',
+  // Nuevos campos añadidos
+  velocidad_maxima: 20.5,
+  elevacion_positiva: 30.2,
+  elevacion_negativa: 10.1,
+  tiempo_inicio: '2025-11-21T08:00:00Z',
+  tiempo_fin: '2025-11-21T09:00:00Z'
 };
 
 
@@ -26,7 +32,13 @@ const mockDbRow = {
   kcal: mockInput.kcal,
   origen: { x: mockInput.origen.longitude, y: mockInput.origen.latitude },
   destino: { x: mockInput.destino.longitude, y: mockInput.destino.latitude },
-  fecha_recorrido: mockInput.fecha_recorrido
+  fecha_recorrido: mockInput.fecha_recorrido,
+  // Nuevos campos en la "fila" de BD (tiempos/fechas se mantienen como strings ISO en el mock)
+  velocidad_maxima: mockInput.velocidad_maxima,
+  elevacion_positiva: mockInput.elevacion_positiva,
+  elevacion_negativa: mockInput.elevacion_negativa,
+  tiempo_inicio: mockInput.tiempo_inicio,
+  tiempo_fin: mockInput.tiempo_fin
 };
 
 //Hacemos que se reseteé con el valor inicial nuestro mockup generado préviamente. 
@@ -98,9 +110,23 @@ describe('RecorridosRepository - CRUD (mocked pool)', () => {
     expect(params[5]).toBe(`(${mockInput.origen.longitude}, ${mockInput.origen.latitude})`);
     expect(params[6]).toBe(`(${mockInput.destino.longitude}, ${mockInput.destino.latitude})`);
 
+    // Verificar los nuevos parámetros añadidos: fecha y campos añadidos están en las posiciones esperadas
+    expect(params[7]).toBe(new Date(mockInput.fecha_recorrido).toISOString()); 
+    expect(params[8]).toBe(mockInput.velocidad_maxima); 
+    expect(params[9]).toBe(mockInput.elevacion_positiva);
+    expect(params[10]).toBe(mockInput.elevacion_negativa);
+    expect(params[11]).toBe(new Date(mockInput.tiempo_inicio).toISOString());
+    expect(params[12]).toBe(new Date(mockInput.tiempo_fin).toISOString());
+
     //ahora verificamos que los valores obtenidos de BD son correctamente formateados: 
     expect(res.origen).toEqual({latitude: 41.38 , longitude: 2.17}); 
     expect(res.destino).toEqual({latitude: 41.39, longitude: 2.18}); 
+    // y que los nuevos campos vienen en la fila transformada (formato de tiempo/fecha mostrado por el transform)
+    expect(res.velocidad_maxima).toBe(mockDbRow.velocidad_maxima);
+    expect(res.elevacion_positiva).toBe(mockDbRow.elevacion_positiva);
+    expect(res.elevacion_negativa).toBe(mockDbRow.elevacion_negativa);
+    expect(res.tiempo_inicio).toBeDefined();
+    expect(res.tiempo_fin).toBeDefined();
   });
   
 
@@ -164,7 +190,13 @@ describe('RecorridosRepository - CRUD (mocked pool)', () => {
     'kcal',
     'origen',
     'destino',
-    'fecha_recorrido'
+    'fecha_recorrido',
+    // Añadimos los nuevos campos a las comprobaciones de "NOT NULL" en los tests
+    'velocidad_maxima',
+    'elevacion_positiva',
+    'elevacion_negativa',
+    'tiempo_inicio',
+    'tiempo_fin'
   ])('saveRecorrido: rechaza cuando %s es null (NOT NULL)', async (campo) => {
     const input = { ...mockInput };
     input[campo] = null;
