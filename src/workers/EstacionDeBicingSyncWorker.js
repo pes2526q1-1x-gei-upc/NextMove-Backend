@@ -15,6 +15,12 @@ const configPeticion = {
   }
 };
 
+// Reemplazar la función transformId defectuosa por una versión robusta
+function transformId(id) {
+	 // Asegurarse de convertir a string y añadir el sufijo requerido
+  return `${String(id)}_BICING`;
+}
+
 function calcularEstadoEstacion(estacionEstado) {
   const isRenting = estacionEstado.is_renting === 1;
   const isReturning = estacionEstado.is_returning === 1;
@@ -84,7 +90,7 @@ class BicingSyncWorker {
 
       // 3. Mapeamos/Transformamos los datos de la API al formato que espera el repositorio para la BD.
       const staticData = rawStations.map(e => ({
-        id: e.station_id,
+        id: transformId(e.station_id),
         nombre: e.name,
         direccion: e.address,
         plazasTotales: e.capacity,
@@ -127,7 +133,6 @@ class BicingSyncWorker {
       const response = await fetch(ESTADO_URL, configPeticion);
       const dynamicRaw = await response.json();
             
-      // Accedemos a la lista de estaciones dinámicas DE FORMA SEGURA, buscando en .data.stations
       let datosDinamicos = [];
       if (dynamicRaw && dynamicRaw.data && Array.isArray(dynamicRaw.data.stations)) {
         datosDinamicos = dynamicRaw.data.stations;
@@ -142,7 +147,8 @@ class BicingSyncWorker {
             
       // Fusión de estaciones (datos estáticos de BD + datos dinámicos de la API)
       this.estacionesCache = datosEstaticos.map(estacion => {
-        const dyn = datosDinamicos.find(e => e.station_id.toString() === estacion.id.toString());
+        // Comparar usando transformId para igual formato
+        const dyn = datosDinamicos.find(e => transformId(e.station_id) === String(estacion.id));
         let fusion = { ...estacion };
         if (dyn) {
           const types = dyn.num_bikes_available_types || {};
