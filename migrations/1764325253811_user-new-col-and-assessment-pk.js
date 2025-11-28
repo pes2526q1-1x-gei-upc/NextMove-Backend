@@ -9,13 +9,13 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-    pgm.addColumn('users', {
-        regWithGoogle: { type: 'boolean', notNull: true }
-    });
-    pgm.dropConstraint('valoracion', 'valoracion_pkey');
-    pgm.addConstraint('valoracion', 'valoracion_pkey', {
-        primaryKey: ['nickname', 'station_id']
-    });
+  pgm.addColumn('users', {
+    regWithGoogle: { type: 'boolean', notNull: true }
+  });
+  pgm.dropConstraint('valoracion', 'valoracion_pkey');
+  pgm.addConstraint('valoracion', 'valoracion_pkey', {
+    primaryKey: ['nickname', 'station_id']
+  });
 };
 
 /**
@@ -24,9 +24,9 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-    pgm.dropColumn('users', 'regWithGoogle');
-    pgm.dropConstraint('valoracion', 'valoracion_pkey');
-    pgm.addConstraint('valoracion', 'valoracion_pkey', {
-        primaryKey: ['nickname', 'station_id', 'created_at']
-    });
+  pgm.dropColumn('users', 'regWithGoogle');
+  pgm.dropConstraint('valoracion', 'valoracion_pkey');
+  pgm.addConstraint('valoracion', 'valoracion_pkey', {
+    primaryKey: ['nickname', 'station_id', 'created_at']
+  });
 };

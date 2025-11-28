@@ -9,7 +9,7 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-    pgm.dropConstraint('favstation', 'favstation_user_id_fkey');
+  pgm.dropConstraint('favstation', 'favstation_user_id_fkey');
 };
 
 /**
@@ -18,10 +18,10 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-    pgm.addConstraint('favstation', 'favstation_user_id_fkey', {
-        foreignKeys: {
-            columns: 'user_id',
-            references: '"users"(email)'
-        }
-    });
+  pgm.addConstraint('favstation', 'favstation_user_id_fkey', {
+    foreignKeys: {
+      columns: 'user_id',
+      references: '"users"(email)'
+    }
+  });
 };
