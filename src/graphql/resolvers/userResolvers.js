@@ -29,6 +29,20 @@ export const userResolvers = {
       return user;
     },
 
+    ExistsUser: async (_, { email }) => {
+      try {
+        const user = await usersRepo.getUserByEmail(email); 
+        if (user) {
+          return { exists: true, isRegWithGoogle: user.regWithGoogle };
+        }
+        
+        return { exists: false, isRegWithGoogle: null };
+      } catch (error) {
+        console.error('Error en ExistsUser:', error.message);
+        throw error;
+      }
+    },
+
     Users: async () => {
       return await usersRepo.getAllUsers();
     },

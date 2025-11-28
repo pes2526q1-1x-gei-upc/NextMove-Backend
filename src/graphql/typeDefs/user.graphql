@@ -30,6 +30,11 @@ type User {
   regWithGoogle: Boolean!
 }
 
+type ExistsUser {
+  exists: Boolean!
+  isRegWithGoogle: Boolean
+}
+
 """
 Input para crear un nuevo usuario.
 birthDate en formato DD-MM-AAAA
@@ -86,6 +91,15 @@ extend type Query {
   """
   UsersByNickname(nickname: String!): [User!]!
 
+  """
+  Verifica si un usuario con el email dado existe.
+  Devuelve un objeto con 'exists' que representa la existencia y 'isRegWithGoogle' donde si existe, dice cómo se ha registrado, null si no existe.
+  """
+  ExistsUser(email:String!): ExistsUser!
+
+  """
+  Obtiene el historial de las últimas 5 búsuqedas del usuario autenticado.
+  """
   UsersSearchHistory: [String!]!
 }
 

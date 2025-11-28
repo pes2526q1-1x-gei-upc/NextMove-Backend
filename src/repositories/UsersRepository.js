@@ -1,7 +1,6 @@
 import  pool  from '../config/database.js';
 
 class UsersRepository {
-  
   /**
    * Obtener todos los usuarios
    */
@@ -40,7 +39,8 @@ class UsersRepository {
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
         bio_description AS "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+        reg_with_google AS "regWithGoogle"
       FROM users
       WHERE email = $1
     `, [email]);
@@ -256,6 +256,7 @@ class UsersRepository {
     `, [email, texto]);
   }
   
+
 }
 
 
