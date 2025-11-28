@@ -47,6 +47,8 @@ type EstacionBicing {
     """
     distanciaKm: Float
 
+    isFavoriteStation: Boolean
+
 }
 
 input CreateInputEstacionBicing {
