@@ -7,10 +7,14 @@ const stationsService = new StationsService();
 
 const StationsResolvers = {
   Query: {
-    stations: async () => {
+    stations: async (_, __, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+      
       try {
-        const stations = await stationsService.getAllStations();
-        
+        const stations = await stationsService.getAllStations(context.user.email);
+
         return {
           stations,
           total: stations.length
