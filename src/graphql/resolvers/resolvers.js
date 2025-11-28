@@ -38,6 +38,7 @@ export const resolvers = {
 
     getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
     getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
+    checkAssessed: assessmentResolver.Query.checkAssessed,
     BlockList: friendshipResolvers.Query.BlockList,
     
     getFavBikeStations: favStationResolver.Query.getFavBikeStations,
