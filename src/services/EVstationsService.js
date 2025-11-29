@@ -1,5 +1,6 @@
 import StationsRepository from '../repositories/EVStationsRepository.js';
 import { mapRepositoryToGraphQL } from '../utils/EVStationsMapper.js';
+import FavStationRepository from '../repositories/FavStationRepository.js';
 
 let dynamicCache = new Map();
 let lastFetch = null;
@@ -9,15 +10,22 @@ const CACHE_DURATION = 5 * 60 * 1000;
 export default class StationsService {
   constructor() {
     this.repository = new StationsRepository();
+    this.favStationRepository = new FavStationRepository();
   }
 
-  async getAllStations() {
+  async getAllStations(email) {
     try {
       const dbStations = await this.repository.getAllStations();
-      
+      const favStationIds = await this.favStationRepository.getFavStationIds(email, 'CAR'); //Hardcodeado como CAR porque esta operación es solo para obtener estaciones ev favoritas.
+
       return dbStations.map(dbStation => {
         const dynamicData = dynamicCache.get(dbStation.id);
-        return mapRepositoryToGraphQL(dbStation, dynamicData);
+        const mappedStation = mapRepositoryToGraphQL(dbStation, dynamicData);
+
+        return {
+          ...mappedStation,
+          isFavoriteStation: favStationIds.has(dbStation.id)
+        };
       });
     } catch (error) {
       console.error('Error in getAllStations:', error);

@@ -1,26 +1,37 @@
 import EstacionDeBicingSyncWorker from "../workers/EstacionDeBicingSyncWorker.js";
 import EstacionDeBicingRepository from "../repositories/estacionDeBicingRepository.js";
+import FavStationRepository from "../repositories/FavStationRepository.js";
 import { calculateDistance } from "../utils/maths.js";
 
 const estacionRepo = new EstacionDeBicingRepository(); 
+const favStationRepo = new FavStationRepository();
 
 //Método para obtener todas las estaciones de bicing de nuestro sistema: 
-export function getEstaciones() {
+export async function getEstaciones(email) {
   const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache();
   if (!estaciones || estaciones.length === 0) {
     console.log("Bicing Service: No existen estaciones cacheadas en el sistema!");
-    return null;
+    return null; // Esto no deberia de retornar []¿? En el schema de bicing sale que retorna array obligatoriamente
   }
+
+  const favStationIds = await favStationRepo.getFavStationIds(email, 'BIKE');
+  
+  const result = estaciones.map(estacion => ({
+    ...estacion,
+    isFavoriteStation: favStationIds.has(estacion.id)
+  }));
+
   console.log("Atributos clave de cada estación:");
-  estaciones.forEach((e, i) => {
+  result.forEach((e, i) => {
     console.log(`Estación ${i + 1} (id: ${e.id}):\n` + JSON.stringify(e, null, 2));
   });
   console.log(`Bicing Service: El  número de estaciones que vamos a retornar es: ${estaciones.length}!`);
-  return estaciones;
-}
+  return result;
+} 
 
 //Método para obtener la estación que precisamos como parámetro de entrada: 
 export function getEstacionById(id) {
+  console.log(`\x1b[95mBuscamos esta estacion de bicing en el service: ${id}\x1b[0m`); 
   const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache();
   if (!estaciones || estaciones.length === 0) {
     console.log("Bicing Service: No existen estaciones de bicing en el sistema!"); 
