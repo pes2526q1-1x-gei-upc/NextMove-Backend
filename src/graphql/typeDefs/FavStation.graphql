@@ -30,5 +30,5 @@ extend type Query{
 
 extend type Mutation{
     addFavStation(station_id: String!, type: String!): Boolean!
-    deleteFavStation(station_id: String!, type: String!): Boolean!
+    deleteFavStation(stationId: String!, type: String!): Boolean!
 }
