@@ -30,6 +30,7 @@ class FavStationRepository {
     return result.rowCount > 0;
   }
   async deleteFavStation(email, stationId, type) {
+    console.log(email, stationId, type);
     const result = await pool.query(`
         DELETE FROM favstation 
         WHERE email = $1 AND station_id = $2 AND station_type = $3
