@@ -27,10 +27,11 @@ export async function getEstaciones() {
   });
   console.log(`Bicing Service: El  número de estaciones que vamos a retornar es: ${estaciones.length}!`);
   return result;
-}
+} 
 
 //Método para obtener la estación que precisamos como parámetro de entrada: 
 export function getEstacionById(id) {
+  console.log(`\x1b[95mBuscamos esta estacion de bicing en el service: ${id}\x1b[0m`); 
   const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache();
   if (!estaciones || estaciones.length === 0) {
     console.log("Bicing Service: No existen estaciones de bicing en el sistema!"); 

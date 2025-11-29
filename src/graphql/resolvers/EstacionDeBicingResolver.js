@@ -17,15 +17,19 @@ export const estacionDeBicingResolver = {
     },
     //método para obtener una estación de bicing por su ID
     getEstacionDeBicing: async (_, {id}) => {   
-      const estaciones = getEstaciones();
+      /*const estaciones = getEstaciones();
       if (!estaciones || estaciones.length === 0) {
         throw new Error('No hay estaciones de Bicing disponibles en este momento');
       }
       const resultEstacion = estaciones.find(estacion => estacion.id === id);
       if (!resultEstacion) {
         throw new Error('No existe la estación con ese identificador.');
+      }*/
+      const resultEstacion = getEstacionById(id); 
+      if (!resultEstacion) {
+        throw new Error ('No existe la estación con ese id!!!'); 
       }
-      return resultEstacion;
+      else return resultEstacion;
     },
 
     //método que obtiene las estaciones que se hallan a un radio radiusKm de distancia respecto la pos del user en ese instante. 

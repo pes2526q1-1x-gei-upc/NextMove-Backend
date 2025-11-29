@@ -139,8 +139,20 @@ class EstacionDeBicingRepository {
     //parseamos las coordenadas:
     const PointCoordenadas = formatToPgPoint(dataEstacion.coordenadas);
     // eslint-disable-next-line no-useless-catch
+
+    const client = await pool.connect(); 
+
     try {
-      const result = await pool.query(`
+      //iniciamos la transacción: 
+      await client.query('BEGIN'); 
+
+      //insertamos en la tabla de stations (es la PPAL de las dos). 
+      await client.query(`
+        INSERT INTO station(id) 
+        VALUES($1)`, [idToInsert]
+      );
+
+      const result = await client.query(`
                 INSERT INTO EstacionBicing(id, nombre, direccion, plazastotales, coordenadas, estacioncargaelectrica)
                 VALUES($1, $2, $3, $4, $5, $6)
                 RETURNING *`,
@@ -152,9 +164,17 @@ class EstacionDeBicingRepository {
         PointCoordenadas,
         dataEstacion.estacionCargaElectrica
       ]);
+
+      //confrimamos la transacción (en el caso de que ambas inserciones sean exitosas): 
+      await client.query('COMMIT'); 
+
       return this._transformEstacion(result.rows[0]);  
     } catch (error) {
+      await client.query('ROLLBACK');
       throw error;
+    } finally {
+      //liberamos el cliente: 
+      client.release(); 
     }
   }
 
@@ -231,50 +251,70 @@ class EstacionDeBicingRepository {
   }
 
   /** MÉTODO DE SINCRONIZACIÓN  MASIVA NECESARIO PARA REALIZAR LAS ACTUALIZACIONES CADA 24 horas. 
-     * Estrategia usada: DELETE ALL + INSERT BATCH, es la forma más eficiente de hacerlo en lugar de UPSERT. 
+     * Estrategia usada: doble upsert. 
      * Hacemos uso de una TRANSACCIÓN SQL para garantizar que los datos no se corrompan. 
      */
-
   async sincronizarEstacionesDeBicingMasivamente(estacionesDataAPI) {
     if (!estacionesDataAPI || estacionesDataAPI.length === 0) {
       console.log("estacionDeBicingRepository: No hay datos de API para sincronizar."); 
       return {count: 0, success: true}; 
     }
 
+    //información para realizar las quieries de inserció para la relación de bicing
+    const bicingPlaceHolders = []; 
+    const bicingValues = []; 
+    //ídem para stations: 
+    const stationPlaceHolders = []; 
+    const stationValues = []; //en este caso solo almacenamos los ids de las estaciones, nada más. 
+
+  
+    //Preparamos los datos para poder realizar las inserciones de forma correcta en estacionbicing
+    estacionesDataAPI.forEach((raw, index) => {
+      const estacion = { ...raw, id: normalizeBicingId(raw.id) };
+      const start = index * 6;
+      const stationIndex = index + 1; //para stations. 
+      bicingPlaceHolders.push(`($${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, $${start + 5}, $${start + 6})`);
+      bicingValues.push(
+        estacion.id,
+        estacion.nombre,
+        estacion.direccion,
+        estacion.plazasTotales,
+        formatToPgPoint(estacion.coordenadas),
+        estacion.estacionCargaElectrica
+      ); 
+
+      //Ídem. pero aplicado a stations
+      stationPlaceHolders.push(`($${stationIndex})`); 
+      stationValues.push(estacion.id); 
+    });
+    
     const client = await pool.connect();
     try {
       await client.query(`BEGIN`); //1. INICIAMOS LA TRANSACCIÓN
       console.log("estacionDeBicingRepository: Iniciando sincronización masiva: Eliminando datos estáticos antiguos...");
-      //2. ELIMINAMOS TODOS LOS DATOS:
-      await client.query(`DELETE FROM EstacionBicing`);  
-      console.log("estacionDeBicingRepository: eliminación llevada a cabo con éxito! Preparamos las inserciones.");
 
-      const placeHolders = []; 
-      const values = []; 
 
-      //3. PREPARAMOS LA INSERCIÓN MASIVA:
-      // Normalizar ids al preparar el batch para evitar variaciones que creen duplicados
-      estacionesDataAPI.forEach((raw, index) => {
-        const estacion = { ...raw, id: normalizeBicingId(raw.id) };
-        const start = index * 6;
-        placeHolders.push(`($${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, $${start + 5}, $${start + 6})`);
-        values.push(
-          estacion.id,
-          estacion.nombre,
-          estacion.direccion,
-          estacion.plazasTotales,
-          formatToPgPoint(estacion.coordenadas),
-          estacion.estacionCargaElectrica
-        ); 
-      });
+      //inserciones en relación stations: 
+      const stationInsertQuery = `
+        INSERT INTO stations(id)
+        VALUES ${stationPlaceHolders.join(', ')}
+        ON CONFLICT (id) DO NOTHING
+      `; 
+      await client.query(stationInsertQuery, stationValues); 
 
-      const insertQuery = `
-                INSERT INTO EstacionBicing(id, nombre, direccion, plazastotales, coordenadas, estacioncargaelectrica)
-                VALUES ${placeHolders.join(', ')}
-            `;
-
+      const bicingInsertQuery = `
+            INSERT INTO EstacionBicing(id, nombre, direccion, plazastotales, coordenadas, estacioncargaelectrica)
+            VALUES ${bicingPlaceHolders.join(', ')}
+            ON CONFLICT (id) DO UPDATE SET
+                nombre = EXCLUDED.nombre,
+                direccion = EXCLUDED.direccion,
+                plazastotales = EXCLUDED.plazastotales,
+                coordenadas = EXCLUDED.coordenadas,
+                estacioncargaelectrica = EXCLUDED.estacioncargaelectrica
+            RETURNING id
+        `;
       //Realizamos la query de inserción : 
-      const result = await client.query(insertQuery, values); 
+      const result = await client.query(bicingInsertQuery, bicingValues); 
 
       //4. CERRRAMOS LA TRANSACCIÓN: 
       await client.query(`COMMIT`); 
