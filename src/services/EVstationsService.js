@@ -1,7 +1,7 @@
 import StationsRepository from '../repositories/EVStationsRepository.js';
 import { mapRepositoryToGraphQL } from '../utils/EVStationsMapper.js';
-import FavStationRepository
- from '../repositories/FavStationRepository.js';
+import FavStationRepository from '../repositories/FavStationRepository.js';
+
 let dynamicCache = new Map();
 let lastFetch = null;
 

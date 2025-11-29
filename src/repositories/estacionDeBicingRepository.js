@@ -138,8 +138,7 @@ class EstacionDeBicingRepository {
     const idToInsert = normalizeBicingId(dataEstacion.id);
     //parseamos las coordenadas:
     const PointCoordenadas = formatToPgPoint(dataEstacion.coordenadas);
-    // eslint-disable-next-line no-useless-catch
-
+    
     const client = await pool.connect(); 
 
     try {
