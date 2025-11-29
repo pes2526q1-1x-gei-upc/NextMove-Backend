@@ -8,8 +8,12 @@ const repo = new EstacionDeBicingRepository();
 export const estacionDeBicingResolver = {
   Query: {
     //método para obtener todas las estaciones de bicing fusionadas.
-    getEstacionesDeBicing: async () => {
-      const estaciones = getEstaciones();
+    getEstacionesDeBicing: async (_, __, context) => {
+      if (!context.user) {
+        return new Error('Usuario no autenticado');
+      }
+
+      const estaciones = getEstaciones(context.user.email);
       if (!estaciones || estaciones.length === 0) {
         throw new Error('No hay estaciones de Bicing disponibles en este momento.');
       }

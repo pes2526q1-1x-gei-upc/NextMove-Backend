@@ -7,7 +7,7 @@ const estacionRepo = new EstacionDeBicingRepository();
 const favStationRepo = new FavStationRepository();
 
 //Método para obtener todas las estaciones de bicing de nuestro sistema: 
-export async function getEstaciones(email = null) {
+export async function getEstaciones(email) {
   const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache();
   if (!estaciones || estaciones.length === 0) {
     console.log("Bicing Service: No existen estaciones cacheadas en el sistema!");
