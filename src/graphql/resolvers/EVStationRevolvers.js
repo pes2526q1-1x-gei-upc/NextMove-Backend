@@ -56,15 +56,21 @@ const StationsResolvers = {
       }
     },
 
-    nearbyStations: async (_, { location }) => {
+    nearbyStations: async (_, { location }, context) => {
       try {
+        
+        if (!context.user) {
+          return new Error("Usuario no autenticado");
+        }
+
         const { coordinates, radiusKm = 5 } = location;
         const { latitude, longitude } = coordinates;
 
         const stations = await stationsService.searchStationsByLocation(
           latitude,
           longitude,
-          radiusKm
+          radiusKm,
+          context.user.email
         );
 
         return stations;

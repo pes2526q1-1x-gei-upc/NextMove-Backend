@@ -46,14 +46,22 @@ export default class StationsService {
     }
   }
 
-  async searchStationsByLocation(lat, lon, radiusKm = 5) {
+  async searchStationsByLocation(lat, lon, radiusKm = 5, email) {
     try {
+      const favStationIds = await this.favStationRepository.getFavStationIds(email, 'CAR');
+      
       const dbStations = await this.repository.getNearbyStations(lat, lon, radiusKm);
       
       return dbStations.map(dbStation => {
         const dynamicData = dynamicCache.get(dbStation.id);
-        return mapRepositoryToGraphQL(dbStation, dynamicData);
+        const mappedStation = mapRepositoryToGraphQL(dbStation, dynamicData);
+
+        return {
+          ...mappedStation,
+          isFavoriteStation: favStationIds.has(dbStation.id)
+        };
       });
+
     } catch (error) {
       console.error('Error searching stations by location:', error);
       return [];

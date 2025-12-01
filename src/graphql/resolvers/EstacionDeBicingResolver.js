@@ -37,13 +37,18 @@ export const estacionDeBicingResolver = {
     },
 
     //método que obtiene las estaciones que se hallan a un radio radiusKm de distancia respecto la pos del user en ese instante. 
-    getEstacionesDeBicingCercanas: async (_, { location }) => {
+    getEstacionesDeBicingCercanas: async (_, { location }, context) => {
+      if (!context.user) {
+        return new Error("Usuario no autenticado");
+      }
+
+
       console.log(location);
       const { coordinates, radiusKm = 5 } = location;
       console.log("valor de coods: ", coordinates);
       console.log("radio utilizado: ", radiusKm, "km");
       const { latitude, longitude } = coordinates;
-      return getEstacionesBicingCercanas({ coordinates: { latitude, longitude } }, radiusKm);
+      return getEstacionesBicingCercanas({ coordinates: { latitude, longitude } }, radiusKm, context.user.email);
     },
 
     //Métoodo que obtiene las estaciones de una determinada dirección

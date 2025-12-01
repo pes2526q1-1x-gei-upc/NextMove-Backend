@@ -5,9 +5,11 @@ const favStationRepo = new FavStationRepository();
 const favStationResolver = {
   Query: {
     getFavBikeStations: async (_, __, context) => {
+      
       if (!context.user) {
         throw new Error('No autenticado');
       }
+
       try {
         return await favStationRepo.getFavStations(context.user.email, 'BIKE');
       }
@@ -31,6 +33,7 @@ const favStationResolver = {
   },
   Mutation:{
     addFavStation: async (_, { station_id,type }, context) => {
+
       if (!context.user) {
         throw new Error('No autenticado');
       }
