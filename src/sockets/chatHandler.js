@@ -7,7 +7,15 @@ export function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.userId}`);
 
-    socket.on('join:room', (roomId) => {
+    socket.on('join:room', (data) => {
+
+      const roomId = typeof data === 'string' ? data : data.roomId; // Fix aquí
+      
+      if (!roomId) {
+        socket.emit('error', { message: 'roomId is required' });
+        return;
+      }   
+
       socket.join(roomId);
       console.log(`User ${socket.userId} joined room: ${roomId}`);
       
