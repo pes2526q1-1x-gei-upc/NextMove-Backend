@@ -272,6 +272,50 @@ class ChatRepository {
     const result = await pool.query(query, [chatId, name, description]);
     return result.rows[0];
   }
+
+  /**
+  * Obtener amigos con info de chat
+   */
+  async getFriendshipsWithChatInfo(email) {
+    console.log("Obteniendo amistades con info de chat de", email);
+    
+    const user = await pool.query(`SELECT nickname FROM users WHERE email = $1`, [email]);
+    
+    if (user.rows.length === 0) {
+      throw new Error('User not found');
+    }
+    
+    const nickname = user.rows[0].nickname;
+    
+    const result = await pool.query(`
+      SELECT 
+        CASE 
+          WHEN a.nickname1 = $1 THEN a.nickname2 
+          ELSE a.nickname1 
+        END AS friend_nickname,
+        u.email AS friend_email,
+        u.photo AS friend_photo,
+        c.id AS chat_id,
+        (SELECT content FROM chat_messages 
+        WHERE chat_id = c.id 
+        ORDER BY created_at DESC LIMIT 1) AS last_message,
+        (SELECT created_at FROM chat_messages 
+        WHERE chat_id = c.id 
+        ORDER BY created_at DESC LIMIT 1) AS last_message_time
+      FROM amigos a
+      JOIN users u ON (
+        (a.nickname1 = $1 AND a.nickname2 = u.nickname) OR 
+        (a.nickname2 = $1 AND a.nickname1 = u.nickname)
+      )
+      LEFT JOIN chat_participants cp1 ON cp1.user_email = $2
+      LEFT JOIN chat_participants cp2 ON cp2.user_email = u.email AND cp2.chat_id = cp1.chat_id
+      LEFT JOIN chats c ON c.id = cp1.chat_id AND c.type = 'direct'
+      ORDER BY 
+        CASE WHEN c.id IS NOT NULL THEN c.updated_at ELSE NOW() END DESC
+    `, [nickname, email]);
+    
+    return result.rows;
+  }
 }
 
 export default new ChatRepository();
