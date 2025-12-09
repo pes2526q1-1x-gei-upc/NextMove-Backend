@@ -6,6 +6,7 @@ import { recorridosResolver } from './RecorridoResolver.js';
 import { assessmentResolver } from './AssessmentResolvers.js';
 import routingResolvers  from './routingResolvers.js';
 import favStationResolver from './FavStationResolver.js';
+import ChatResolver from './ChatResolver.js';
 
 
 export const resolvers = {
@@ -43,6 +44,8 @@ export const resolvers = {
     
     getFavBikeStations: favStationResolver.Query.getFavBikeStations,
     getFavCarStations: favStationResolver.Query.getFavCarStations,
+
+    ...ChatResolver.Query
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -71,5 +74,7 @@ export const resolvers = {
 
     addFavStation: favStationResolver.Mutation.addFavStation,
     deleteFavStation: favStationResolver.Mutation.deleteFavStation,
+  
+    ...ChatResolver.Mutation
   }
 };
