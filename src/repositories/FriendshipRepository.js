@@ -10,13 +10,14 @@ class FriendshipRepository {
     const result = await pool.query(`
         SELECT CASE WHEN nickname1 =$1 THEN nickname2 
         ELSE nickname1 
-        END AS name, u.photo
+        END AS name, u.photo, u.email
         FROM amigos a, users u
         WHERE (a.nickname1 = $1 and a.nickname2 = u.nickname) OR (a.nickname2 = $1 and a.nickname1 = u.nickname)
         `, [nickname]);
     console.log("resultados de la query de amistades", result.rows);
     return result.rows;
   }
+
   async getAllFriendships(){
     const result = await pool.query(`
         SELECT * FROM amigos
