@@ -58,7 +58,7 @@ Todas las respuestas incluyen un campo \`success\` (boolean) y, en caso de error
       //   description: 'Servidor de desarrollo'
       // },
       {
-        url: 'http://bemotion.duckdns.org/:3001',
+        url: 'http://bemotion.duckdns.org',
         description: 'Servidor de NextMove'
       }
     ],
