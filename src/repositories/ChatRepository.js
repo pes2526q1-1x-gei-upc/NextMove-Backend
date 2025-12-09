@@ -42,7 +42,7 @@ class ChatRepository {
       SELECT 
         cp.user_email,
         u.nickname,
-        u.photo_url,
+        u.photo,
         cp.joined_at
       FROM chat_participants cp
       JOIN users u ON cp.user_email = u.email
@@ -185,7 +185,7 @@ class ChatRepository {
         m.type,
         m.created_at,
         u.nickname as sender_nickname,
-        u.photo_url as sender_photo
+        u.photo as sender_photo
       FROM chat_messages m
       JOIN users u ON m.sender_email = u.email
       WHERE m.chat_id = $1
