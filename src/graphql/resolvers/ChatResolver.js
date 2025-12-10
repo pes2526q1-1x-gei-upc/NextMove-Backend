@@ -7,11 +7,13 @@ const ChatResolver = {
      * Obtener chats del usuario actual
      */
     myChats: async (_, __, context) => {
+      // context.user = {email: "xuanyi.qiu@estudiantat.upc.edu"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
 
       const chats = await ChatService.getUserChats(context.user.email);
+      // console.log("mis chats:", chats);
       return chats;
     },
 
@@ -53,6 +55,7 @@ const ChatResolver = {
      * Buscar o crear chat directo
      */
     getOrCreateDirectChat: async (_, { userEmail }, context) => {
+      // context.user = {email: "xuanyi.qiu@estudiantat.upc.edu"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -180,6 +183,18 @@ const ChatResolver = {
         timestamp: parent.last_message_time,
       };
     },
+
+    createdAt: (parent) => {
+      // Si es null, devolvemos la fecha actual o una fecha cero para no romper la app
+      if (!parent.created_at) return new Date().toISOString();
+      // Aseguramos que se devuelva un String
+      return new Date(parent.created_at).toISOString();
+    },
+
+    updatedAt: (parent) => {
+      if (!parent.updated_at) return new Date().toISOString();
+      return new Date(parent.updated_at).toISOString();
+    }
   },
 
   Message: {
@@ -195,7 +210,7 @@ const ChatResolver = {
 
   ChatParticipant: {
     userEmail: (parent) => parent.user_email,
-    photoUrl: (parent) => parent.photo_url,
+    photoUrl: (parent) => parent.photo,
     joinedAt: (parent) => parent.joined_at,
   },
 };
