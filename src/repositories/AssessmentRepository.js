@@ -133,6 +133,26 @@ class AssessmentRepository {
     
     return info;
   }
+
+  async checkAssessed(AssessmentData) {
+    const { email, station_id } = AssessmentData;
+
+    const user = await pool.query(`
+        SELECT nickname FROM users WHERE email = $1
+    `, [email]);
+    
+    if (user.rows.length === 0) throw new Error("Usuario no encontrado");
+    const nickname = user.rows[0].nickname;
+
+    const result = await pool.query(`
+        SELECT EXISTS (
+            SELECT 1 FROM valoracion
+            WHERE nickname = $1 AND station_id = $2
+        )
+    `, [nickname, station_id]);
+
+    return result.rows[0].exists;
+  }
 }
 
 export default AssessmentRepository;

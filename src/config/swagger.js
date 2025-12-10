@@ -53,13 +53,13 @@ Todas las respuestas incluyen un campo \`success\` (boolean) y, en caso de error
       }
     },
     servers: [
+      // {
+      //   url: 'http://localhost:3000',
+      //   description: 'Servidor de desarrollo'
+      // },
       {
-        url: 'http://localhost:3000',
-        description: 'Servidor de desarrollo'
-      },
-      {
-        url: 'http://51.94.90.40:3003',
-        description: 'Servidor de producción NextMove'
+        url: 'http://bemotion.duckdns.org/:3001',
+        description: 'Servidor de NextMove'
       }
     ],
     tags: [

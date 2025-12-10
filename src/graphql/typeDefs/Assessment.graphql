@@ -16,6 +16,7 @@ type AssessmentInfo{
 extend type Query{
     getAssessmentsByStationId(id: String!): [Assessment]!
     getStationAssessmentInfo(id: String!): AssessmentInfo!
+    checkAssessed(station_id: String!): Boolean!
 }
 
 extend type Mutation{

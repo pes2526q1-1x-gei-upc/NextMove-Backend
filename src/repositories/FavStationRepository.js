@@ -30,11 +30,23 @@ class FavStationRepository {
     return result.rowCount > 0;
   }
   async deleteFavStation(email, stationId, type) {
+    console.log(email, stationId, type);
     const result = await pool.query(`
         DELETE FROM favstation 
         WHERE email = $1 AND station_id = $2 AND station_type = $3
     `, [email, stationId, type]);
     return result.rowCount > 0;
+  }
+
+  // Retorna SOLO las ids de las estaciones favoritas de un usuario
+  async getFavStationIds(email, type) {
+    const result = await pool.query(`
+      SELECT station_id 
+      FROM favstation 
+      WHERE email = $1 AND station_type = $2
+    `, [email, type]);
+    
+    return new Set(result.rows.map(row => row.station_id));
   }
 }
 

@@ -8,8 +8,12 @@ const repo = new EstacionDeBicingRepository();
 export const estacionDeBicingResolver = {
   Query: {
     //método para obtener todas las estaciones de bicing fusionadas.
-    getEstacionesDeBicing: async () => {
-      const estaciones = getEstaciones();
+    getEstacionesDeBicing: async (_, __, context) => {
+      if (!context.user) {
+        return new Error('Usuario no autenticado');
+      }
+
+      const estaciones = getEstaciones(context.user.email);
       if (!estaciones || estaciones.length === 0) {
         throw new Error('No hay estaciones de Bicing disponibles en este momento.');
       }
@@ -17,25 +21,34 @@ export const estacionDeBicingResolver = {
     },
     //método para obtener una estación de bicing por su ID
     getEstacionDeBicing: async (_, {id}) => {   
-      const estaciones = getEstaciones();
+      /*const estaciones = getEstaciones();
       if (!estaciones || estaciones.length === 0) {
         throw new Error('No hay estaciones de Bicing disponibles en este momento');
       }
       const resultEstacion = estaciones.find(estacion => estacion.id === id);
       if (!resultEstacion) {
         throw new Error('No existe la estación con ese identificador.');
+      }*/
+      const resultEstacion = getEstacionById(id); 
+      if (!resultEstacion) {
+        throw new Error ('No existe la estación con ese id!!!'); 
       }
-      return resultEstacion;
+      else return resultEstacion;
     },
 
     //método que obtiene las estaciones que se hallan a un radio radiusKm de distancia respecto la pos del user en ese instante. 
-    getEstacionesDeBicingCercanas: async (_, { location }) => {
+    getEstacionesDeBicingCercanas: async (_, { location }, context) => {
+      if (!context.user) {
+        return new Error("Usuario no autenticado");
+      }
+
+
       console.log(location);
       const { coordinates, radiusKm = 5 } = location;
       console.log("valor de coods: ", coordinates);
       console.log("radio utilizado: ", radiusKm, "km");
       const { latitude, longitude } = coordinates;
-      return getEstacionesBicingCercanas({ coordinates: { latitude, longitude } }, radiusKm);
+      return getEstacionesBicingCercanas({ coordinates: { latitude, longitude } }, radiusKm, context.user.email);
     },
 
     //Métoodo que obtiene las estaciones de una determinada dirección

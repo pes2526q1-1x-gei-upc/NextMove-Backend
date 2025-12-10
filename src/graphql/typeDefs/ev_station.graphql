@@ -27,6 +27,7 @@ type Station {
   la distancia desde un punto hasta una estación. En el resto de casos será null. 
   """
   distance: Float
+  isFavoriteStation: Boolean
 }
 
 """

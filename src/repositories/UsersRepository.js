@@ -1,7 +1,6 @@
 import  pool  from '../config/database.js';
 
 class UsersRepository {
-  
   /**
    * Obtener todos los usuarios
    */
@@ -40,7 +39,8 @@ class UsersRepository {
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
         bio_description AS "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+        reg_with_google AS "regWithGoogle"
       FROM users
       WHERE email = $1
     `, [email]);
@@ -86,11 +86,11 @@ class UsersRepository {
    * Crear nuevo usuario
    */
   async createUser(userData) {
-    const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate } = userData;
+    const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle } = userData;
     console.log('Creating user with data:', userData);
 
-    if (!email || !name || !nickname || !preferredMode) {
-      throw new Error('Los campos email, name, nickname y preferredMode son obligatorios');
+    if (!email || !name || !nickname || !preferredMode || regWithGoogle === undefined) {
+      throw new Error('Los campos email, name, nickname, preferredMode y regWithGoogle son obligatorios');
     }
 
     try {
@@ -105,7 +105,8 @@ class UsersRepository {
           preferred_mode,       -- $6 
           preferred_language,   -- $7
           bio_description,      -- $8
-          birth_date            -- $9 
+          birth_date,           -- $9
+          reg_with_google       -- $10
         )
         VALUES (
           $1, 
@@ -116,7 +117,8 @@ class UsersRepository {
           $6::"MODE",     
           $7, 
           $8, 
-          $9::date        
+          $9::date,
+          $10        
         )
         RETURNING 
           email,
@@ -128,7 +130,8 @@ class UsersRepository {
           preferred_language AS "preferredLanguage",
           bio_description AS "bioDescription",
           TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
-          TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+          TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+          reg_with_google AS "regWithGoogle"
       `, [
         email,
         name,
@@ -138,7 +141,8 @@ class UsersRepository {
         preferredMode,
         preferredLanguage || "ESP",
         bioDescription || null,
-        birthDate || null       
+        birthDate || null,
+        regWithGoogle
       ]); 
 
       return result.rows[0];
@@ -252,6 +256,7 @@ class UsersRepository {
     `, [email, texto]);
   }
   
+
 }
 
 

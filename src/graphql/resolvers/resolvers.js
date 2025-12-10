@@ -16,6 +16,7 @@ export const resolvers = {
     Users: userResolvers.Query.Users,
     UsersByNickname: userResolvers.Query.UsersByNickname,
     UsersSearchHistory: userResolvers.Query.UsersSearchHistory,
+    ExistsUser: userResolvers.Query.ExistsUser,
       
     stations: EVStationResolvers.Query.stations,
     station: EVStationResolvers.Query.station,
@@ -37,6 +38,7 @@ export const resolvers = {
 
     getAssessmentsByStationId: assessmentResolver.Query.getAssessmentsByStationId,
     getStationAssessmentInfo: assessmentResolver.Query.getStationAssessmentInfo,
+    checkAssessed: assessmentResolver.Query.checkAssessed,
     BlockList: friendshipResolvers.Query.BlockList,
     
     getFavBikeStations: favStationResolver.Query.getFavBikeStations,
