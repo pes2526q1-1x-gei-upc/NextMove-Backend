@@ -90,12 +90,23 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             cd /home/ubuntu/BeMotion
-            git fetch --all
-            git checkout ${{ github.ref_name }}
-            git pull origin ${{ github.ref_name }}
-            docker-compose build \
-              --build-arg GITHUB_TOKEN=${GH_TOKEN} \
-              --build-arg GIT_BRANCH=${{ github.ref_name }} \
-              ${{ steps.vars.outputs.servicio }}
-            docker-compose up -d --no-deps ${{ steps.vars.outputs.servicio }}
+            
+            # Aseguramos que la variable SERVICIO tiene el valor correcto desde el paso anterior
+            SERVICIO=${{ steps.vars.outputs.servicio }}
+
+            # 1. Limpieza (Añadimos '|| true' para que no falle si es el primer despliegue y no hay nada que borrar)
+            sudo docker stop \$SERVICIO || true
+            sudo docker rm \$SERVICIO || true
+            
+            # 2. Construcción: Creamos la imagen nueva con el código actualizado
+            sudo docker-compose build --no-cache \$SERVICIO
+            
+            # 3. MIGRACIÓN DE BASE DE DATOS
+            # Antes de levantar la app, lanzamos un contenedor temporal para actualizar la BD.
+            echo "Ejecutando migraciones en base de datos..."
+            sudo docker-compose run --rm \$SERVICIO npm run migrate:up
+            # --------------------------------
+            
+            # 4. Despliegue: Levantamos el servicio real en segundo plano
+            sudo docker-compose up -d \$SERVICIO
           EOF
