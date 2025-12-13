@@ -1,0 +1,24 @@
+
+
+type trophy {
+  name: String!
+}
+
+type Challenge{
+    name: String!
+    distance: Int!
+    description: String!
+    points: Int!
+    starting_date: String!
+    ending_date: String!
+}
+
+extend type Query{
+    getAllChallenges: [Challenge]!
+    getEnrolledChallenges: [Challenge]!
+    getTrophies: [trophy]!
+}
+
+extend type Mutation{
+    enrollChallenge(challenge_id: String!): Boolean!
+}
