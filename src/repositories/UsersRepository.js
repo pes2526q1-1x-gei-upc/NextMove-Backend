@@ -1,4 +1,4 @@
-import  pool  from '../config/database.js';
+import pool from '../config/database.js';
 
 class UsersRepository {
   /**
@@ -17,7 +17,8 @@ class UsersRepository {
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
         bio_description AS "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+        "isBlock" AS "isBlock"
       FROM users
       ORDER BY created_at DESC
     `);
@@ -40,7 +41,8 @@ class UsersRepository {
         preferred_language AS "preferredLanguage",
         bio_description AS "bioDescription",
         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
-        reg_with_google AS "regWithGoogle"
+        reg_with_google AS "regWithGoogle",
+        "isBlock" AS "isBlock"
       FROM users
       WHERE email = $1
     `, [email]);
@@ -62,14 +64,15 @@ class UsersRepository {
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage",
         bio_description AS "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+        "isBlock" AS "isBlock"
       FROM users
       WHERE nickname ILIKE $1
       ORDER BY nickname
     `, [`${nickname}%`]);
-    
+
     // console.log("Datos:", result.rows);
-    
+
     return result.rows;
   }
 
@@ -86,7 +89,7 @@ class UsersRepository {
    * Crear nuevo usuario
    */
   async createUser(userData) {
-    const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle } = userData;
+    const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle, isBlock } = userData;
     console.log('Creating user with data:', userData);
 
     if (!email || !name || !nickname || !preferredMode || regWithGoogle === undefined) {
@@ -106,7 +109,8 @@ class UsersRepository {
           preferred_language,   -- $7
           bio_description,      -- $8
           birth_date,           -- $9
-          reg_with_google       -- $10
+          reg_with_google,      -- $10
+          "isBlock"             -- $11
         )
         VALUES (
           $1, 
@@ -118,7 +122,8 @@ class UsersRepository {
           $7, 
           $8, 
           $9::date,
-          $10        
+          $10,
+          $11        
         )
         RETURNING 
           email,
@@ -131,19 +136,21 @@ class UsersRepository {
           bio_description AS "bioDescription",
           TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
           TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
-          reg_with_google AS "regWithGoogle"
+          reg_with_google AS "regWithGoogle",
+          "isBlock" AS "isBlock"
       `, [
         email,
         name,
         nickname,
-        photo || null,          
+        photo || null,
         phoneNumber || null,
         preferredMode,
         preferredLanguage || "ESP",
         bioDescription || null,
         birthDate || null,
-        regWithGoogle
-      ]); 
+        regWithGoogle,
+        isBlock || false
+      ]);
 
       return result.rows[0];
     } catch (error) {
@@ -205,7 +212,7 @@ class UsersRepository {
     }
 
     values.push(email);
-    
+
     const query = `
       UPDATE users 
       SET ${fields.join(', ')}
@@ -220,7 +227,8 @@ class UsersRepository {
         preferred_mode AS "preferredMode",
         preferred_language AS "preferredLanguage", 
         bio_description AS "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+        "isBlock" AS "isBlock"
     `;
 
     const result = await pool.query(query, values);
@@ -234,7 +242,7 @@ class UsersRepository {
     const result = await pool.query(`
       DELETE FROM users WHERE email = $1 RETURNING email
     `, [email]);
-    
+
     return result.rows.length > 0;
   }
 
@@ -255,7 +263,7 @@ class UsersRepository {
       VALUES ($1, $2)
     `, [email, texto]);
   }
-  
+
 
 }
 
