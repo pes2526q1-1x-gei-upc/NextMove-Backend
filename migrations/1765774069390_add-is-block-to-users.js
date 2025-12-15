@@ -9,14 +9,14 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-    pgm.addColumn('users', {
-        isBlock: {
-            type: 'boolean',
-            default: false,
-            notNull: true,
-            description: 'Indica si el usuario está bloqueado'
-        }
-    });
+  pgm.addColumn('users', {
+    isBlock: {
+      type: 'boolean',
+      default: false,
+      notNull: true,
+      description: 'Indica si el usuario está bloqueado'
+    }
+  });
 };
 
 /**
