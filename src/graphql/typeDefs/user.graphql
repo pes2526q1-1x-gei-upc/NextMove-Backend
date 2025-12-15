@@ -28,6 +28,7 @@ type User {
   bioDescription: String
   createdAt: String
   regWithGoogle: Boolean!
+  isBlock: Boolean!
 }
 
 type ExistsUser {
@@ -51,6 +52,7 @@ input CreateUserInput {
   birthDate: String
   bioDescription: String
   regWithGoogle: Boolean!
+  isBlock: Boolean!
 }
 
 """

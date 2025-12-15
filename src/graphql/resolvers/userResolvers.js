@@ -31,11 +31,11 @@ export const userResolvers = {
 
     ExistsUser: async (_, { email }) => {
       try {
-        const user = await usersRepo.getUserByEmail(email); 
+        const user = await usersRepo.getUserByEmail(email);
         if (user) {
           return { exists: true, isRegWithGoogle: user.regWithGoogle };
         }
-        
+
         return { exists: false, isRegWithGoogle: null };
       } catch (error) {
         console.error('Error en ExistsUser:', error.message);
@@ -49,7 +49,7 @@ export const userResolvers = {
 
     UsersByNickname: async (_, { nickname }, context) => {
       console.log(`\n--- [DEBUG] Buscando usuarios por: "${nickname}" ---`);
-      
+
       const users = await usersRepo.getUsersByNickname(nickname);
       console.log(`[DEBUG] Candidatos iniciales encontrados: ${users.length}`);
 
@@ -57,8 +57,8 @@ export const userResolvers = {
 
       try {
         const myEmail = context.user.email;
-        const myProfile = await usersRepo.getUserByEmail(myEmail); 
-        const myNickname = myProfile.nickname; 
+        const myProfile = await usersRepo.getUserByEmail(myEmail);
+        const myNickname = myProfile.nickname;
 
         if (!myNickname) {
           console.warn('[WARN] No se pudo determinar mi nickname, devuelvo lista sin filtrar.');
@@ -67,7 +67,7 @@ export const userResolvers = {
 
         const myBlocks = await friendshipRepo.getBlockList(myEmail);
         const usersIBlocked = new Set(myBlocks.map(b => b.blocked));
-        
+
         const finalResults = await Promise.all(users.map(async (candidateUser) => {
           if (usersIBlocked.has(candidateUser.nickname)) {
             return null;
@@ -79,14 +79,14 @@ export const userResolvers = {
 
             if (isMeBlocked) {
               console.log(`[DEBUG] Ocultando a ${candidateUser.nickname} -> Me tiene bloqueado en su lista:`, candidateBlockList);
-              return null; 
+              return null;
             }
 
             return candidateUser;
 
           } catch (err) {
             console.error(`[ERROR] Fallo verificando bloqueos de ${candidateUser.nickname}`, err);
-            return candidateUser; 
+            return candidateUser;
           }
         }));
 
@@ -110,7 +110,7 @@ export const userResolvers = {
       try {
         return await usersRepo.getUserSearchHistory(context.user.email);
       }
-      catch (error){
+      catch (error) {
         throw new Error('Error retrieving user search history.', error);
       }
     }
@@ -119,7 +119,7 @@ export const userResolvers = {
   Mutation: {
     createUser: async (_, { createInfo }) => {
       try {
-        const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle } = createInfo;
+        const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle, isBlock } = createInfo;
         console.log('Entramos en createUser. Esto es usuario: ', createInfo);
 
         const existingUserByEmail = await usersRepo.getUserByEmail(email);
@@ -144,7 +144,8 @@ export const userResolvers = {
           preferredLanguage: preferredLanguage || "ESP",
           bioDescription: bioDescription || null,
           birthDate: birthDate || null,
-          regWithGoogle
+          regWithGoogle,
+          isBlock
         });
 
         console.log(`Usuario creado exitosamente: ${email}`);
