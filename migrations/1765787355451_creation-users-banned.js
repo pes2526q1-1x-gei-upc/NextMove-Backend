@@ -9,37 +9,37 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-    // 1. Eliminar columna isBlock de users
-    pgm.dropColumn('users', 'isBlock');
+  // 1. Eliminar columna isBlock de users
+  pgm.dropColumn('users', 'isBlock');
 
-    // 2. Crear tabla usersBanned
-    pgm.createTable('usersBanned', {
-        email: {
-            type: 'text',
-            primaryKey: true,
-            references: '"users"',
-            onDelete: 'CASCADE',
-        },
-        reason: {
-            type: 'text',
-            notNull: true,
-        },
-        description: {
-            type: 'text',
-        },
-        duration: {
-            type: 'text',
-            notNull: true,
-        },
-        created_at: {
-            type: 'timestamp',
-            notNull: true,
-            default: pgm.func('current_timestamp'),
-        },
-    });
+  // 2. Crear tabla usersBanned
+  pgm.createTable('usersBanned', {
+    email: {
+      type: 'text',
+      primaryKey: true,
+      references: '"users"',
+      onDelete: 'CASCADE',
+    },
+    reason: {
+      type: 'text',
+      notNull: true,
+    },
+    description: {
+      type: 'text',
+    },
+    duration: {
+      type: 'text',
+      notNull: true,
+    },
+    created_at: {
+      type: 'timestamp',
+      notNull: true,
+      default: pgm.func('current_timestamp'),
+    },
+  });
 
-    // Índice para búsquedas rápidas
-    pgm.createIndex('usersBanned', 'email');
+  // Índice para búsquedas rápidas
+  pgm.createIndex('usersBanned', 'email');
 };
 
 /**
@@ -48,15 +48,15 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-    // 1. Eliminar tabla usersBanned
-    pgm.dropTable('usersBanned');
+  // 1. Eliminar tabla usersBanned
+  pgm.dropTable('usersBanned');
 
-    // 2. Volver a crear columna isBlock
-    pgm.addColumn('users', {
-        isBlock: {
-            type: 'boolean',
-            default: false,
-            notNull: true,
-        },
-    });
+  // 2. Volver a crear columna isBlock
+  pgm.addColumn('users', {
+    isBlock: {
+      type: 'boolean',
+      default: false,
+      notNull: true,
+    },
+  });
 };
