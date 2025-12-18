@@ -48,15 +48,19 @@ class RankingRepository {
   }
 
   //Método para obtener las stats de un user determinado
-  async getUserStats(email) {
+  async getUserStats(email, metric) {
     try {
+      if (!this.isValidMetric(metric)) {
+        throw new Error("RankigRepository: La métrica introducida no es válida!"); 
+      }
       const result = await pool.query(`
             SELECT email,
                    num_rutas,
                    km_recorridos, 
                    elevacion_positiva, 
                    co2_ahorrado,
-                   calorias_quemadas  
+                   calorias_quemadas, 
+                   ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion  
             FROM  user_ranking_stats
             WHERE email = $1`, [email]); 
       //verificamos que realmente ese user es existente en el ranking

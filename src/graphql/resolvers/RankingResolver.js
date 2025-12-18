@@ -25,16 +25,16 @@ export const rankingResolver = {
       }
     },
 
-    userStats: async (_, { email }, context) => {
+    userStats: async (_, { email, metric }, context) => {
       if (!context || !context.user) {
         throw new Error('No estás autenticado en el sistema!'); 
-      } 
+      }
 
       if (!email) {
         throw new Error("RankingResolver: El email es requerido!"); 
       }
 
-      const userStats = await rankingService.getUserStats(email); 
+      const userStats = await rankingService.getUserStats(email, metric); 
       if (!userStats) {
         throw new Error(`RankingResolver: El usuario ${email} no existe en el ranking`); 
       }

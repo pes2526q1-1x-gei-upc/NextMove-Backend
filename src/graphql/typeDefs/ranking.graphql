@@ -23,7 +23,7 @@ type GlobalStats {
 
 type Query {
     ranking(metric: String!): [RankingStats!]!
-    userStats(email: String!): RankingStats!
+    userStats(email: String!, metric: String!): RankingStats!
     globalStats: GlobalStats!
     topUsers(limit: Int!, metric: String!): [RankingStats!]!
 }
