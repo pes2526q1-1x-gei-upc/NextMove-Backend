@@ -1,0 +1,29 @@
+type RankingStats {
+    email: String!
+    num_rutas: Int!
+    km_recorridos: Float!
+    co2_ahorrado: Float!
+    calorias_quemadas: Float!
+    elevacion_positiva: Float!
+    posicion: Int!
+}
+
+type GlobalStats {
+    total_usuarios: Int!
+    usuarios_activos: Int!
+    usuarios_inactivos: Int!
+    rutas_totales: Int!
+    km_recorridos_totales: Float!
+    km_promedio: Float!
+    km_recorridos_maximo: Float!
+    elevacion_positiva_total: Float!
+    co2_total_ahorrado: Float!
+    calorias_quemadas_total: Float!
+}
+
+type Query {
+    ranking(metric: String!): [RankingStats!]!
+    userStats(email: String!): RankingStats!
+    globalStats: GlobalStats!
+    topUsers(limit: Int!, metric: String!): [RankingStats!]!
+}
