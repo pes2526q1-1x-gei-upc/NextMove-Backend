@@ -1,6 +1,6 @@
 import RankingService from '../../services/RankingService.js'; 
 
-const rankingService = new  RankingService(); 
+const rankingService = new  RankingService();  
 
 
 export const rankingResolver = {
