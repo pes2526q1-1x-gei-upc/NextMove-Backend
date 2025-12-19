@@ -7,6 +7,7 @@ import { assessmentResolver } from './AssessmentResolvers.js';
 import routingResolvers  from './routingResolvers.js';
 import favStationResolver from './FavStationResolver.js';
 import { challengesResolver } from './challengesResolver.js';
+import  { rankingResolver }  from './RankingResolver.js';
 
 export const resolvers = {
   Query: {
@@ -47,6 +48,11 @@ export const resolvers = {
     getAllChallenges: challengesResolver.Query.getAllChallenges,
     getEnrolledChallenges: challengesResolver.Query.getEnrolledChallenges,
     getTrophies: challengesResolver.Query.getTrophies,
+
+    ranking: rankingResolver.Query.ranking, 
+    userStats: rankingResolver.Query.userStats, 
+    globalStats: rankingResolver.Query.globalStats, 
+    topUsers: rankingResolver.Query.topUsers,
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
