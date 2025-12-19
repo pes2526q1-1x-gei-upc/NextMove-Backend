@@ -2,6 +2,7 @@
 import { socketAuthMiddleware } from '../middleware/socketAuth.js';
 import ChatService from '../services/ChatService.js';
 import ChatRepository from '../repositories/ChatRepository.js';
+import pool from '../config/database.js';
 
 export function setupSocketHandlers(io) {
   io.use(socketAuthMiddleware);
@@ -112,6 +113,19 @@ export function setupSocketHandlers(io) {
           type
         );
 
+        // Obtener foto del usuario
+        let senderPhoto = null;
+        try {
+          const userResult = await pool.query(
+            'SELECT photo FROM users WHERE email = $1',
+            [socket.userEmail]
+          );
+          senderPhoto = userResult.rows[0]?.photo || null;
+        } catch (photoError) {
+          console.warn('[Socket.IO] Error fetching user photo:', photoError.message);
+          // Continuar sin foto
+        }
+
         // Construir mensaje completo para emitir
         const message = {
           id: savedMessage.id,
@@ -119,6 +133,7 @@ export function setupSocketHandlers(io) {
           senderId: socket.userId,
           senderEmail: socket.userEmail,
           senderName: socket.userName,
+          senderPhoto: senderPhoto,
           content: savedMessage.content,
           type: savedMessage.type,
           timestamp: savedMessage.created_at
