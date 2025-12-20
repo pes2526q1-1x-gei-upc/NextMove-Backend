@@ -52,7 +52,7 @@ export const challengesResolver = {
           throw new Error('Nickname or Challenge ID incorrect.');
         }
         if (error.code === '23505'){
-          if(error.detail.includes('usuario_retos_pkey'))
+          if (error.detail.includes('usuario_retos_pkey'))
             throw new Error('User already enrolled in this challenge.');
           throw new Error('User can only enroll one challenge at a time.');
         }
