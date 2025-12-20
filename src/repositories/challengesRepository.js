@@ -6,18 +6,18 @@ class ChanllengesRepository{
     return result.rows;
   }
   async enrollChallenge(challengeData) {
-    const {challenge_id, email} = challengeData;
+    const {challenge_id, email, total_distance} = challengeData;
     const result = await pool.query(`
-        INSERT INTO usuario_retos (email, id)
-        VALUES ($1, $2)
-    `, [email, challenge_id]);
+        INSERT INTO usuario_retos (email, id, total_distance)
+        VALUES ($1, $2, $3)
+    `, [email, challenge_id, total_distance]);
     return result.rowCount > 0;
   }
   async getEnrolledChallenges(email)
   {
     const result = await pool.query(`
         SELECT r.* FROM usuario_retos ur join retos r on ur.id = r.id 
-        WHERE ur.email = $1
+        WHERE ur.email = $1 and active = true
     `, [email]);
     return result.rows;
   }

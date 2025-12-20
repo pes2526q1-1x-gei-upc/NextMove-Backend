@@ -40,19 +40,21 @@ export const challengesResolver = {
     },
   },
   Mutation: {
-    enrollChallenge: async (_, { challenge_id }, context) => {
+    enrollChallenge: async (_, { challenge_id, total_distance }, context) => {
       if (!context.user) {
         throw new Error('No autenticado');
       }
       try {
-        const challengeData = { challenge_id, email: context.user.email };
+        const challengeData = { challenge_id, email: context.user.email, total_distance };
         return await challengesRepo.enrollChallenge(challengeData);
       } catch (error) {
         if (error.code === '23503'){
           throw new Error('Nickname or Challenge ID incorrect.');
         }
         if (error.code === '23505'){
-          throw new Error('User already enrolled in this challenge.');
+          if(error.detail.includes('usuario_retos_pkey'))
+            throw new Error('User already enrolled in this challenge.');
+          throw new Error('User can only enroll one challenge at a time.');
         }
         throw error;
       }
