@@ -184,6 +184,10 @@ class ChatRepository {
         m.content,
         m.type,
         m.created_at,
+        m.deleted,
+        m.deleted_at,
+        m.edited,
+        m.edited_at,
         u.nickname as sender_nickname,
         u.photo as sender_photo
       FROM chat_messages m
@@ -198,17 +202,33 @@ class ChatRepository {
   }
 
   /**
-   * Eliminar mensaje (hard delete)
+   * Eliminar mensaje (soft delete)
    */
   async deleteMessage(messageId, senderEmail) {
     const query = `
-      DELETE FROM chat_messages 
-      WHERE id = $1 AND sender_email = $2
+      UPDATE chat_messages 
+      SET deleted = true, deleted_at = NOW()
+      WHERE id = $1 AND sender_email = $2 AND deleted = false
       RETURNING id
     `;
     
     const result = await pool.query(query, [messageId, senderEmail]);
     return result.rows.length > 0;
+  }
+
+  /**
+   * Editar mensaje
+   */
+  async editMessage(messageId, senderEmail, newContent) {
+    const query = `
+      UPDATE chat_messages 
+      SET content = $3, edited = true, edited_at = NOW()
+      WHERE id = $1 AND sender_email = $2 AND deleted = false
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [messageId, senderEmail, newContent]);
+    return result.rows[0] || null;
   }
 
   /**

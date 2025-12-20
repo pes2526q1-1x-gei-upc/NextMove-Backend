@@ -185,7 +185,15 @@ class ChatService {
         senderPhoto: senderInfo.photo || null, // photo puede ser null
         
         // Fechas
-        createdAt: msg.created_at
+        createdAt: msg.created_at,
+        
+        // Estado de eliminación
+        deleted: msg.deleted || false,
+        deletedAt: msg.deleted_at || null,
+        
+        // Estado de edición
+        edited: msg.edited || false,
+        editedAt: msg.edited_at || null
       };
     });
   }
@@ -199,6 +207,21 @@ class ChatService {
       throw new Error('Message not found or unauthorized');
     }
     return true;
+  }
+
+  /**
+   * Editar mensaje
+   */
+  async editMessage(messageId, userEmail, newContent) {
+    if (!newContent || newContent.trim().length === 0) {
+      throw new Error('Message content cannot be empty');
+    }
+
+    const editedMessage = await ChatRepository.editMessage(messageId, userEmail, newContent.trim());
+    if (!editedMessage) {
+      throw new Error('Message not found or unauthorized');
+    }
+    return editedMessage;
   }
 
   /**

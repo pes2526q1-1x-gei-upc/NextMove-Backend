@@ -31,6 +31,10 @@ type Message {
   content: String!
   type: String!
   createdAt: String!
+  deleted: Boolean!
+  deletedAt: String
+  edited: Boolean!
+  editedAt: String
 }
 
 type Query {

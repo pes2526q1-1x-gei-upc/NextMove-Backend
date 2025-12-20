@@ -220,6 +220,14 @@ const ChatResolver = {
     senderPhoto: (parent) => parent.senderPhoto || parent.sender_photo,
     
     createdAt: (parent) => parent.createdAt || parent.created_at,
+    
+    deleted: (parent) => parent.deleted !== undefined ? parent.deleted : false,
+    
+    deletedAt: (parent) => parent.deletedAt || parent.deleted_at || null,
+    
+    edited: (parent) => parent.edited !== undefined ? parent.edited : false,
+    
+    editedAt: (parent) => parent.editedAt || parent.edited_at || null,
   },
 
   ChatParticipant: {
