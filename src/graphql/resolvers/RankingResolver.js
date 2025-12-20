@@ -60,7 +60,7 @@ export const rankingResolver = {
     topUsers: async (_, { limit, metric }, context) => {
       if (!context || !context.user) {
         throw new Error('No estás autenticado en el sistema!'); 
-      } 
+      }
 
       console.log("LA METRICCA Y LIMITE SON: " + metric + " " + limit); 
       if (limit <= 0) {
