@@ -5,7 +5,7 @@ class RankingRepository {
      * Obtiene el ranking completo de todos los users del sistema
  */
 
-  valid_metrics = ['num_rutas',  'km_recorridos', 'elevacion_positiva', 'co2_ahorrado', 'calorias_quemadas']; 
+  valid_metrics = ['num_rutas',  'km_recorridos', 'elevacion_positiva', 'co2_ahorrado', 'calorias_quemadas', 'num_retos_participados', 'num_retos_completados']; 
 
 
   //Método para validar la metrica que recibimos desde el service. 
@@ -34,6 +34,9 @@ class RankingRepository {
                 elevacion_positiva, 
                 co2_ahorrado, 
                 calorias_quemadas, 
+                num_retos_completados, 
+                num_retos_participados, 
+                num_retos_completados,
                 ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion
             FROM user_ranking_stats
             WHERE(num_rutas >= 0)
@@ -60,6 +63,8 @@ class RankingRepository {
                    elevacion_positiva, 
                    co2_ahorrado,
                    calorias_quemadas, 
+                   num_retos_participados,
+                   num_retos_completados,
                    ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion  
             FROM  user_ranking_stats
             WHERE email = $1`, [email]); 
@@ -92,7 +97,9 @@ class RankingRepository {
             MAX(km_recorridos) AS km_recorridos_maximo,
             SUM(elevacion_positiva) AS elevacion_positiva_total,
             SUM(co2_ahorrado) AS co2_total_ahorrado,
-            SUM(calorias_quemadas) AS calorias_quemadas_total
+            SUM(calorias_quemadas) AS calorias_quemadas_total, 
+            SUM(num_retos_participados) AS num_retos_participados_total,
+            SUM(num_retos_completados) AS num_retos_completados_total
         FROM user_ranking_stats
         `); 
       return result.rows[0]; 
