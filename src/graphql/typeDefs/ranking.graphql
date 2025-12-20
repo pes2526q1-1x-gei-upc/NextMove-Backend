@@ -5,6 +5,8 @@ type RankingStats {
     co2_ahorrado: Float!
     calorias_quemadas: Float!
     elevacion_positiva: Float!
+    num_retos_participados: Int!
+    num_retos_completados: Int!
     posicion: Int!
 }
 
@@ -19,6 +21,8 @@ type GlobalStats {
     elevacion_positiva_total: Float!
     co2_total_ahorrado: Float!
     calorias_quemadas_total: Float!
+    num_retos_participados_total: Int!
+    num_retos_completados_total: Int!
 }
 
 type Query {
