@@ -147,7 +147,47 @@ class ChatService {
       throw new Error('User is not a participant of this chat');
     }
 
-    return await ChatRepository.getChatMessages(chatId, limit, offset);
+    // 1. Obtener mensajes crudos
+    const messages = await ChatRepository.getChatMessages(chatId, limit, offset);
+
+    // Si no hay mensajes, devolvemos array vacío y ahorramos trabajo
+    if (!messages || messages.length === 0) {
+      return [];
+    }
+
+    // 2. Extraer emails únicos de los remitentes para buscar sus datos
+    const senderEmails = [...new Set(messages.map(msg => msg.sender_email))];
+
+    // 3. Obtener info (nickname, photo) de esos usuarios desde la tabla 'users'
+    const usersResult = await pool.query(
+      'SELECT email, nickname, photo FROM users WHERE email = ANY($1)',
+      [senderEmails]
+    );
+
+    // Crear un mapa rápido para buscar usuario por email: { 'a@a.com': { nickname: '...', photo: '...' } }
+    const usersMap = {};
+    usersResult.rows.forEach(user => {
+      usersMap[user.email] = user;
+    });
+
+    // 4. Combinar todo y devolver
+    return messages.map(msg => {
+      const senderInfo = usersMap[msg.sender_email] || {};
+      
+      return {
+        ...msg,
+        // IDs
+        chatId: chatId,
+        
+        // Sender Info
+        senderEmail: msg.sender_email,
+        senderNickname: senderInfo.nickname || 'Desconocido', // Evita el error null
+        senderPhoto: senderInfo.photo || null, // photo puede ser null
+        
+        // Fechas
+        createdAt: msg.created_at
+      };
+    });
   }
 
   /**

@@ -31,7 +31,7 @@ const ChatResolver = {
         limit,
         offset
       );
-
+      console.log('Fetched messages:', messages); // See raw output from ChatService
       return messages;
     },
 
@@ -199,13 +199,27 @@ const ChatResolver = {
 
   Message: {
     /**
-     * Mapeo de campos snake_case a camelCase
+     * Mapeo robusto: intenta leer camelCase (si el driver lo convirtió) 
+     * y si no, lee snake_case (directo de la BD).
      */
-    chatId: (parent) => parent.chat_id,
-    senderEmail: (parent) => parent.sender_email,
-    senderNickname: (parent) => parent.sender_nickname,
-    senderPhoto: (parent) => parent.sender_photo,
-    createdAt: (parent) => parent.created_at,
+    chatId: (parent) => {
+      // ESTO TE DIRÁ LA VERDAD
+      console.log("Objeto Mensaje recibido:", parent);
+      
+      // Chequeo de todas las variantes posibles
+      const val = parent.chatId || parent.chat_id || parent.chatid; 
+      console.log("Valor resuelto para chatId:", val);
+      
+      return val;
+    },
+    
+    senderEmail: (parent) => parent.senderEmail || parent.sender_email,
+    
+    senderNickname: (parent) => parent.senderNickname || parent.sender_nickname,
+    
+    senderPhoto: (parent) => parent.senderPhoto || parent.sender_photo,
+    
+    createdAt: (parent) => parent.createdAt || parent.created_at,
   },
 
   ChatParticipant: {
