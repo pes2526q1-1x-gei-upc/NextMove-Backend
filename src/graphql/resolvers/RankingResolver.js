@@ -43,7 +43,7 @@ export const rankingResolver = {
       return userStats; 
     }, 
 
-    globalStats: async (_, context) => {
+    globalStats: async (_, __, context) => {
       if (!context || !context.user) {
         throw new Error('No estás autenticado en el sistema!'); 
       } 
