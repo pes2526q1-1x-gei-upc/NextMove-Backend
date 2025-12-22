@@ -1,8 +1,10 @@
 import UsersRepository from "../../repositories/UsersRepository.js";
 import FriendshipRepository from "../../repositories/FriendshipRepository.js";
+import RankingService from "../../services/RankingService.js";
 
 const usersRepo = new UsersRepository();
 const friendshipRepo = new FriendshipRepository();
+const rankingService = new RankingService();
 
 export const userResolvers = {
   Query: {
@@ -13,6 +15,15 @@ export const userResolvers = {
         }
 
         const dbUser = await usersRepo.getUserByEmail(context.user.email);
+        
+        try {
+          const userStats = await rankingService.getUserStats(context.user.email, 'km_recorridos');
+          dbUser.statistics = userStats || null;
+        } catch (statsError) {
+          console.warn('Warning: No se pudieron obtener estadísticas para el usuario:', statsError.message);
+          dbUser.statistics = null;
+        }
+        
         return dbUser;
       } catch (err) {
         console.error("Error en me():", err.message);
