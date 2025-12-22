@@ -30,6 +30,7 @@ type User {
   regWithGoogle: Boolean!
   isBanned: Boolean!
   banInfo: BanInfo
+  statistics: RankingStats
 }
 
 type ExistsUser {
