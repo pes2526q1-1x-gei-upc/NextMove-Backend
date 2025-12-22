@@ -30,7 +30,6 @@ type UserStats {
     elevacion_positiva: Float!
     num_retos_participados: Int!
     num_retos_completados: Int!
-    posicion: Int!
 
     nombre: String!
     nombre_usuario: String!
@@ -60,7 +59,7 @@ type GlobalStats {
 
 type Query {
     ranking(metric: String!): [RankingStats!]!
-    userStats(email: String!, metric: String!): UserStats!
+    userStats(email: String!): UserStats!
     globalStats: GlobalStats!
     topUsers(limit: Int!, metric: String!): [RankingStats!]!
 }
