@@ -19,9 +19,9 @@ export default class  RankingService {
     }
   } 
   
-  async getUserStats(email, metrica) {
+  async getUserStats(email) {
     try {
-      const user_stats = await this.rankingRepo.getUserStats(email, metrica); 
+      const user_stats = await this.rankingRepo.getUserStats(email); 
       return user_stats; 
     } catch (error) {
       console.error('RankingService: Error obteniendo stats del user concreto');

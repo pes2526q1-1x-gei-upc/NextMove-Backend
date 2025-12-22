@@ -36,7 +36,7 @@ class RankingRepository {
                 calorias_quemadas, 
                 num_retos_completados, 
                 num_retos_participados, 
-                num_retos_completados,
+                num_retos_completados,  
                 ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion
             FROM user_ranking_stats
             WHERE(num_rutas >= 0)
@@ -51,23 +51,30 @@ class RankingRepository {
   }
 
   //Método para obtener las stats de un user determinado
-  async getUserStats(email, metric) {
+  async getUserStats(email) {
     try {
-      if (!this.isValidMetric(metric)) {
-        throw new Error("RankigRepository: La métrica introducida no es válida!"); 
-      }
       const result = await pool.query(`
-            SELECT email,
-                   num_rutas,
-                   km_recorridos, 
-                   elevacion_positiva, 
-                   co2_ahorrado,
-                   calorias_quemadas, 
-                   num_retos_participados,
-                   num_retos_completados,
-                   ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion  
-            FROM  user_ranking_stats
-            WHERE email = $1`, [email]); 
+            SELECT urs.email,
+                   urs.num_rutas,
+                   urs.km_recorridos, 
+                   urs.elevacion_positiva, 
+                   urs.co2_ahorrado,
+                   urs.calorias_quemadas, 
+                   urs.num_retos_participados,
+                   urs.num_retos_completados,
+                   u.name AS nombre,
+                   u.nickname AS nombre_usuario,
+                   u.photo AS foto,
+                   u.birth_date AS fecha_nacimiento,
+                   u.phone_number AS numero_telefono,
+                   u.preferred_mode AS modo_preferido,
+                   u.preferred_language AS idioma_preferido,
+                   u.bio_description AS descripcion_biografica,
+                   u.created_at AS fecha_creacion,
+                   u.reg_with_google AS registrado_con_google
+            FROM user_ranking_stats urs
+            LEFT JOIN users u ON urs.email = u.email
+            WHERE urs.email = $1`, [email]); 
       //verificamos que realmente ese user es existente en el ranking
       if (!result.rows[0]) {
         console.warn(`RankingRepository: Usuario ${email} no existe en el sistema de Ranking!`); 
