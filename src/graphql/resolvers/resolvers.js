@@ -76,5 +76,8 @@ export const resolvers = {
     deleteFavStation: favStationResolver.Mutation.deleteFavStation,
   
     ...ChatResolver.Mutation
-  }
+  },
+  Chat: ChatResolver.Chat,
+  Message: ChatResolver.Message,
+  ChatParticipant: ChatResolver.ChatParticipant
 };

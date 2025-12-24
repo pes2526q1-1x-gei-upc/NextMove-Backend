@@ -7,13 +7,12 @@ const ChatResolver = {
      * Obtener chats del usuario actual
      */
     myChats: async (_, __, context) => {
-      // context.user = {email: "xuanyi.qiu@estudiantat.upc.edu"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
 
       const chats = await ChatService.getUserChats(context.user.email);
-      // console.log("mis chats:", chats);
+      console.log("mis chats:", chats);
       return chats;
     },
 
@@ -55,7 +54,6 @@ const ChatResolver = {
      * Buscar o crear chat directo
      */
     getOrCreateDirectChat: async (_, { userEmail }, context) => {
-      // context.user = {email: "xuanyi.qiu@estudiantat.upc.edu"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -158,15 +156,23 @@ const ChatResolver = {
   },
 
   Chat: {
+
     /**
      * Resolver para participantes
      */
     participants: async (parent, _, context) => {
-      if (!context.user) {
-        throw new Error('Authentication required');
+      try {
+      if (!context.user) return [];       
+      const chatId = parent.id || parent.chat_id;
+      const participants = await ChatRepository.getChatParticipants(chatId);
+      
+      console.log(`Participantes para chat ${chatId}:`, participants.length);
+      return participants || []; // Siempre devuelve al menos un array vacío
+      
+      } catch (error) {
+        console.error("Error en resolver participants:", error);
+        return []; // Devuelve array vacío para no romper la query principal
       }
-
-      return await ChatRepository.getChatParticipants(parent.id);
     },
 
     /**
@@ -184,17 +190,19 @@ const ChatResolver = {
       };
     },
 
-    createdAt: (parent) => {
-      // Si es null, devolvemos la fecha actual o una fecha cero para no romper la app
-      if (!parent.created_at) return new Date().toISOString();
-      // Aseguramos que se devuelva un String
-      return new Date(parent.created_at).toISOString();
-    },
+    createdAt: (parent) => parent.created_at,
+    updatedAt: (parent) => parent.updated_at,
+    // createdAt: (parent) => {
+    //   // Si es null, devolvemos la fecha actual o una fecha cero para no romper la app
+    //   if (!parent.created_at) return new Date().toISOString();
+    //   // Aseguramos que se devuelva un String
+    //   return new Date(parent.created_at).toISOString();
+    // },
 
-    updatedAt: (parent) => {
-      if (!parent.updated_at) return new Date().toISOString();
-      return new Date(parent.updated_at).toISOString();
-    }
+    // updatedAt: (parent) => {
+    //   if (!parent.updated_at) return new Date().toISOString();
+    //   return new Date(parent.updated_at).toISOString();
+    // }
   },
 
   Message: {
