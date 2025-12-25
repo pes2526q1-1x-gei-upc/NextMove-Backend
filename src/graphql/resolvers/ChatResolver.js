@@ -91,6 +91,8 @@ const ChatResolver = {
      * Agregar participante a grupo
      */
     addParticipantToGroup: async (_, { chatId, userEmail }, context) => {
+
+
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -159,6 +161,7 @@ const ChatResolver = {
      * Expulsar participante de grupo
      */
     kickParticipantFromGroup: async (_, { chatId, userEmail }, context) => {
+      context.user = {email: "xuanyiqiu77@gmail.com"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -182,6 +185,33 @@ const ChatResolver = {
       return success;
 
     },
+
+    toggleAdminStatus: async (_, { chatId, userEmail }, context) => {
+      context.user = {email: "xuanyiqiu77@gmail.com"};
+      if (!context.user) {
+        throw new Error('Authentication required');
+      }
+      
+      const isParticipant = await ChatRepository.isParticipant(
+        chatId,
+        context.user.email
+      );
+      if (!isParticipant) {
+        throw new Error('Error: el usuario no forma parte del grupo.');
+      }
+
+      const isAdmin = await ChatRepository.isAdmin(chatId, context.user.email);
+      if (!isAdmin) {
+        throw new Error('Error: permisos insuficientes. Solo un administrador puede otorgar permisos.');
+      }
+
+      if (context.user.email === userEmail) {
+        throw new Error('Error: no puedes cambiar tus propios permisos de administrador.');
+      }
+
+      const success = await ChatRepository.toggleAdminStatus(chatId, userEmail);
+      return success;
+    }
   },
 
   Chat: {

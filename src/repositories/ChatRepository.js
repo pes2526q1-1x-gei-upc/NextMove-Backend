@@ -367,6 +367,26 @@ async createGroupChat(name, description, participantEmails, photo) {
 
     return result.rows[0].is_admin;
   }
-}
+
+  /**
+   * Alternar estado de admin de un participante
+   */
+  async toggleAdminStatus(chatId, userEmail) {
+    const query = `
+      UPDATE chat_participants 
+      SET is_admin = NOT is_admin
+      WHERE chat_id = $1 AND user_email = $2
+      RETURNING is_admin
+    `;
+    
+    const result = await pool.query(query, [chatId, userEmail]);
+    
+    if (result.rows.length === 0) {
+      throw new Error('Participant not found');
+    }
+    
+    return result.rows[0].is_admin;
+  }
+  }
 
 export default new ChatRepository();

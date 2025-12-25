@@ -84,4 +84,10 @@ type Mutation {
     chatId: ID!
     userEmail: String!
   ): Boolean! 
+
+  toggleAdminStatus(
+    chatId: ID!
+    userEmail: String!
+  ): Boolean!
+
 }
