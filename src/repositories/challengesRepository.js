@@ -2,7 +2,7 @@ import pool from '../config/database.js';
 
 class ChanllengesRepository{
   async getAllChallenges() {
-    const result = await pool.query('SELECT * FROM retos order by ending_date ASC');
+    const result = await pool.query('SELECT r.* , e.nombre as company FROM retos r join empresas e on r.empresa_id = e.id order by ending_date ASC');
     return result.rows;
   }
   async enrollChallenge(challengeData) {
@@ -16,7 +16,7 @@ class ChanllengesRepository{
   async getEnrolledChallenges(email)
   {
     const result = await pool.query(`
-        SELECT r.* FROM usuario_retos ur join retos r on ur.id = r.id 
+        SELECT r.*, e.nombre as company FROM usuario_retos ur join retos r on ur.id = r.id join empresas e on r.empresa_id = e.id
         WHERE ur.email = $1 and active = true
     `, [email]);
     return result.rows;

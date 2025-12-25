@@ -11,6 +11,8 @@ type Challenge{
     points: Int!
     starting_date: String!
     ending_date: String!
+    photo: String
+    company: String
 }
 
 extend type Query{
