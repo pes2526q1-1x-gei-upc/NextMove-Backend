@@ -12,6 +12,7 @@ class ChatRepository {
         c.type,
         c.name,
         c.description,
+        c.photo,
         c.created_at,
         c.updated_at,
         (SELECT content FROM chat_messages 
