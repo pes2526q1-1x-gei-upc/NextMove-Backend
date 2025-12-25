@@ -91,7 +91,7 @@ class ChatService {
   /**
    * Crear chat grupal
    */
-  async createGroupChat(creatorEmail, name, description, participantEmails) {
+  async createGroupChat(creatorEmail, name, description, participantEmails, photo) {
     if (!name || name.trim().length === 0) {
       throw new Error('Group name is required');
     }
@@ -115,7 +115,8 @@ class ChatService {
     const chatId = await ChatRepository.createGroupChat(
       name,
       description,
-      Array.from(allParticipants)
+      Array.from(allParticipants),
+      photo
     );
 
     return await ChatRepository.getChatById(chatId);
