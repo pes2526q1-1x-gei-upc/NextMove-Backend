@@ -1,0 +1,11 @@
+type firm{
+    nombre: String!
+    descripcion: String
+    email: String!
+    url: String!
+}
+
+extend type Query{
+    getFirms: [firm]!
+    getFirmByName(nombre: String!): firm
+}

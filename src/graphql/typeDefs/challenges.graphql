@@ -4,6 +4,11 @@ type trophy {
   name: String!
 }
 
+type company{
+    name: String!
+    photo: String!
+}
+
 type Challenge{
     name: String!
     distance: Int!
@@ -11,6 +16,8 @@ type Challenge{
     points: Int!
     starting_date: String!
     ending_date: String!
+    photo: String
+    company: company
 }
 
 extend type Query{
