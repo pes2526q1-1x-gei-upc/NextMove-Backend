@@ -264,6 +264,28 @@ class ChatService {
 
     return await ChatRepository.getChatParticipants(chatId);
   }
+
+  /**
+ * Eliminar grupo (solo admins)
+ */
+  async deleteGroup(chatId, userEmail) {
+    const chat = await ChatRepository.getChatById(chatId);
+    if (!chat || chat.type !== 'group') {
+      throw new Error('El chat no es un grupo');
+    }
+
+    const isAdmin = await ChatRepository.isAdmin(chatId, userEmail);
+    if (!isAdmin) {
+      throw new Error('Error: no tienes permisos suficientes para realizar esta acción.');
+    }
+
+    const deleted = await ChatRepository.deleteChat(chatId);
+    if (!deleted) {
+      throw new Error('Failed to delete group');
+    }
+    
+    return true;
+  }
 }
 
 export default new ChatService();

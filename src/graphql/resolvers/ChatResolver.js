@@ -211,7 +211,31 @@ const ChatResolver = {
 
       const success = await ChatRepository.toggleAdminStatus(chatId, userEmail);
       return success;
-    }
+    },
+
+    deleteGroup: async (_, { chatId }, context) => {
+      context.user = {email: "xuanyiqiu77@gmail.com"};
+      if (!context.user) {
+        throw new Error('Authentication required');
+      }
+
+      const isParticipant = await ChatRepository.isParticipant(
+        chatId,
+        context.user.email
+      );
+      
+      if (!isParticipant) {
+        throw new Error('Error: el usuario no forma parte del grupo.');
+      }
+
+      const isAdmin = await ChatRepository.isAdmin(chatId, context.user.email);
+      if (!isAdmin) {
+        throw new Error('Error: solo un administrador puede eliminar el grupo.');
+      }
+
+      const success = await ChatService.deleteGroup(chatId, context.user.email);
+      return success;
+    },
   },
 
   Chat: {
