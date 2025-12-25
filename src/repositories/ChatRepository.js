@@ -42,6 +42,7 @@ class ChatRepository {
     const query = `
       SELECT 
         cp.user_email,
+        cp.is_admin,
         u.nickname,
         u.photo,
         cp.joined_at
@@ -109,42 +110,56 @@ class ChatRepository {
     }
   }
 
-  /**
-   * Crear chat grupal
-   */
-  async createGroupChat(name, description, participantEmails, photo) {
-    const client = await pool.connect();
+/**
+ * Crear chat grupal
+ * El primer email en participantEmails debe ser el creador (admin)
+ */
+async createGroupChat(name, description, participantEmails, photo) {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
     
-    try {
-      await client.query('BEGIN');
-      
-      // Crear chat
-      const chatResult = await client.query(
-        `INSERT INTO chats (type, name, description, photo) 
-         VALUES ('group', $1, $2, $3) RETURNING id`,
-        [name, description, photo]
-      );
-      const chatId = chatResult.rows[0].id;
-      
-      // Agregar participantes
-      const values = participantEmails.map((email, i) => 
-        `($1, $${i + 2})`
+    // Crear chat
+    const chatResult = await client.query(
+      `INSERT INTO chats (type, name, description, photo) 
+       VALUES ('group', $1, $2, $3) RETURNING id`,
+      [name, description, photo]
+    );
+    const chatId = chatResult.rows[0].id;
+    
+    // El primer participante es el creador (admin)
+    const creatorEmail = participantEmails[0];
+    
+    // Agregar creador como admin
+    await client.query(
+      `INSERT INTO chat_participants (chat_id, user_email, is_admin) 
+       VALUES ($1, $2, true)`,
+      [chatId, creatorEmail]
+    );
+    
+    // Agregar resto de participantes (no admin)
+    if (participantEmails.length > 1) {
+      const otherParticipants = participantEmails.slice(1);
+      const values = otherParticipants.map((email, i) => 
+        `($1, $${i + 2}, false)`
       ).join(', ');
       
       await client.query(
-        `INSERT INTO chat_participants (chat_id, user_email) VALUES ${values}`,
-        [chatId, ...participantEmails]
+        `INSERT INTO chat_participants (chat_id, user_email, is_admin) VALUES ${values}`,
+        [chatId, ...otherParticipants]
       );
-      
-      await client.query('COMMIT');
-      return chatId;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
     }
+    
+    await client.query('COMMIT');
+    return chatId;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
+}
 
   /**
    * Verificar si usuario pertenece a un chat
@@ -336,6 +351,21 @@ class ChatRepository {
     `, [nickname, email]);
     
     return result.rows;
+  }
+
+  async isAdmin(chatId, userEmail) {
+    const query = `
+      SELECT is_admin FROM chat_participants 
+      WHERE chat_id = $1 AND user_email = $2
+    `;
+   
+    const result = await pool.query(query, [chatId, userEmail]);
+    
+    if (result.rows.length === 0) {
+      return false;
+    }
+
+    return result.rows[0].is_admin;
   }
 }
 

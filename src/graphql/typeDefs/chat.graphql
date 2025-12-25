@@ -15,6 +15,7 @@ type ChatParticipant {
   nickname: String!
   photoUrl: String
   joinedAt: String!
+  isAdmin: Boolean!
 }
 
 type LastMessageInfo {
@@ -78,4 +79,9 @@ type Mutation {
     description: String
     photo: String
   ): Chat!
+
+  kickParticipantFromGroup(
+    chatId: ID!
+    userEmail: String!
+  ): Boolean! 
 }

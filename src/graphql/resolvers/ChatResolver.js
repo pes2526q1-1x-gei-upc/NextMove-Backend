@@ -154,6 +154,34 @@ const ChatResolver = {
 
       return chat;
     },
+
+    /**
+     * Expulsar participante de grupo
+     */
+    kickParticipantFromGroup: async (_, { chatId, userEmail }, context) => {
+      if (!context.user) {
+        throw new Error('Authentication required');
+      }
+
+      // Verificar que es participante
+      const isParticipant = await ChatRepository.isParticipant(
+        chatId,
+        context.user.email
+      );
+
+      if (!isParticipant) {
+        throw new Error('Error: el usuario no forma parte del grupo.');
+      }
+
+      const isAdmin = await ChatRepository.isAdmin(chatId, context.user.email);
+      if (!isAdmin) {
+        throw new Error('Error: permisos insuficientes. Solo un administrador puede expulsar participantes.');
+      }
+
+      const success = await ChatRepository.removeParticipant(chatId, userEmail);
+      return success;
+
+    },
   },
 
   Chat: {
@@ -193,32 +221,12 @@ const ChatResolver = {
 
     createdAt: (parent) => parent.created_at,
     updatedAt: (parent) => parent.updated_at,
-    // createdAt: (parent) => {
-    //   // Si es null, devolvemos la fecha actual o una fecha cero para no romper la app
-    //   if (!parent.created_at) return new Date().toISOString();
-    //   // Aseguramos que se devuelva un String
-    //   return new Date(parent.created_at).toISOString();
-    // },
-
-    // updatedAt: (parent) => {
-    //   if (!parent.updated_at) return new Date().toISOString();
-    //   return new Date(parent.updated_at).toISOString();
-    // }
   },
 
   Message: {
-    /**
-     * Mapeo robusto: intenta leer camelCase (si el driver lo convirtió) 
-     * y si no, lee snake_case (directo de la BD).
-     */
+
     chatId: (parent) => {
-      // ESTO TE DIRÁ LA VERDAD
-      console.log("Objeto Mensaje recibido:", parent);
-      
-      // Chequeo de todas las variantes posibles
-      const val = parent.chatId || parent.chat_id || parent.chatid; 
-      console.log("Valor resuelto para chatId:", val);
-      
+      const val = parent.chatId;
       return val;
     },
     
@@ -243,6 +251,7 @@ const ChatResolver = {
     userEmail: (parent) => parent.user_email,
     photoUrl: (parent) => parent.photo,
     joinedAt: (parent) => parent.joined_at,
+    isAdmin: (parent) => parent.is_admin || false,
   },
 };
 
