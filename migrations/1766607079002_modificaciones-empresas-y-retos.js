@@ -24,6 +24,9 @@ export const up = (pgm) => {
   pgm.addConstraint('empresas', 'empresa_name_unique', {
     unique: ['nombre'],
   });
+  pgm.alterColumn('retos', 'empresa_id', {
+    notNull: true,
+  });
 };
 
 /**
@@ -35,4 +38,7 @@ export const down = (pgm) => {
   pgm.dropColumn('empresas', 'descripcion');
   pgm.dropColumn('retos', 'photo');
   pgm.dropConstraint('empresas', 'empresa_name_unique');
+  pgm.alterColumn('retos', 'empresa_id', {
+    notNull: false,
+  });
 };
