@@ -23,16 +23,7 @@ class ChatService {
    */
   async _areFriends(userEmail1, userEmail2) {
     const friends = await friendshipRepository.getFriendships(userEmail1);
-    
-    // Convertir nicknames a emails
-    for (const friend of friends) {
-      const friendEmail = await this._getNicknameEmail(friend.name);
-      if (friendEmail === userEmail2) {
-        return true;
-      }
-    }
-    
-    return false;
+    return friends.some(friend => friend.email === userEmail2);
   }
 
   /**
