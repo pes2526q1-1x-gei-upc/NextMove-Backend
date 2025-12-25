@@ -47,4 +47,26 @@ router.post('/upload-profile-photo', requireUserAuth, upload.single('file'), asy
   }
 });
 
+router.post('/upload-photo', requireUserAuth, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).send('No file uploaded');
+
+    const file = req.file;
+    const fileExt = file.mimetype.split('/').pop() || 'jpg';
+    const fileName = `group-${Date.now()}.${fileExt}`;
+
+    const imageUrl = await uploadToS3({
+      fileBuffer: file.buffer,
+      fileName,
+      mimeType: file.mimetype,
+    });
+
+    return res.json({ imageUrl });
+
+  } catch (error) {
+    console.error('Error uploading group photo:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
