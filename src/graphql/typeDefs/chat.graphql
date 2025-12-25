@@ -7,6 +7,7 @@ type Chat {
   lastMessage: LastMessageInfo
   createdAt: String!
   updatedAt: String!
+  photo: String 
 }
 
 type ChatParticipant {
@@ -59,6 +60,7 @@ type Mutation {
     name: String!
     description: String
     participantEmails: [String!]!
+    photo: String
   ): Chat!
   
   addParticipantToGroup(
@@ -74,5 +76,6 @@ type Mutation {
     chatId: ID!
     name: String
     description: String
+    photo: String
   ): Chat!
 }
