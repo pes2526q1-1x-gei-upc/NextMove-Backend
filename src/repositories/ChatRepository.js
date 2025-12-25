@@ -111,7 +111,7 @@ class ChatRepository {
   /**
    * Crear chat grupal
    */
-  async createGroupChat(name, description, participantEmails) {
+  async createGroupChat(name, description, participantEmails, photo) {
     const client = await pool.connect();
     
     try {
@@ -119,9 +119,9 @@ class ChatRepository {
       
       // Crear chat
       const chatResult = await client.query(
-        `INSERT INTO chats (type, name, description) 
-         VALUES ('group', $1, $2) RETURNING id`,
-        [name, description]
+        `INSERT INTO chats (type, name, description, photo) 
+         VALUES ('group', $1, $2, $3) RETURNING id`,
+        [name, description, photo]
       );
       const chatId = chatResult.rows[0].id;
       
@@ -281,15 +281,15 @@ class ChatRepository {
   /**
    * Actualizar info de grupo
    */
-  async updateGroupChat(chatId, name, description) {
+  async updateGroupChat(chatId, name, description, photo) {
     const query = `
       UPDATE chats 
-      SET name = $2, description = $3, updated_at = NOW()
+      SET name = $2, description = $3, photo = $4, updated_at = NOW()
       WHERE id = $1 AND type = 'group'
       RETURNING *
     `;
     
-    const result = await pool.query(query, [chatId, name, description]);
+    const result = await pool.query(query, [chatId, name, description, photo]);
     return result.rows[0];
   }
 

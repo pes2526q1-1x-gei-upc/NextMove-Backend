@@ -71,7 +71,7 @@ const ChatResolver = {
     /**
      * Crear chat grupal
      */
-    createGroupChat: async (_, { name, description, participantEmails }, context) => {
+    createGroupChat: async (_, { name, description, participantEmails, photo }, context) => {
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -80,7 +80,8 @@ const ChatResolver = {
         context.user.email,
         name,
         description,
-        participantEmails
+        participantEmails,
+        photo
       );
 
       return chat;
@@ -130,7 +131,7 @@ const ChatResolver = {
     /**
      * Actualizar grupo
      */
-    updateGroupChat: async (_, { chatId, name, description }, context) => {
+    updateGroupChat: async (_, { chatId, name, description, photo }, context) => {
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -145,7 +146,7 @@ const ChatResolver = {
         throw new Error('Unauthorized');
       }
 
-      const chat = await ChatRepository.updateGroupChat(chatId, name, description);
+      const chat = await ChatRepository.updateGroupChat(chatId, name, description, photo);
       
       if (!chat) {
         throw new Error('Chat not found or not a group');
