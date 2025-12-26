@@ -36,6 +36,7 @@
     "graphql-tag": "^2.12.6",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
+    "obscenity": "^0.4.5",
     "pg": "^8.16.3",
     "ruru": "^2.0.0-beta.30",
     "swagger-jsdoc": "^6.2.8",
