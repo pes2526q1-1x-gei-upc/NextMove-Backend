@@ -12,11 +12,11 @@ class ChanllengesRepository{
     }));
   }
   async enrollChallenge(challengeData) {
-    const {challenge_id, email, total_distance} = challengeData;
+    const {challenge_id, email} = challengeData;
     const result = await pool.query(`
         INSERT INTO usuario_retos (email, id, total_distance)
-        VALUES ($1, $2, $3)
-    `, [email, challenge_id, total_distance]);
+        VALUES ($1, $2::varchar(50), (select distance from retos where id = $2::varchar(50)))
+    `, [email, challenge_id]);
     return result.rowCount > 0;
   }
   async getEnrolledChallenges(email)
