@@ -40,12 +40,12 @@ export const challengesResolver = {
     },
   },
   Mutation: {
-    enrollChallenge: async (_, { challenge_id, total_distance }, context) => {
+    enrollChallenge: async (_, { challenge_id }, context) => {
       if (!context.user) {
         throw new Error('No autenticado');
       }
       try {
-        const challengeData = { challenge_id, email: context.user.email, total_distance };
+        const challengeData = { challenge_id, email: context.user.email };
         return await challengesRepo.enrollChallenge(challengeData);
       } catch (error) {
         if (error.code === '23503'){
