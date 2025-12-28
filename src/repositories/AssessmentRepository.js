@@ -58,6 +58,10 @@ class AssessmentRepository {
 
   async EditAssessment(AssessmentData) {
     const { email, station_id, score, comments } = AssessmentData;
+    
+    if (comments !== undefined && IsOffensive(comments)) {
+      throw new Error("El comentario contiene lenguaje ofensivo.");
+    }
 
     const user = await pool.query(`
         SELECT nickname FROM users WHERE email = $1
