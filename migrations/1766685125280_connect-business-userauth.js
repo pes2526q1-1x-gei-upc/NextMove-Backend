@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-
 export const shorthands = undefined;
 
 export async function up(pgm) {
