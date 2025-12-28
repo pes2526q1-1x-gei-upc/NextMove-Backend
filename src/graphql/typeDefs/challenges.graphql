@@ -10,6 +10,7 @@ type company{
 }
 
 type Challenge{
+    id: String!
     name: String!
     distance: Int!
     description: String!

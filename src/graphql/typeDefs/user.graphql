@@ -146,26 +146,12 @@ extend type Mutation {
   Borrar foto de perfil
   """
   deleteProfilePhoto: User!
-
-  """
-  Banear a un usuario
-  """
-  banUser(
-    email: String!
-    reason: String!
-    description: String
-    duration: String!
-  ): User
-
-  """
-  Desbanear a un usuario
-  """
-  unbanUser(email: String!): User
 }
 
 type BanInfo {
   reason: String!
   description: String
-  duration: String!
+  bannedUntil: String
+  isPermanent: Boolean!
   createdAt: String!
 }
