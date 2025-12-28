@@ -342,34 +342,5 @@ export const userResolvers = {
       }
     },
 
-    banUser: async (_, { email, reason, description, duration }, context) => {
-      if (!context.user || context.user.role !== "ADMIN") {
-        throw new Error("No tienes permisos para banear usuarios");
-      }
-
-      const user = await usersRepo.getUserByEmail(email);
-      if (!user) {
-        throw new Error("Usuario no encontrado");
-      }
-
-      await usersRepo.banUser(email, { reason, description, duration });
-
-      return await usersRepo.getUserByEmail(email);
-    },
-
-    unbanUser: async (_, { email }, context) => {
-      if (!context.user || context.user.role !== "ADMIN") {
-        throw new Error("No tienes permisos para desbanear usuarios");
-      }
-
-      const user = await usersRepo.getUserByEmail(email);
-      if (!user) {
-        throw new Error("Usuario no encontrado");
-      }
-
-      await usersRepo.unbanUser(email);
-
-      return await usersRepo.getUserByEmail(email);
-    },
   },
 };
