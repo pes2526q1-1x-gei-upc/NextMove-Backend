@@ -61,7 +61,8 @@ class UsersRepository {
       banInfo: banned ? {
         reason: banned.reason,
         description: banned.description,
-        duration: banned.duration,
+        bannedUntil: banned.banned_until ? banned.banned_until.toISOString() : null,
+        isPermanent: banned.is_permanent,
         createdAt: banned.created_at.toISOString(),
       } : null,
     };
@@ -295,7 +296,7 @@ class UsersRepository {
 
   async isUserBanned(email) {
     const result = await pool.query(
-      `SELECT email, reason, description, duration, created_at
+      `SELECT email, reason, description, banned_until, is_permanent, created_at
      FROM "usersBanned"
      WHERE email = $1`,
       [email]
