@@ -66,7 +66,6 @@ export const assessmentResolver = {
         if (error.code === '23505'){
           throw new Error('Assessment already exists for this user and station.');
         }
-        // Propagar otros errores (como lenguaje ofensivo)
         throw error;
       }
     },
