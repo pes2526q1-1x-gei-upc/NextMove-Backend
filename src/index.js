@@ -29,6 +29,9 @@ const io = new Server(httpServer, {
   pingInterval: 25000
 });
 
+// Exportar io para uso en otros módulos
+export { io };
+
 app.use('/api', uploadProfilePhotoRouter);
 
 app.use((req, res, next) => {
@@ -114,7 +117,7 @@ function initGraphQL() {
     },
     createHandler({
       schema: schema,
-      context: (req, res) => createContext(req, res),
+      context: (req, res) => createContext(req, res, io),
     }),
   );
 

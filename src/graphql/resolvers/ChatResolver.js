@@ -103,6 +103,46 @@ const ChatResolver = {
         userEmail
       );
 
+      // Emitir evento Socket.IO para notificar al nuevo participante y actualizar lista de chats
+      if (context.io) {
+        try {
+          // Obtener información del chat
+          const chat = await ChatRepository.getChatById(chatId);
+          if (chat) {
+            // Obtener información del usuario añadido
+            const UsersRepository = (await import('../../repositories/UsersRepository.js')).default;
+            const usersRepo = new UsersRepository();
+            const newUser = await usersRepo.getUserByEmail(userEmail);
+            
+            // Emitir evento al nuevo participante para actualizar su lista de chats
+            context.io.to(`user:${userEmail}`).emit('group:user:added', {
+              chatId: chatId,
+              chatName: chat.name,
+              userEmail: userEmail,
+              userNickname: newUser?.nickname || userEmail,
+              timestamp: new Date().toISOString()
+            });
+
+            // Notificar a todos los participantes del grupo (incluyendo el nuevo)
+            const participants = await ChatRepository.getChatParticipants(chatId);
+            const participantEmails = participants.map(p => p.user_email);
+            
+            participantEmails.forEach(email => {
+              context.io.to(`user:${email}`).emit('group:participant:added', {
+                chatId: chatId,
+                chatName: chat.name,
+                newParticipantEmail: userEmail,
+                newParticipantNickname: newUser?.nickname || userEmail,
+                timestamp: new Date().toISOString()
+              });
+            });
+          }
+        } catch (error) {
+          console.error('[ChatResolver] Error emitiendo evento de usuario añadido:', error);
+          // No fallar la mutación si el evento falla
+        }
+      }
+
       return true;
     },
 
@@ -161,7 +201,6 @@ const ChatResolver = {
      * Expulsar participante de grupo
      */
     kickParticipantFromGroup: async (_, { chatId, userEmail }, context) => {
-      context.user = {email: "xuanyiqiu77@gmail.com"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -181,17 +220,62 @@ const ChatResolver = {
         throw new Error('Error: permisos insuficientes. Solo un administrador puede expulsar participantes.');
       }
 
+      // Obtener información del usuario expulsado antes de expulsarlo
+      const UsersRepository = (await import('../../repositories/UsersRepository.js')).default;
+      const usersRepo = new UsersRepository();
+      const kickedUser = await usersRepo.getUserByEmail(userEmail);
+      const chat = await ChatRepository.getChatById(chatId);
+
       const success = await ChatRepository.removeParticipant(chatId, userEmail);
+      
+      // Emitir evento Socket.IO para expulsar al usuario del chat
+      if (success && context.io) {
+        try {
+          // Obtener todos los sockets del usuario expulsado y sacarlo de la sala
+          const userSockets = await context.io.in(`user:${userEmail}`).fetchSockets();
+          for (const userSocket of userSockets) {
+            // Sacar al usuario de la sala del chat
+            userSocket.leave(chatId);
+            console.log(`[ChatResolver] Usuario ${userEmail} (socket ${userSocket.id}) expulsado de la sala ${chatId}`);
+          }
+
+          // Emitir evento específico al usuario expulsado para cerrar la pantalla de chat
+          context.io.to(`user:${userEmail}`).emit('user:kicked:from:group', {
+            chatId: chatId,
+            chatName: chat?.name || 'Grupo',
+            userEmail: userEmail,
+            timestamp: new Date().toISOString()
+          });
+
+          // Notificar a todos los demás participantes del grupo
+          const participants = await ChatRepository.getChatParticipants(chatId);
+          participants.forEach(participant => {
+            if (participant.user_email !== userEmail) {
+              context.io.to(`user:${participant.user_email}`).emit('group:participant:kicked', {
+                chatId: chatId,
+                chatName: chat?.name || 'Grupo',
+                kickedUserEmail: userEmail,
+                kickedUserNickname: kickedUser?.nickname || userEmail,
+                timestamp: new Date().toISOString()
+              });
+            }
+          });
+        } catch (error) {
+          console.error('[ChatResolver] Error emitiendo evento de expulsión:', error);
+          // No fallar la mutación si el evento falla
+        }
+      }
+
       return success;
 
     },
 
     toggleAdminStatus: async (_, { chatId, userEmail }, context) => {
-      context.user = {email: "xuanyiqiu77@gmail.com"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
       
+      // Verificar que el usuario actual es participante
       const isParticipant = await ChatRepository.isParticipant(
         chatId,
         context.user.email
@@ -200,9 +284,16 @@ const ChatResolver = {
         throw new Error('Error: el usuario no forma parte del grupo.');
       }
 
+      // Verificar que el usuario actual es administrador
       const isAdmin = await ChatRepository.isAdmin(chatId, context.user.email);
       if (!isAdmin) {
         throw new Error('Error: permisos insuficientes. Solo un administrador puede otorgar permisos.');
+      }
+
+      // Verificar que el usuario objetivo es participante del grupo
+      const targetIsParticipant = await ChatRepository.isParticipant(chatId, userEmail);
+      if (!targetIsParticipant) {
+        throw new Error('Error: el usuario objetivo no forma parte del grupo.');
       }
 
       if (context.user.email === userEmail) {
@@ -210,11 +301,37 @@ const ChatResolver = {
       }
 
       const success = await ChatRepository.toggleAdminStatus(chatId, userEmail);
+      
+      // Emitir evento Socket.IO para notificar a todos los participantes
+      if (success && context.io) {
+        try {
+          const targetUser = await (await import('../../repositories/UsersRepository.js')).default;
+          const usersRepo = new targetUser();
+          const user = await usersRepo.getUserByEmail(userEmail);
+          const chat = await ChatRepository.getChatById(chatId);
+          const newAdminStatus = await ChatRepository.isAdmin(chatId, userEmail);
+
+          // Notificar a todos los participantes del grupo
+          const participants = await ChatRepository.getChatParticipants(chatId);
+          participants.forEach(participant => {
+            context.io.to(`user:${participant.user_email}`).emit('group:admin:status:changed', {
+              chatId: chatId,
+              userEmail: userEmail,
+              userName: user?.nickname || userEmail,
+              isAdmin: newAdminStatus,
+              timestamp: new Date().toISOString()
+            });
+          });
+        } catch (error) {
+          console.error('[ChatResolver] Error emitiendo evento de cambio de admin:', error);
+          // No fallar la mutación si el evento falla
+        }
+      }
+      
       return success;
     },
 
     deleteGroup: async (_, { chatId }, context) => {
-      context.user = {email: "xuanyiqiu77@gmail.com"};
       if (!context.user) {
         throw new Error('Authentication required');
       }
@@ -233,7 +350,31 @@ const ChatResolver = {
         throw new Error('Error: solo un administrador puede eliminar el grupo.');
       }
 
+      // Obtener participantes antes de eliminar para notificarles
+      const participants = await ChatRepository.getChatParticipants(chatId);
+      const chat = await ChatRepository.getChatById(chatId);
+
       const success = await ChatService.deleteGroup(chatId, context.user.email);
+      
+      // Emitir evento Socket.IO para notificar a todos los participantes
+      if (success && context.io) {
+        try {
+          // Notificar a todos los participantes que el grupo fue eliminado
+          participants.forEach(participant => {
+            context.io.to(`user:${participant.user_email}`).emit('group:deleted', {
+              chatId: chatId,
+              chatName: chat?.name || 'Grupo Eliminado',
+              timestamp: new Date().toISOString()
+            });
+            // También sacar a todos los participantes de la sala de Socket.IO
+            context.io.in(`user:${participant.user_email}`).socketsLeave(chatId);
+          });
+        } catch (error) {
+          console.error('[ChatResolver] Error emitiendo evento de eliminación de grupo:', error);
+          // No fallar la mutación si el evento falla
+        }
+      }
+      
       return success;
     },
   },

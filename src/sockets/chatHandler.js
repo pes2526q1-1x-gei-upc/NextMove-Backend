@@ -10,6 +10,12 @@ export function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log(`[Socket.IO] User connected: ${socket.userEmail}`);
     
+    // Unir al socket a una sala personalizada por email para poder enviarle eventos específicos
+    if (socket.userEmail) {
+      socket.join(`user:${socket.userEmail}`);
+      console.log(`[Socket.IO] User ${socket.userEmail} joined personal room: user:${socket.userEmail}`);
+    }
+    
     // Notificar al cliente
     socket.emit('connection:success', {
       userId: socket.userId,
@@ -102,6 +108,15 @@ export function setupSocketHandlers(io) {
         const rooms = Array.from(socket.rooms);
         if (!rooms.includes(roomId)) {
           socket.emit('error', { message: 'You are not in this chat' });
+          return;
+        }
+
+        // Verificar que el usuario es participante del chat (puede haber sido expulsado)
+        const isParticipant = await ChatRepository.isParticipant(roomId, socket.userEmail);
+        if (!isParticipant) {
+          socket.emit('error', { message: 'You are no longer a participant of this chat' });
+          // Sacar al usuario de la sala si ya no es participante
+          socket.leave(roomId);
           return;
         }
 

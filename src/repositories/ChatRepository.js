@@ -280,6 +280,11 @@ async createGroupChat(name, description, participantEmails, photo) {
    * Eliminar chat completo
    */
   async deleteChat(chatId) {
+    // Primero eliminar todos los participantes (si hay restricción CASCADE, esto se hará automáticamente)
+    // Pero lo hacemos explícitamente para asegurarnos
+    await pool.query(`DELETE FROM chat_participants WHERE chat_id = $1`, [chatId]);
+    
+    // Luego eliminar el chat
     const query = `DELETE FROM chats WHERE id = $1 RETURNING id`;
     const result = await pool.query(query, [chatId]);
     return result.rows.length > 0;
