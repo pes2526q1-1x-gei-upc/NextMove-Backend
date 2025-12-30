@@ -55,6 +55,12 @@ input RouteInput {
   Controla si se considera el tráfico en tiempo real para calcular la ruta.
   """
   routingPreference: RoutingPreference
+
+  """
+  Indica el idioma en el que se devolverá la ruta.
+  
+  """
+  languageCode: String
 }
 
 """
