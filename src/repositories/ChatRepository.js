@@ -16,14 +16,14 @@ class ChatRepository {
         c.created_at,
         c.updated_at,
         (SELECT content FROM chat_messages 
-         WHERE chat_id = c.id 
+         WHERE chat_id = c.id AND deleted = false
          ORDER BY created_at DESC LIMIT 1) as last_message_content,
         (SELECT created_at FROM chat_messages 
-         WHERE chat_id = c.id 
+         WHERE chat_id = c.id AND deleted = false
          ORDER BY created_at DESC LIMIT 1) as last_message_time,
         (SELECT u.nickname FROM chat_messages m
          JOIN users u ON m.sender_email = u.email
-         WHERE m.chat_id = c.id 
+         WHERE m.chat_id = c.id AND m.deleted = false
          ORDER BY m.created_at DESC LIMIT 1) as last_message_sender
       FROM chats c
       JOIN chat_participants cp ON c.id = cp.chat_id
@@ -280,11 +280,13 @@ async createGroupChat(name, description, participantEmails, photo) {
    * Eliminar chat completo
    */
   async deleteChat(chatId) {
-    // Primero eliminar todos los participantes (si hay restricción CASCADE, esto se hará automáticamente)
-    // Pero lo hacemos explícitamente para asegurarnos
+    // Primero eliminar todos los mensajes del chat
+    await pool.query(`DELETE FROM chat_messages WHERE chat_id = $1`, [chatId]);
+    
+    // Luego eliminar todos los participantes
     await pool.query(`DELETE FROM chat_participants WHERE chat_id = $1`, [chatId]);
     
-    // Luego eliminar el chat
+    // Finalmente eliminar el chat
     const query = `DELETE FROM chats WHERE id = $1 RETURNING id`;
     const result = await pool.query(query, [chatId]);
     return result.rows.length > 0;

@@ -1,5 +1,6 @@
 import ChatService from '../../services/ChatService.js';
 import ChatRepository from '../../repositories/ChatRepository.js';
+import pool from '../../config/database.js';
 
 const ChatResolver = {
   Query: {
@@ -58,10 +59,44 @@ const ChatResolver = {
         throw new Error('Authentication required');
       }
 
+      // Verificar si el chat ya existía antes de crearlo
+      const existingChat = await ChatRepository.findDirectChat(
+        context.user.email,
+        userEmail
+      );
+      const wasNewChat = !existingChat;
+
       const chat = await ChatService.getOrCreateDirectChat(
         context.user.email,
         userEmail
       );
+
+      // Si se creó un nuevo chat, notificar al otro usuario
+      if (wasNewChat && context.io && chat) {
+        try {
+          // Obtener información del usuario que creó el chat
+          const userResult = await pool.query(
+            `SELECT nickname, photo FROM users WHERE email = $1`,
+            [context.user.email]
+          );
+          const userNickname = userResult.rows[0]?.nickname || context.user.email;
+          const userPhoto = userResult.rows[0]?.photo || null;
+
+          // Emitir evento al otro usuario para que actualice su lista de chats
+          context.io.to(`user:${userEmail}`).emit('direct:chat:created', {
+            chatId: chat.id,
+            otherUserEmail: context.user.email,
+            otherUserNickname: userNickname,
+            otherUserPhoto: userPhoto,
+            timestamp: new Date().toISOString()
+          });
+
+          console.log(`[ChatResolver] Evento 'direct:chat:created' emitido a ${userEmail} para chat ${chat.id}`);
+        } catch (error) {
+          console.error('[ChatResolver] Error emitiendo evento de chat directo creado:', error);
+          // No fallar la query si el evento falla
+        }
+      }
 
       return chat;
     },
