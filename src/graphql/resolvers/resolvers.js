@@ -7,7 +7,9 @@ import { assessmentResolver } from './AssessmentResolvers.js';
 import routingResolvers  from './routingResolvers.js';
 import favStationResolver from './FavStationResolver.js';
 import ChatResolver from './ChatResolver.js';
-
+import { challengesResolver } from './challengesResolver.js';
+import  { rankingResolver }  from './RankingResolver.js';
+import { firmResolver } from './FirmResolver.js';
 
 export const resolvers = {
   Query: {
@@ -45,6 +47,18 @@ export const resolvers = {
     getFavBikeStations: favStationResolver.Query.getFavBikeStations,
     getFavCarStations: favStationResolver.Query.getFavCarStations,
 
+    getAllChallenges: challengesResolver.Query.getAllChallenges,
+    getEnrolledChallenges: challengesResolver.Query.getEnrolledChallenges,
+    getTrophies: challengesResolver.Query.getTrophies,
+
+    ranking: rankingResolver.Query.ranking, 
+    userStats: rankingResolver.Query.userStats, 
+    globalStats: rankingResolver.Query.globalStats, 
+    topUsers: rankingResolver.Query.topUsers,
+
+    getFirms: firmResolver.Query.getFirms,
+    getFirmByName: firmResolver.Query.getFirmByName,
+
     ...ChatResolver.Query
   },
   Mutation: {
@@ -74,6 +88,8 @@ export const resolvers = {
 
     addFavStation: favStationResolver.Mutation.addFavStation,
     deleteFavStation: favStationResolver.Mutation.deleteFavStation,
+
+    enrollChallenge: challengesResolver.Mutation.enrollChallenge,
   
     ...ChatResolver.Mutation
   },

@@ -10,7 +10,7 @@ const routingResolvers = {
 
       try {
         if (Math.abs(input.origin.latitude) > 90 || Math.abs(input.origin.longitude) > 180 ||
-            Math.abs(input.destination.latitude) > 90 || Math.abs(input.destination.longitude) > 180) {
+          Math.abs(input.destination.latitude) > 90 || Math.abs(input.destination.longitude) > 180) {
           throw new Error('Coordenadas fuera de rango válido');
         }
 
@@ -23,7 +23,8 @@ const routingResolvers = {
             computeAlternatives: true,
             avoidTolls: input.avoidTolls || false,
             avoidHighways: input.avoidHighways || false,
-            avoidFerries: input.avoidFerries || false
+            avoidFerries: input.avoidFerries || false,
+            languageCode: input.languageCode || 'es'
           }
         );
 

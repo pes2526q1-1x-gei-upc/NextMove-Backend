@@ -1,0 +1,65 @@
+enum Mode {
+  CAR
+  BIKE
+}
+
+enum Language {
+  ESP
+  CAT
+  ENG
+}
+
+type RankingStats {
+    email: String!
+    num_rutas: Int!
+    km_recorridos: Float!
+    co2_ahorrado: Float!
+    calorias_quemadas: Float!
+    elevacion_positiva: Float!
+    num_retos_participados: Int!
+    num_retos_completados: Int!
+    posicion: Int!
+}
+
+type UserStats {
+    email: String!
+    num_rutas: Int!
+    km_recorridos: Float!
+    co2_ahorrado: Float!
+    calorias_quemadas: Float!
+    elevacion_positiva: Float!
+    num_retos_participados: Int!
+    num_retos_completados: Int!
+
+    nombre: String!
+    nombre_usuario: String!
+    foto: String!
+    fecha_nacimiento: String!
+    numero_telefono: String!
+    modo_preferido: Mode!
+    idioma_preferido: Language!
+    descripcion_biografica: String
+    fecha_creacion: String!
+}
+
+type GlobalStats {
+    total_usuarios: Int!
+    usuarios_activos: Int!
+    usuarios_inactivos: Int!
+    rutas_totales: Int!
+    km_recorridos_totales: Float!
+    km_promedio: Float!
+    km_recorridos_maximo: Float!
+    elevacion_positiva_total: Float!
+    co2_total_ahorrado: Float!
+    calorias_quemadas_total: Float!
+    num_retos_participados_total: Int!
+    num_retos_completados_total: Int!
+}
+
+type Query {
+    ranking(metric: String!): [RankingStats!]!
+    userStats(email: String!): UserStats!
+    globalStats: GlobalStats!
+    topUsers(limit: Int!, metric: String!): [RankingStats!]!
+}
