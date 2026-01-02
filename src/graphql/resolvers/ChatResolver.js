@@ -343,7 +343,6 @@ const ChatResolver = {
           const targetUser = await (await import('../../repositories/UsersRepository.js')).default;
           const usersRepo = new targetUser();
           const user = await usersRepo.getUserByEmail(userEmail);
-          const chat = await ChatRepository.getChatById(chatId);
           const newAdminStatus = await ChatRepository.isAdmin(chatId, userEmail);
 
           // Notificar a todos los participantes del grupo
@@ -421,13 +420,13 @@ const ChatResolver = {
      */
     participants: async (parent, _, context) => {
       try {
-      if (!context.user) return [];       
-      const chatId = parent.id || parent.chat_id;
-      const participants = await ChatRepository.getChatParticipants(chatId);
-      
-      console.log(`Participantes para chat ${chatId}:`, participants.length);
-      return participants || []; // Siempre devuelve al menos un array vacío
-      
+        if (!context.user) return [];       
+        const chatId = parent.id || parent.chat_id;
+        const participants = await ChatRepository.getChatParticipants(chatId);
+        
+        console.log(`Participantes para chat ${chatId}:`, participants.length);
+        return participants || []; // Siempre devuelve al menos un array vacío
+        
       } catch (error) {
         console.error("Error en resolver participants:", error);
         return []; // Devuelve array vacío para no romper la query principal

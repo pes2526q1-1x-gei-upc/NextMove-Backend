@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+ 
 
 
 export const shorthands = undefined;
