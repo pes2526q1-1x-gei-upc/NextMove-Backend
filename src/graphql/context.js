@@ -5,9 +5,10 @@ import authService from '../services/AuthService.js';
  * Crea el contexto de GraphQL con el usuario autenticado
  * @param {object} req - Request de Express
  * @param {object} res - Response de Express
+ * @param {object} io - Instancia de Socket.IO
  * @returns {Promise<object>} - Contexto con usuario y servicios
  */
-export async function createContext(req, res) {
+export async function createContext(req, res, io) {
   const authHeader = req?.headers?.authorization;
   const token = authService.extractToken(authHeader);
   let user = null;
@@ -40,6 +41,7 @@ export async function createContext(req, res) {
     authService,    // Servicio de autenticación
     req,            // Request original
     res,            // Response original
+    io,             // Instancia de Socket.IO para emitir eventos
   };
 }
 

@@ -39,6 +39,7 @@
     "obscenity": "^0.4.5",
     "pg": "^8.16.3",
     "ruru": "^2.0.0-beta.30",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
@@ -50,7 +51,8 @@
     "jest": "^30.2.0",
     "jest-junit": "^16.0.0",
     "node-pg-migrate": "^8.0.3",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "socket.io-client": "^4.8.1"
   },
   "type": "module"
 }

@@ -1,0 +1,95 @@
+type Chat {
+  id: ID!
+  type: String!
+  name: String
+  description: String
+  participants: [ChatParticipant!]!
+  lastMessage: LastMessageInfo
+  createdAt: String!
+  updatedAt: String!
+  photo: String 
+}
+
+type ChatParticipant {
+  userEmail: String!
+  nickname: String!
+  photoUrl: String
+  joinedAt: String!
+  isAdmin: Boolean!
+}
+
+type LastMessageInfo {
+  content: String
+  sender: String
+  timestamp: String
+}
+
+type Message {
+  id: ID!
+  chatId: ID!
+  senderEmail: String!
+  senderNickname: String!
+  senderPhoto: String
+  content: String!
+  type: String!
+  createdAt: String!
+  deleted: Boolean!
+  deletedAt: String
+  edited: Boolean!
+  editedAt: String
+}
+
+type Query {
+  # Obtener todos los chats del usuario actual
+  myChats: [Chat!]!
+  
+  # Obtener mensajes de un chat (con paginación)
+  chatMessages(
+    chatId: ID!
+    limit: Int = 50
+    offset: Int = 0
+  ): [Message!]!
+  
+  chatParticipants(chatId: ID!): [ChatParticipant!]!
+  
+  # Buscar o crear chat directo con otro usuario
+  getOrCreateDirectChat(userEmail: String!): Chat!
+}
+
+type Mutation {
+  createGroupChat(
+    name: String!
+    description: String
+    participantEmails: [String!]!
+    photo: String
+  ): Chat!
+  
+  addParticipantToGroup(
+    chatId: ID!
+    userEmail: String!
+  ): Boolean!
+  
+  leaveGroup(chatId: ID!): Boolean!
+  
+  deleteMessage(messageId: ID!): Boolean!
+  
+  updateGroupChat(
+    chatId: ID!
+    name: String
+    description: String
+    photo: String
+  ): Chat!
+
+  kickParticipantFromGroup(
+    chatId: ID!
+    userEmail: String!
+  ): Boolean! 
+
+  toggleAdminStatus(
+    chatId: ID!
+    userEmail: String!
+  ): Boolean!
+
+  deleteGroup(chatId: ID!): Boolean!
+
+}

@@ -1,0 +1,291 @@
+// src/services/ChatService.js
+import ChatRepository from '../repositories/ChatRepository.js';
+import FriendshipRepository from '../repositories/FriendshipRepository.js';
+import pool from '../config/database.js';
+
+const friendshipRepository = new FriendshipRepository();
+
+class ChatService {
+  
+  /**
+   * Helper: Convertir nicknames a emails
+   */
+  async _getNicknameEmail(nickname) {
+    const result = await pool.query(
+      'SELECT email FROM users WHERE nickname = $1',
+      [nickname]
+    );
+    return result.rows[0]?.email || null;
+  }
+
+  /**
+   * Helper: Verificar si dos usuarios son amigos
+   */
+  async _areFriends(userEmail1, userEmail2) {
+    const friends = await friendshipRepository.getFriendships(userEmail1);
+    return friends.some(friend => friend.email === userEmail2);
+  }
+
+  /**
+   * Obtener o crear chat directo entre dos usuarios
+   */
+  async getOrCreateDirectChat(userEmail1, userEmail2) {
+    if (userEmail1 === userEmail2) {
+      throw new Error('Cannot create chat with yourself');
+    }
+
+    // Verificar que son amigos
+    const areFriends = await this._areFriends(userEmail1, userEmail2);
+    if (!areFriends) {
+      throw new Error('Users are not friends');
+    }
+
+    // Buscar chat existente
+    let chat = await ChatRepository.findDirectChat(userEmail1, userEmail2);
+    
+    if (!chat) {
+      const chatId = await ChatRepository.createDirectChat(userEmail1, userEmail2);
+      chat = await ChatRepository.getChatById(chatId);
+    } else {
+      chat = await ChatRepository.getChatById(chat.id);
+    }
+
+    return chat;
+  }
+
+  /**
+   * Obtener chats del usuario con info enriquecida
+   */
+  async getUserChats(userEmail) {
+    const chats = await ChatRepository.getUserChats(userEmail);
+    
+    // Para chats directos, obtener info del otro usuario
+    const enrichedChats = await Promise.all(
+      chats.map(async (chat) => {
+        if (chat.type === 'direct') {
+          const participants = await ChatRepository.getChatParticipants(chat.id);
+          const otherUser = participants.find(p => p.user_email !== userEmail);
+          
+          return {
+            ...chat,
+            name: otherUser?.nickname || 'Usuario',
+            otherUserEmail: otherUser?.user_email,
+          };
+        }
+        return chat;
+      })
+    );
+    
+    return enrichedChats;
+  }
+
+  /**
+   * Crear chat grupal
+   */
+  async createGroupChat(creatorEmail, name, description, participantEmails, photo) {
+    if (!name || name.trim().length === 0) {
+      throw new Error('Group name is required');
+    }
+
+    if (!participantEmails || participantEmails.length === 0) {
+      throw new Error('At least one participant is required');
+    }
+
+    // Verificar que todos son amigos del creador
+    for (const participantEmail of participantEmails) {
+      if (participantEmail !== creatorEmail) {
+        const areFriends = await this._areFriends(creatorEmail, participantEmail);
+        if (!areFriends) {
+          throw new Error(`${participantEmail} is not your friend`);
+        }
+      }
+    }
+
+    const allParticipants = new Set([creatorEmail, ...participantEmails]);
+
+    const chatId = await ChatRepository.createGroupChat(
+      name,
+      description,
+      Array.from(allParticipants),
+      photo
+    );
+
+    return await ChatRepository.getChatById(chatId);
+  }
+
+  /**
+   * Enviar mensaje
+   */
+  async sendMessage(chatId, senderEmail, content, type = 'text') {
+    const isParticipant = await ChatRepository.isParticipant(chatId, senderEmail);
+    if (!isParticipant) {
+      throw new Error('User is not a participant of this chat');
+    }
+
+    if (!content || content.trim().length === 0) {
+      throw new Error('Message content cannot be empty');
+    }
+
+    const message = await ChatRepository.createMessage(chatId, senderEmail, content, type);
+    return message;
+  }
+
+  /**
+   * Obtener mensajes de un chat
+   */
+  async getChatMessages(chatId, userEmail, limit = 50, offset = 0) {
+    const isParticipant = await ChatRepository.isParticipant(chatId, userEmail);
+    if (!isParticipant) {
+      throw new Error('User is not a participant of this chat');
+    }
+
+    // 1. Obtener mensajes crudos
+    const messages = await ChatRepository.getChatMessages(chatId, limit, offset);
+
+    // Si no hay mensajes, devolvemos array vacío y ahorramos trabajo
+    if (!messages || messages.length === 0) {
+      return [];
+    }
+
+    // 2. Extraer emails únicos de los remitentes para buscar sus datos
+    const senderEmails = [...new Set(messages.map(msg => msg.sender_email))];
+
+    // 3. Obtener info (nickname, photo) de esos usuarios desde la tabla 'users'
+    const usersResult = await pool.query(
+      'SELECT email, nickname, photo FROM users WHERE email = ANY($1)',
+      [senderEmails]
+    );
+
+    // Crear un mapa rápido para buscar usuario por email: { 'a@a.com': { nickname: '...', photo: '...' } }
+    const usersMap = {};
+    usersResult.rows.forEach(user => {
+      usersMap[user.email] = user;
+    });
+
+    // 4. Combinar todo y devolver
+    return messages.map(msg => {
+      const senderInfo = usersMap[msg.sender_email] || {};
+      
+      return {
+        ...msg,
+        // IDs
+        chatId: chatId,
+        
+        // Sender Info
+        senderEmail: msg.sender_email,
+        senderNickname: senderInfo.nickname || 'Desconocido', // Evita el error null
+        senderPhoto: senderInfo.photo || null, // photo puede ser null
+        
+        // Fechas
+        createdAt: msg.created_at,
+        
+        // Estado de eliminación
+        deleted: msg.deleted || false,
+        deletedAt: msg.deleted_at || null,
+        
+        // Estado de edición
+        edited: msg.edited || false,
+        editedAt: msg.edited_at || null
+      };
+    });
+  }
+
+  /**
+   * Eliminar mensaje
+   */
+  async deleteMessage(messageId, userEmail) {
+    const deleted = await ChatRepository.deleteMessage(messageId, userEmail);
+    if (!deleted) {
+      throw new Error('Message not found or unauthorized');
+    }
+    return true;
+  }
+
+  /**
+   * Editar mensaje
+   */
+  async editMessage(messageId, userEmail, newContent) {
+    if (!newContent || newContent.trim().length === 0) {
+      throw new Error('Message content cannot be empty');
+    }
+
+    const editedMessage = await ChatRepository.editMessage(messageId, userEmail, newContent.trim());
+    if (!editedMessage) {
+      throw new Error('Message not found or unauthorized');
+    }
+    return editedMessage;
+  }
+
+  /**
+   * Agregar participante a grupo
+   */
+  async addParticipantToGroup(chatId, requestorEmail, newParticipantEmail) {
+    const chat = await ChatRepository.getChatById(chatId);
+    if (!chat || chat.type !== 'group') {
+      throw new Error('Chat is not a group');
+    }
+
+    const isParticipant = await ChatRepository.isParticipant(chatId, requestorEmail);
+    if (!isParticipant) {
+      throw new Error('Unauthorized');
+    }
+
+    // Verificar amistad
+    const areFriends = await this._areFriends(requestorEmail, newParticipantEmail);
+    if (!areFriends) {
+      throw new Error('New participant must be your friend');
+    }
+
+    await ChatRepository.addParticipant(chatId, newParticipantEmail);
+    return true;
+  }
+
+  /**
+   * Salir de un grupo
+   */
+  async leaveGroup(chatId, userEmail) {
+    const chat = await ChatRepository.getChatById(chatId);
+    if (!chat || chat.type !== 'group') {
+      throw new Error('Chat is not a group');
+    }
+
+    await ChatRepository.removeParticipant(chatId, userEmail);
+    return true;
+  }
+
+  /**
+   * Obtener participantes de un chat
+   */
+  async getChatParticipants(chatId, userEmail) {
+    const isParticipant = await ChatRepository.isParticipant(chatId, userEmail);
+    if (!isParticipant) {
+      throw new Error('User is not a participant of this chat');
+    }
+
+    return await ChatRepository.getChatParticipants(chatId);
+  }
+
+  /**
+ * Eliminar grupo (solo admins)
+ */
+  async deleteGroup(chatId, userEmail) {
+    const chat = await ChatRepository.getChatById(chatId);
+    if (!chat || chat.type !== 'group') {
+      throw new Error('El chat no es un grupo');
+    }
+
+    const isAdmin = await ChatRepository.isAdmin(chatId, userEmail);
+    if (!isAdmin) {
+      throw new Error('Error: no tienes permisos suficientes para realizar esta acción.');
+    }
+
+    const deleted = await ChatRepository.deleteChat(chatId);
+    if (!deleted) {
+      throw new Error('Failed to delete group');
+    }
+    
+    return true;
+  }
+}
+
+export default new ChatService();

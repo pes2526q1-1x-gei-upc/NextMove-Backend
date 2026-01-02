@@ -6,6 +6,7 @@ import { recorridosResolver } from './RecorridoResolver.js';
 import { assessmentResolver } from './AssessmentResolvers.js';
 import routingResolvers  from './routingResolvers.js';
 import favStationResolver from './FavStationResolver.js';
+import ChatResolver from './ChatResolver.js';
 import { challengesResolver } from './challengesResolver.js';
 import  { rankingResolver }  from './RankingResolver.js';
 import { firmResolver } from './FirmResolver.js';
@@ -57,6 +58,8 @@ export const resolvers = {
 
     getFirms: firmResolver.Query.getFirms,
     getFirmByName: firmResolver.Query.getFirmByName,
+
+    ...ChatResolver.Query
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -87,5 +90,10 @@ export const resolvers = {
     deleteFavStation: favStationResolver.Mutation.deleteFavStation,
 
     enrollChallenge: challengesResolver.Mutation.enrollChallenge,
-  }
+  
+    ...ChatResolver.Mutation
+  },
+  Chat: ChatResolver.Chat,
+  Message: ChatResolver.Message,
+  ChatParticipant: ChatResolver.ChatParticipant
 };
