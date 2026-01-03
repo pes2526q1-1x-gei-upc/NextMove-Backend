@@ -28,18 +28,19 @@ class RankingRepository {
         throw new Error(`Ranking Repo: Métrica inválida ${metric}`);
       }
       const result = await pool.query(
-        `SELECT email, 
-                num_rutas, 
-                km_recorridos,
-                elevacion_positiva, 
-                co2_ahorrado, 
-                calorias_quemadas, 
-                num_retos_completados, 
-                num_retos_participados, 
-                num_retos_completados,  
+        `SELECT u.nickname,
+                urs.email, 
+                urs.num_rutas, 
+                urs.km_recorridos,
+                urs.elevacion_positiva, 
+                urs.co2_ahorrado, 
+                urs.calorias_quemadas, 
+                urs.num_retos_completados, 
+                urs.num_retos_participados, 
+                urs.num_retos_completados,  
                 ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion
-            FROM user_ranking_stats
-            WHERE(num_rutas >= 0)
+            FROM user_ranking_stats urs INNER JOIN users u ON urs.email = u.email
+            WHERE(urs.num_rutas >= 0)
             ORDER BY ${metric} DESC
         `); 
       console.log("REPO RANKING: Ranking completo obtenido correctamente") ; 
