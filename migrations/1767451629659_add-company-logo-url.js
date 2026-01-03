@@ -9,9 +9,9 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-    pgm.addColumn('empresas', {
-        logo_url: { type: 'text', notNull: false },
-    });
+  pgm.addColumn('empresas', {
+    logo_url: { type: 'text', notNull: false },
+  });
 };
 
 /**
@@ -20,5 +20,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-    pgm.dropColumn('empresas', 'logo_url');
+  pgm.dropColumn('empresas', 'logo_url');
 };
