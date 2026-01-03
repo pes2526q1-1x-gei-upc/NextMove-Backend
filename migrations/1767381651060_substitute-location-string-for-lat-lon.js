@@ -10,17 +10,13 @@ export const shorthands = undefined;
  */
 export const up = (pgm) => {
   pgm.dropColumn('empresas', 'ubicacion');
-  pgm.addColumns('empresas', {
-    lat: {
-      type: 'numeric',
+  pgm.addColumn('empresas',{
+    ubicacion: {
+      type: 'geography(Point,4326)',
       notNull: true,
-    },
-    lng: {
-      type: 'numeric',
-      notNull: true,
-    },
+      unique: true
+    }
   });
-
 };
 
 /**
@@ -29,6 +25,7 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
+  pgm.dropColumn('empresas', 'ubicacion');
   pgm.addColumn('empresas', {
     ubicacion: {
       type: 'varchar(200)',
@@ -36,6 +33,4 @@ export const down = (pgm) => {
       unique: true
     }
   });
-  pgm.dropColumn('empresas', 'lat');
-  pgm.dropColumn('empresas', 'lng');
 };
