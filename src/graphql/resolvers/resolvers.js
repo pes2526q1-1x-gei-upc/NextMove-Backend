@@ -9,7 +9,6 @@ import favStationResolver from './FavStationResolver.js';
 import ChatResolver from './ChatResolver.js';
 import { challengesResolver } from './challengesResolver.js';
 import  { rankingResolver }  from './RankingResolver.js';
-import { firmResolver } from './FirmResolver.js';
 
 export const resolvers = {
   Query: {
@@ -50,14 +49,12 @@ export const resolvers = {
     getAllChallenges: challengesResolver.Query.getAllChallenges,
     getEnrolledChallenges: challengesResolver.Query.getEnrolledChallenges,
     getTrophies: challengesResolver.Query.getTrophies,
+    getPromotedCompanies: challengesResolver.Query.getPromotedCompanies,
 
     ranking: rankingResolver.Query.ranking, 
     userStats: rankingResolver.Query.userStats, 
     globalStats: rankingResolver.Query.globalStats, 
     topUsers: rankingResolver.Query.topUsers,
-
-    getFirms: firmResolver.Query.getFirms,
-    getFirmByName: firmResolver.Query.getFirmByName,
 
     ...ChatResolver.Query
   },

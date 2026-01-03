@@ -4,9 +4,13 @@ type trophy {
   name: String!
 }
 
-type company{
+type Company{
     name: String!
-    photo: String!
+    email: String
+    url: String
+    description: String
+    logo_url: String
+    location: Coordinates
 }
 
 type Challenge{
@@ -18,13 +22,14 @@ type Challenge{
     starting_date: String!
     ending_date: String!
     photo: String
-    company: company
+    company: Company
 }
 
 extend type Query{
     getAllChallenges: [Challenge]!
     getEnrolledChallenges: [Challenge]!
     getTrophies: [trophy]!
+    getPromotedCompanies: [Company]!
 }
 
 extend type Mutation{

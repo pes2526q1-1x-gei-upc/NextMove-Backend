@@ -38,6 +38,17 @@ export const challengesResolver = {
         throw error;
       }
     },
+    getPromotedCompanies: async (_, __, context) => {
+      if (!context.user) {
+        throw new Error('No autenticado');
+      }
+      try {
+        return await challengesRepo.getPromotedCompanies();
+      } catch (error) {
+        error.message = "Error fetching promoted companies: " + error.message;
+        throw error;
+      }
+    },
   },
   Mutation: {
     enrollChallenge: async (_, { challenge_id }, context) => {

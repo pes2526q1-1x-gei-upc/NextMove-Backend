@@ -2,12 +2,31 @@ import pool from '../config/database.js';
 
 class ChanllengesRepository{
   async getAllChallenges() {
-    const result = await pool.query('SELECT r.* , e.nombre as company_name, e.url as company_photo FROM retos r join empresas e on r.empresa_id = e.id order by ending_date ASC');
+    const result = await pool.query(`
+      SELECT r.* ,
+             e.nombre as company_name,
+             e.email as company_email,
+             e.url as company_url,
+             e.descripcion as company_description,
+             e.logo_url as company_logo_url,
+             ST_Y(e.ubicacion::geometry) as company_latitude,
+             ST_X(e.ubicacion::geometry) as company_longitude
+      FROM retos r
+      JOIN empresas e ON r.empresa_id = e.id
+      ORDER BY ending_date ASC
+    `);
     return result.rows.map(row => ({
       ...row,
       company: {
-        name: row.company_name, 
-        photo: row.company_photo
+        name: row.company_name,
+        email: row.company_email,
+        url: row.company_url,
+        description: row.company_description,
+        logo_url: row.company_logo_url,
+        location: row.company_latitude && row.company_longitude ? {
+          latitude: parseFloat(row.company_latitude),
+          longitude: parseFloat(row.company_longitude)
+        } : null
       }
     }));
   }
@@ -22,14 +41,31 @@ class ChanllengesRepository{
   async getEnrolledChallenges(email)
   {
     const result = await pool.query(`
-        SELECT r.*, e.nombre as company_name, e.url as company_photo FROM usuario_retos ur join retos r on ur.id = r.id join empresas e on r.empresa_id = e.id
-        WHERE ur.email = $1 and active = true
+        SELECT r.*,
+               e.nombre as company_name,
+               e.email as company_email,
+               e.url as company_url,
+               e.descripcion as company_description,
+               e.logo_url as company_logo_url,
+               ST_Y(e.ubicacion::geometry) as company_latitude,
+               ST_X(e.ubicacion::geometry) as company_longitude
+        FROM usuario_retos ur
+        JOIN retos r ON ur.id = r.id
+        JOIN empresas e ON r.empresa_id = e.id
+        WHERE ur.email = $1 AND active = true
     `, [email]);
     return result.rows.map(row => ({
       ...row,
       company: {
-        name: row.company_name, 
-        photo: row.company_photo
+        name: row.company_name,
+        email: row.company_email,
+        url: row.company_url,
+        description: row.company_description,
+        logo_url: row.company_logo_url,
+        location: row.company_latitude && row.company_longitude ? {
+          latitude: parseFloat(row.company_latitude),
+          longitude: parseFloat(row.company_longitude)
+        } : null
       }
     }));
   }
@@ -40,6 +76,26 @@ class ChanllengesRepository{
         WHERE ur.email = $1 AND ur.completed = 100
     `, [email]);
     return result.rows;
+  }
+
+  async getPromotedCompanies() {
+    const result = await pool.query(`
+      SELECT nombre, descripcion, email, url, logo_url,
+             ST_Y(ubicacion::geometry) as latitude,
+             ST_X(ubicacion::geometry) as longitude
+      FROM empresas
+    `);
+    return result.rows.map(row => ({
+      name: row.nombre,
+      description: row.descripcion,
+      email: row.email,
+      url: row.url,
+      logo_url: row.logo_url,
+      location: {
+        latitude: parseFloat(row.latitude),
+        longitude: parseFloat(row.longitude)
+      }
+    }));
   }
 }
 
