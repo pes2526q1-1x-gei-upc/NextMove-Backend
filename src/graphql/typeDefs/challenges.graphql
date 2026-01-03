@@ -6,7 +6,10 @@ type trophy {
 
 type company{
     name: String!
-    photo: String!
+    photo: String
+    url: String!
+    description: String
+    email: String!
 }
 
 type Challenge{

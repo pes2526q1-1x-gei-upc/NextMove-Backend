@@ -3,6 +3,7 @@ type firm{
     descripcion: String
     email: String!
     url: String!
+    logo_url: String
     ubicacion: Coordinates!
 }
 
