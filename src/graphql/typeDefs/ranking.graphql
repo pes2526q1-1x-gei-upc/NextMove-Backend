@@ -10,6 +10,7 @@ enum Language {
 }
 
 type RankingStats {
+    nickname: String!
     email: String!
     num_rutas: Int!
     km_recorridos: Float!
