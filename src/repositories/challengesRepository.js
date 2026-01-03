@@ -17,6 +17,8 @@ class ChanllengesRepository{
     `);
     return result.rows.map(row => ({
       ...row,
+      starting_date: Date.parse(row.starting_date).toString(),
+      ending_date: Date.parse(row.ending_date).toString(),
       company: {
         name: row.company_name,
         email: row.company_email,
@@ -48,14 +50,24 @@ class ChanllengesRepository{
                e.descripcion as company_description,
                e.logo_url as company_logo_url,
                ST_Y(e.ubicacion::geometry) as company_latitude,
-               ST_X(e.ubicacion::geometry) as company_longitude
+               ST_X(e.ubicacion::geometry) as company_longitude,
+               ur.completed,
+               ur.total_distance,
+               ur.current_distance
         FROM usuario_retos ur
         JOIN retos r ON ur.id = r.id
         JOIN empresas e ON r.empresa_id = e.id
         WHERE ur.email = $1 AND active = true
     `, [email]);
     return result.rows.map(row => ({
-      ...row,
+      id: row.id,
+      name: row.name,
+      distance: row.distance,
+      description: row.description,
+      points: row.points,
+      starting_date: Date.parse(row.starting_date).toString(),
+      ending_date: Date.parse(row.ending_date).toString(),
+      photo: row.photo,
       company: {
         name: row.company_name,
         email: row.company_email,
@@ -66,7 +78,10 @@ class ChanllengesRepository{
           latitude: parseFloat(row.company_latitude),
           longitude: parseFloat(row.company_longitude)
         } : null
-      }
+      },
+      completed: row.completed,
+      total_distance: row.total_distance,
+      current_distance: row.current_distance
     }));
   }
   async getTrophies(email)
