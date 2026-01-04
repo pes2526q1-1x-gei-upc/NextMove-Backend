@@ -9,6 +9,8 @@ import favStationResolver from './FavStationResolver.js';
 import ChatResolver from './ChatResolver.js';
 import { challengesResolver } from './challengesResolver.js';
 import  { rankingResolver }  from './RankingResolver.js';
+import alertResolver from './AlertResolver.js';
+import fcmTokenResolver from './FCMTokenResolver.js';
 
 export const resolvers = {
   Query: {
@@ -56,6 +58,9 @@ export const resolvers = {
     globalStats: rankingResolver.Query.globalStats, 
     topUsers: rankingResolver.Query.topUsers,
 
+    getStationAlerts: alertResolver.Query.getStationAlerts,
+    getStationAlert: alertResolver.Query.getStationAlert,
+
     ...ChatResolver.Query
   },
   Mutation: {
@@ -87,6 +92,14 @@ export const resolvers = {
     deleteFavStation: favStationResolver.Mutation.deleteFavStation,
 
     enrollChallenge: challengesResolver.Mutation.enrollChallenge,
+
+    createStationAlert: alertResolver.Mutation.createStationAlert,
+    updateStationAlert: alertResolver.Mutation.updateStationAlert,
+    deleteStationAlert: alertResolver.Mutation.deleteStationAlert,
+    toggleStationAlert: alertResolver.Mutation.toggleStationAlert,
+
+    registerFCMToken: fcmTokenResolver.Mutation.registerFCMToken,
+    deleteFCMToken: fcmTokenResolver.Mutation.deleteFCMToken,
   
     ...ChatResolver.Mutation
   },
