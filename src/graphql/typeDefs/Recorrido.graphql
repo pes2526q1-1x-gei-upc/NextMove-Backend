@@ -35,6 +35,7 @@ input CreateRecorridoInput {
     fecha_recorrido: String
     tiempo_fin: String!
     tiempo_inicio: String!
+    bike_photo: Boolean!
 }
 
 input UpdateRecorridoInput {
