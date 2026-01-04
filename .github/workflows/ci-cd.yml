@@ -84,31 +84,31 @@ jobs:
           fi
 
       - name: Desplegar servicio en EC2
-    if: steps.vars.outputs.servicio != 'none'
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      SERVICIO: ${{ steps.vars.outputs.servicio }}
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_USER: ${{ secrets.EC2_USER }}
-    run: |
-      ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
-        cd /home/ubuntu/BeMotion
-        
-        # 1. Limpieza
-        sudo docker stop $SERVICIO || true
-        sudo docker rm $SERVICIO || true
-        
-        # 2. Build
-        sudo docker-compose build --no-cache $SERVICIO
-        
-        # 3. Migraciones (ahora SÍ funcionará)
-        echo "Ejecutando migraciones en base de datos..."
-        sudo docker-compose run --rm "$SERVICIO" npm run migrate:up
-        
-        # 4. Despliegue
-        sudo docker-compose up -d "$SERVICIO"
-        
-        # 5. Verificación
-        sudo docker-compose ps | grep $SERVICIO
-        sudo docker-compose logs --tail=20 $SERVICIO
-      EOF
+        if: steps.vars.outputs.servicio != 'none'  # ← Ahora correctamente indentado
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          SERVICIO: ${{ steps.vars.outputs.servicio }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |  # ← Ahora tiene su `run:`
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+            cd /home/ubuntu/BeMotion
+            
+            # 1. Limpieza
+            sudo docker stop $SERVICIO || true
+            sudo docker rm $SERVICIO || true
+            
+            # 2. Build
+            sudo docker-compose build --no-cache $SERVICIO
+            
+            # 3. Migraciones
+            echo "Ejecutando migraciones en base de datos..."
+            sudo docker-compose run --rm "$SERVICIO" npm run migrate:up
+            
+            # 4. Despliegue
+            sudo docker-compose up -d "$SERVICIO"
+            
+            # 5. Verificación
+            sudo docker-compose ps | grep $SERVICIO
+            sudo docker-compose logs --tail=20 $SERVICIO
+          EOF
