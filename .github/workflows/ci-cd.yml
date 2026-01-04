@@ -100,13 +100,16 @@ jobs:
             # 2. Construcción: Creamos la imagen nueva con el código actualizado
             sudo docker-compose build --no-cache \$SERVICIO
             
-            # 3. MIGRACIÓN DE BASE DE DATOS
-            # Antes de levantar la app, lanzamos un contenedor temporal para actualizar la BD.
+            # 3. Migración de base de datos (igual que antes, pero asegurando que si falla, falla el deploy)
             echo "Ejecutando migraciones en base de datos..."
-            sudo docker-compose run --rm \$SERVICIO npm run migrate:up
-            # --------------------------------
-            
-            # 4. Despliegue: Levantamos el servicio real en segundo plano
-            sudo docker-compose up -d \$SERVICIO
+            set -e  # opcional: hace que el script SSH falle si cualquier comando falla
+            sudo docker-compose run --rm $SERVICIO npm run migrate:up
+
+            # 4. Despliegue
+            sudo docker-compose up -d $SERVICIO
+
+            # 5. Logs rápidos para debug (opcional, muy útil al principio)
+            sudo docker-compose ps
+            sudo docker-compose logs -n 50 $SERVICIO
 
           EOF
