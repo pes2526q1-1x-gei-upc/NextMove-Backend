@@ -109,6 +109,7 @@ class RecorridosRepository {
             SELECT *
             FROM recorridos
             WHERE(user_email = $1)
+            ORDER BY fecha_recorrido DESC
         `, [user_email]); 
     return result.rows.map(recorrido => this._transformRecorrido(recorrido));    //map lo que hace es para elemento del array nos permite aplicar un metodo. 
   }
