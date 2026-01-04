@@ -13,7 +13,7 @@ type Company{
     location: Coordinates
 }
 
-type Challenge{
+interface ChallengeInterface {
     id: String!
     name: String!
     distance: Int!
@@ -25,9 +25,36 @@ type Challenge{
     company: Company
 }
 
+type Challenge implements ChallengeInterface {
+    id: String!
+    name: String!
+    distance: Int!
+    description: String!
+    points: Int!
+    starting_date: String!
+    ending_date: String!
+    photo: String
+    company: Company
+}
+
+type EnrolledChallenge implements ChallengeInterface {
+    id: String!
+    name: String!
+    distance: Int!
+    description: String!
+    points: Int!
+    starting_date: String!
+    ending_date: String!
+    photo: String
+    company: Company
+    completed: Int!
+    total_distance: Float!
+    current_distance: Float!
+}
+
 extend type Query{
     getAllChallenges: [Challenge]!
-    getEnrolledChallenges: [Challenge]!
+    getEnrolledChallenges: [EnrolledChallenge]!
     getTrophies: [trophy]!
     getPromotedCompanies: [Company]!
 }
