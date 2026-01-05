@@ -134,7 +134,7 @@ class AlertNotificationWorker {
       // Preparar notificaciones
       const notificationsToSend = [];
 
-      for (const { alert, estacion, alertKey } of alertsToSend) {
+      for (const { alert, estacion } of alertsToSend) {
         const tokens = tokensMap[alert.user_email] || [];
         
         if (tokens.length === 0) {
