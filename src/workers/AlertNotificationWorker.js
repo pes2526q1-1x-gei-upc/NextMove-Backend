@@ -139,7 +139,7 @@ class AlertNotificationWorker {
       // Preparar notificaciones
       const notificationsToSend = [];
 
-      for (const { alert, estacion, alertKey } of alertsToSend) {
+      for (const { alert, estacion } of alertsToSend) {
         const tokens = tokensMap[alert.user_email] || [];
         
         if (tokens.length === 0) {
@@ -192,7 +192,7 @@ class AlertNotificationWorker {
         console.warn(`AlertNotificationWorker: ${this.consecutiveErrors} errores consecutivos. Aumentando intervalo a ${extendedInterval / 1000}s`);
         this.scheduleNextCheck(extendedInterval);
       } else {
-      this.scheduleNextCheck();
+        this.scheduleNextCheck();
       }
     }
   }
