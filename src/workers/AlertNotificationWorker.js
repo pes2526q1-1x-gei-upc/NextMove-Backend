@@ -13,6 +13,8 @@ class AlertNotificationWorker {
     // Mapa para rastrear alertas enviadas: clave = "alertId:hora", valor = timestamp
     this.sentAlerts = new Map();
     this.CLEANUP_INTERVAL = 60 * 60 * 1000; // Limpiar mapa cada hora
+    this.consecutiveErrors = 0; // Contador de errores consecutivos
+    this.maxConsecutiveErrors = 5; // Máximo de errores antes de aumentar el intervalo
   }
 
   /**
@@ -53,6 +55,9 @@ class AlertNotificationWorker {
 
       // Obtener todas las alertas activas
       const allAlerts = await this.getAllActiveAlerts();
+      
+      // Si la consulta fue exitosa, resetear el contador de errores
+      this.consecutiveErrors = 0;
       
       if (allAlerts.length === 0) {
         console.log('AlertNotificationWorker: No hay alertas activas.');
@@ -134,7 +139,7 @@ class AlertNotificationWorker {
       // Preparar notificaciones
       const notificationsToSend = [];
 
-      for (const { alert, estacion, alertKey } of alertsToSend) {
+      for (const { alert, estacion } of alertsToSend) {
         const tokens = tokensMap[alert.user_email] || [];
         
         if (tokens.length === 0) {
@@ -178,9 +183,17 @@ class AlertNotificationWorker {
       }
 
     } catch (error) {
-      console.error('AlertNotificationWorker: Error verificando alertas:', error);
-    } finally {
-      this.scheduleNextCheck();
+      this.consecutiveErrors++;
+      console.error('AlertNotificationWorker: Error verificando alertas:', error.message);
+      
+      // Si hay muchos errores consecutivos, aumentar el intervalo de verificación
+      if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
+        const extendedInterval = this.checkInterval * 3; // 3 minutos en lugar de 1
+        console.warn(`AlertNotificationWorker: ${this.consecutiveErrors} errores consecutivos. Aumentando intervalo a ${extendedInterval / 1000}s`);
+        this.scheduleNextCheck(extendedInterval);
+      } else {
+        this.scheduleNextCheck();
+      }
     }
   }
 
@@ -255,9 +268,10 @@ class AlertNotificationWorker {
   /**
    * Programa la siguiente verificación
    */
-  scheduleNextCheck() {
+  scheduleNextCheck(customInterval = null) {
     if (!this.isRunning) return;
-    this.intervalId = setTimeout(() => this.checkAlerts(), this.checkInterval);
+    const interval = customInterval || this.checkInterval;
+    this.intervalId = setTimeout(() => this.checkAlerts(), interval);
     
     // Limpiar mapa de alertas enviadas periódicamente
     // Mantener solo las de la última hora

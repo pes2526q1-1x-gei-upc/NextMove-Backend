@@ -301,18 +301,44 @@ class UsersRepository {
      WHERE email = $1`,
       [email]
     );
-    return result.rows[0] || null;
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    const banInfo = result.rows[0];
+    
+    // Si es permanente, siempre está baneado
+    if (banInfo.is_permanent) {
+      return banInfo;
+    }
+    
+    // Si tiene fecha de expiración, verificar si ya expiró
+    if (banInfo.banned_until) {
+      const now = new Date();
+      const bannedUntil = new Date(banInfo.banned_until);
+      
+      // Si ya expiró, no está baneado
+      if (now >= bannedUntil) {
+        // Eliminar el baneo expirado
+        await this.unbanUser(email);
+        return null;
+      }
+    }
+    
+    return banInfo;
   }
 
-  async banUser(email, { reason, description, duration }) {
+  async banUser(email, { reason, description, bannedUntil, isPermanent }) {
     await pool.query(
-      `INSERT INTO "usersBanned" (email, reason, description, duration)
-     VALUES ($1, $2, $3, $4)
+      `INSERT INTO "usersBanned" (email, reason, description, banned_until, is_permanent)
+     VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (email) DO UPDATE
      SET reason = EXCLUDED.reason,
          description = EXCLUDED.description,
-         duration = EXCLUDED.duration`,
-      [email, reason, description || null, duration]
+         banned_until = EXCLUDED.banned_until,
+         is_permanent = EXCLUDED.is_permanent`,
+      [email, reason, description || null, bannedUntil || null, isPermanent || false]
     );
   }
 

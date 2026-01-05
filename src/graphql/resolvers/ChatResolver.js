@@ -13,7 +13,7 @@ const ChatResolver = {
       }
 
       const chats = await ChatService.getUserChats(context.user.email);
-      console.log("mis chats:", chats);
+      // console.log("mis chats:", chats);
       return chats;
     },
 
@@ -31,7 +31,7 @@ const ChatResolver = {
         limit,
         offset
       );
-      console.log('Fetched messages:', messages); // See raw output from ChatService
+      // console.log('Fetched messages:', messages); // See raw output from ChatService
       return messages;
     },
 
@@ -424,7 +424,7 @@ const ChatResolver = {
         const chatId = parent.id || parent.chat_id;
         const participants = await ChatRepository.getChatParticipants(chatId);
         
-        console.log(`Participantes para chat ${chatId}:`, participants.length);
+        // console.log(`Participantes para chat ${chatId}:`, participants.length);
         return participants || []; // Siempre devuelve al menos un array vacío
         
       } catch (error) {
