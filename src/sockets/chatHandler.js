@@ -13,7 +13,7 @@ export function setupSocketHandlers(io) {
     // Unir al socket a una sala personalizada por email para poder enviarle eventos específicos
     if (socket.userEmail) {
       socket.join(`user:${socket.userEmail}`);
-      console.log(`[Socket.IO] User ${socket.userEmail} joined personal room: user:${socket.userEmail}`);
+      //console.log(`[Socket.IO] User ${socket.userEmail} joined personal room: user:${socket.userEmail}`);
     }
     
     // Notificar al cliente
@@ -44,7 +44,7 @@ export function setupSocketHandlers(io) {
         }
 
         socket.join(chatId);
-        console.log(`[Socket.IO] User ${socket.userEmail} joined chat: ${chatId}`);
+        //console.log(`[Socket.IO] User ${socket.userEmail} joined chat: ${chatId}`);
         
         // Confirmar al usuario
         socket.emit('room:joined', { 
@@ -76,7 +76,7 @@ export function setupSocketHandlers(io) {
         if (!chatId) return;
 
         socket.leave(chatId);
-        console.log(`[Socket.IO] User ${socket.userEmail} left chat: ${chatId}`);
+        //console.log(`[Socket.IO] User ${socket.userEmail} left chat: ${chatId}`);
         
         socket.to(chatId).emit('user:left', {
           userId: socket.userId,
@@ -190,8 +190,8 @@ export function setupSocketHandlers(io) {
         if (deleted) {
           // Obtener sockets en la sala para logging
           const socketsInRoom = await io.in(roomId).fetchSockets();
-          console.log(`[Socket.IO] 🗑️ Message ${messageId} deleted by ${socket.userEmail} in room ${roomId}`);
-          console.log(`[Socket.IO] 📡 Notifying ${socketsInRoom.length} users in room ${roomId}`);
+          console.log(`[Socket.IO] Message ${messageId} deleted by ${socket.userEmail} in room ${roomId}`);
+          console.log(`[Socket.IO] Notifying ${socketsInRoom.length} users in room ${roomId}`);
           
           // Notificar a todos en la sala (incluyendo el emisor)
           io.to(roomId).emit('message:deleted', {
@@ -200,9 +200,9 @@ export function setupSocketHandlers(io) {
             timestamp: new Date().toISOString()
           });
           
-          console.log(`[Socket.IO] ✅ Event 'message:deleted' emitted to room ${roomId}`);
+          console.log(`[Socket.IO] Event 'message:deleted' emitted to room ${roomId}`);
         } else {
-          console.log(`[Socket.IO] ⚠️ Failed to delete message ${messageId} - not found or unauthorized`);
+          console.log(`[Socket.IO] Failed to delete message ${messageId} - not found or unauthorized`);
         }
       } catch (error) {
         console.error('[Socket.IO] Error deleting message:', error);
@@ -265,9 +265,9 @@ export function setupSocketHandlers(io) {
           // Notificar a todos en la sala (incluyendo el emisor)
           io.to(roomId).emit('message:edited', message);
           
-          console.log(`[Socket.IO] ✏️ Message ${messageId} edited by ${socket.userEmail} in room ${roomId}`);
+          console.log(`[Socket.IO] Message ${messageId} edited by ${socket.userEmail} in room ${roomId}`);
         } else {
-          console.log(`[Socket.IO] ⚠️ Failed to edit message ${messageId} - not found or unauthorized`);
+          console.log(`[Socket.IO] Failed to edit message ${messageId} - not found or unauthorized`);
           socket.emit('error', { message: 'Failed to edit message' });
         }
       } catch (error) {
