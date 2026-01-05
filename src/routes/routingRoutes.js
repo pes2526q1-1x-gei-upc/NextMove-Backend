@@ -2,11 +2,8 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import googleMapsService from '../services/googleMapsService.js';
 import { requireApiKey } from '../middleware/auth.js';
-import cors from 'cors';
 
 const router = express.Router();
-
-
 
 const companyRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
