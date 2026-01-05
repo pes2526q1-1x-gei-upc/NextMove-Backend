@@ -9,10 +9,12 @@ import { ruruHTML } from 'ruru/server';
 import schema from './graphql/schema.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
 import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
+import alertNotificationWorker from './workers/AlertNotificationWorker.js';
 import { createContext } from './graphql/context.js';
 import routingRoutes from './routes/routingRoutes.js';
 import uploadProfilePhotoRouter from './routes/uploadProfilePhoto.js';
 import { setupSocketHandlers } from './sockets/chatHandler.js';
+import cors from 'cors';
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,6 +33,13 @@ const io = new Server(httpServer, {
 
 // Exportar io para uso en otros módulos
 export { io };
+
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'X-API-Key'],
+  credentials: true
+}));
 
 app.use('/api', uploadProfilePhotoRouter);
 
@@ -72,6 +81,7 @@ httpServer.listen(PORT, () => {
 
   syncWorker.start();
   bicingSyncWorker.start();
+  alertNotificationWorker.start();
 });
 
 // Graceful shutdown
@@ -81,6 +91,8 @@ process.on('SIGTERM', () => {
     console.log('Socket.IO connections closed');
   });
   syncWorker.stop();
+  bicingSyncWorker.stop();
+  alertNotificationWorker.stop();
   httpServer.close(() => {
     console.log('HTTP server closed');
     process.exit(0);
@@ -93,6 +105,8 @@ process.on('SIGINT', () => {
     console.log('Socket.IO connections closed');
   });
   syncWorker.stop();
+  bicingSyncWorker.stop();
+  alertNotificationWorker.stop();
   httpServer.close(() => {
     console.log('HTTP server closed');
     process.exit(0);
