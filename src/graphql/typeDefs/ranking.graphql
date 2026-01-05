@@ -19,7 +19,6 @@ type RankingStats {
     elevacion_positiva: Float!
     num_retos_participados: Int!
     num_retos_completados: Int!
-    puntos_totales: Int!
     posicion: Int!
 }
 
@@ -32,7 +31,6 @@ type UserStats {
     elevacion_positiva: Float!
     num_retos_participados: Int!
     num_retos_completados: Int!
-    puntos_totales: Int!
 
     nombre: String!
     nombre_usuario: String!

@@ -5,7 +5,7 @@ class RankingRepository {
      * Obtiene el ranking completo de todos los users del sistema
  */
 
-  valid_metrics = ['num_rutas',  'km_recorridos', 'elevacion_positiva', 'co2_ahorrado', 'calorias_quemadas', 'num_retos_participados', 'num_retos_completados', 'puntos_totales']; 
+  valid_metrics = ['num_rutas',  'km_recorridos', 'elevacion_positiva', 'co2_ahorrado', 'calorias_quemadas', 'num_retos_participados', 'num_retos_completados']; 
 
 
   //Método para validar la metrica que recibimos desde el service. 
@@ -37,8 +37,7 @@ class RankingRepository {
                 urs.calorias_quemadas, 
                 urs.num_retos_completados, 
                 urs.num_retos_participados, 
-                urs.num_retos_completados,
-                urs.puntos_totales,  
+                urs.num_retos_completados,  
                 ROW_NUMBER() OVER (ORDER BY ${metric} DESC) AS posicion
             FROM user_ranking_stats urs INNER JOIN users u ON urs.email = u.email
             WHERE(urs.num_rutas >= 0)
@@ -64,7 +63,6 @@ class RankingRepository {
                    urs.calorias_quemadas, 
                    urs.num_retos_participados,
                    urs.num_retos_completados,
-                   urs.puntos_totales,
                    u.name AS nombre,
                    u.nickname AS nombre_usuario,
                    u.photo AS foto,
