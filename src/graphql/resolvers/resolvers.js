@@ -9,10 +9,12 @@ import favStationResolver from './FavStationResolver.js';
 import ChatResolver from './ChatResolver.js';
 import { challengesResolver } from './challengesResolver.js';
 import  { rankingResolver }  from './RankingResolver.js';
+import { IsOffensive } from '../../services/BadWordsService.js';
 
 export const resolvers = {
   Query: {
     hello: () => 'Hello world!',
+    checkOffensiveText: (_, { text }) => IsOffensive(text),
     me: userResolvers.Query.me,
     User: userResolvers.Query.User,
     Users: userResolvers.Query.Users,
