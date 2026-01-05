@@ -13,6 +13,7 @@ import { createContext } from './graphql/context.js';
 import routingRoutes from './routes/routingRoutes.js';
 import uploadProfilePhotoRouter from './routes/uploadProfilePhoto.js';
 import { setupSocketHandlers } from './sockets/chatHandler.js';
+import cors from 'cors';
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,6 +32,13 @@ const io = new Server(httpServer, {
 
 // Exportar io para uso en otros módulos
 export { io };
+
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'X-API-Key'],
+  credentials: true
+}));
 
 app.use('/api', uploadProfilePhotoRouter);
 

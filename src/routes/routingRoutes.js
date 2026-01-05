@@ -2,8 +2,11 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import googleMapsService from '../services/googleMapsService.js';
 import { requireApiKey } from '../middleware/auth.js';
+import cors from 'cors';
 
 const router = express.Router();
+
+
 
 const companyRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
@@ -21,6 +24,7 @@ const companyRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS'
 });
 
 // Aplicar autenticación con API Key a todas las rutas
