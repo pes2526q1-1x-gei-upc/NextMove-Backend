@@ -1,16 +1,13 @@
 import UsersRepository from '../repositories/UsersRepository.js';
-import FCMTokenRepository from '../repositories/FCMTokenRepository.js';
-import NotificationService from './NotificationService.js';
 import pool from '../config/database.js';
 
 class BanService {
   constructor() {
     this.usersRepo = new UsersRepository();
-    this.fcmTokenRepo = new FCMTokenRepository();
   }
 
   /**
-   * Banea un usuario y envía notificación push
+   * Banea un usuario
    * @param {string} email - Email del usuario a banear
    * @param {object} banData - Datos del baneo
    * @param {string} banData.reason - Razón del baneo
@@ -34,58 +31,19 @@ class BanService {
       bannedUntil: bannedUntilDate,
       isPermanent: isPermanent || false,
     });
-
-    // Obtener tokens FCM del usuario
-    const tokens = await this.fcmTokenRepo.getTokensByUser(email);
-    const fcmTokens = tokens.map(t => t.fcm_token);
-
-    // Enviar notificación push
-    if (fcmTokens.length > 0) {
-      try {
-        await NotificationService.sendBanNotification(fcmTokens, {
-          reason,
-          bannedUntil: bannedUntilDate ? bannedUntilDate.toISOString() : null,
-          isPermanent: isPermanent || false,
-        });
-        console.log(`Notificación de baneo enviada a ${fcmTokens.length} dispositivo(s) del usuario ${email}`);
-      } catch (error) {
-        console.error(`Error enviando notificación de baneo a ${email}:`, error);
-        // No lanzar error, el baneo ya se guardó
-      }
-    } else {
-      console.log(`Usuario ${email} no tiene tokens FCM registrados, no se envió notificación`);
-    }
   }
 
   /**
-   * Desbanea un usuario y envía notificación push
+   * Desbanea un usuario
    * @param {string} email - Email del usuario a desbanear
    */
   async unbanUser(email) {
     // Eliminar el baneo de la base de datos
     await this.usersRepo.unbanUser(email);
-
-    // Obtener tokens FCM del usuario
-    const tokens = await this.fcmTokenRepo.getTokensByUser(email);
-    const fcmTokens = tokens.map(t => t.fcm_token);
-
-    // Enviar notificación push
-    if (fcmTokens.length > 0) {
-      try {
-        await NotificationService.sendUnbanNotification(fcmTokens);
-        console.log(`Notificación de desbaneo enviada a ${fcmTokens.length} dispositivo(s) del usuario ${email}`);
-      } catch (error) {
-        console.error(`Error enviando notificación de desbaneo a ${email}:`, error);
-        // No lanzar error, el desbaneo ya se realizó
-      }
-    } else {
-      console.log(`Usuario ${email} no tiene tokens FCM registrados, no se envió notificación`);
-    }
   }
 
   /**
    * Verifica y procesa baneos expirados
-   * Envía notificaciones a usuarios cuyo baneo ha expirado
    */
   async processExpiredBans() {
     try {

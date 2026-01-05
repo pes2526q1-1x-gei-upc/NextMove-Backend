@@ -188,63 +188,6 @@ class NotificationService {
     }
   }
 
-  /**
-   * Envía notificación de baneo a un usuario
-   * @param {Array<string>} fcmTokens - Tokens FCM del usuario
-   * @param {object} banInfo - Información del baneo
-   */
-  async sendBanNotification(fcmTokens, banInfo) {
-    if (fcmTokens.length === 0) {
-      return { success: true, sent: 0, failed: 0 };
-    }
-
-    const { reason, bannedUntil, isPermanent } = banInfo;
-    
-    let banMessage = 'Tu cuenta ha sido suspendida';
-    if (isPermanent) {
-      banMessage = 'Tu cuenta ha sido suspendida permanentemente';
-    } else if (bannedUntil) {
-      const untilDate = new Date(bannedUntil);
-      banMessage = `Tu cuenta ha sido suspendida hasta el ${untilDate.toLocaleDateString('es-ES')}`;
-    }
-
-    const notification = {
-      title: 'Cuenta Suspendida',
-      body: banMessage + (reason ? `\nRazón: ${reason}` : ''),
-    };
-
-    const data = {
-      type: 'user_banned',
-      reason: reason || '',
-      bannedUntil: bannedUntil || '',
-      isPermanent: isPermanent ? 'true' : 'false',
-      click_action: 'FLUTTER_NOTIFICATION_CLICK',
-    };
-
-    return await this.sendBatchNotifications(fcmTokens, notification, data);
-  }
-
-  /**
-   * Envía notificación de desbaneo a un usuario
-   * @param {Array<string>} fcmTokens - Tokens FCM del usuario
-   */
-  async sendUnbanNotification(fcmTokens) {
-    if (fcmTokens.length === 0) {
-      return { success: true, sent: 0, failed: 0 };
-    }
-
-    const notification = {
-      title: 'Cuenta Restaurada',
-      body: 'Tu cuenta ha sido restaurada. Ya puedes volver a usar la aplicación.',
-    };
-
-    const data = {
-      type: 'user_unbanned',
-      click_action: 'FLUTTER_NOTIFICATION_CLICK',
-    };
-
-    return await this.sendBatchNotifications(fcmTokens, notification, data);
-  }
 }
 
 export default new NotificationService();

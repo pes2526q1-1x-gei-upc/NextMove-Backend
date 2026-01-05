@@ -34,7 +34,7 @@ class BanExpirationWorker {
   }
 
   /**
-   * Verifica baneos expirados y envía notificaciones
+   * Verifica baneos expirados
    */
   async checkExpiredBans() {
     if (!this.isRunning) return;
