@@ -1,0 +1,21 @@
+type FCMToken {
+    id: ID!
+    userEmail: String!
+    fcmToken: String!
+    deviceId: String
+    platform: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+input RegisterFCMTokenInput {
+    fcmToken: String!
+    deviceId: String
+    platform: String
+}
+
+extend type Mutation {
+    registerFCMToken(input: RegisterFCMTokenInput!): FCMToken!
+    deleteFCMToken(fcmToken: String!): Boolean!
+}
+
