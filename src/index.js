@@ -49,7 +49,7 @@ app.use('/api/ban', banRoutes);
 app.use((req, res, next) => {
   // Filtrar peticiones GraphQL para no saturar los logs
   if (req.url !== '/graphql') {
-  console.log(`${req.method} ${req.url}`);
+    console.log(`${req.method} ${req.url}`);
   }
   next();
 });
