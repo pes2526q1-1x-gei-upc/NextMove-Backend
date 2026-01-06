@@ -26,18 +26,6 @@ const mockDbRow = {
   estacioncargaelectrica: true
 };
 
-// Fila transformada (camelCase)
-const mockTransformedRow = {
-  id: '123_BIKE',
-  nombre: 'Estación Diagonal',
-  direccion: 'Avinguda Diagonal, 500',
-  plazasTotales: 25,
-  coordenadas: {
-    latitude: 41.3974,
-    longitude: 2.1611
-  },
-  estacionCargaElectrica: true
-};
 
 describe('EstacionDeBicingRepository - CRUD (mocked pool)', () => {
   beforeEach(() => {
@@ -262,7 +250,7 @@ describe('EstacionDeBicingRepository - CRUD (mocked pool)', () => {
       mockQuery.mockResolvedValueOnce({ rows: [{ ...mockDbRow, nombre: 'Nuevo Nombre' }] });
       
       const repo = new EstacionDeBicingRepository();
-      const result = await repo.updateEstacionDeBicing('123', { nombre: 'Nuevo Nombre' });
+      const _result = await repo.updateEstacionDeBicing('123', { nombre: 'Nuevo Nombre' });
 
       expect(mockQuery).toHaveBeenCalled();
       const query = mockQuery.mock.calls[0][0];
@@ -320,7 +308,6 @@ describe('EstacionDeBicingRepository - CRUD (mocked pool)', () => {
       const repo = new EstacionDeBicingRepository();
       await repo.updateEstacionDeBicing('123_BICING', { nombre: 'Test' });
 
-      const query = mockQuery.mock.calls[0][0];
       const values = mockQuery.mock.calls[0][1];
       expect(values[values.length - 1]).toBe('123_BIKE');
     });
