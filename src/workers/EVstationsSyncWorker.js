@@ -210,7 +210,7 @@ class StationsSyncWorker {
       const currentDbIds = new Set(await this.repository.getAllStationIds());
       console.log(`Current DB stations: ${currentDbIds.size}`);
 
-      const newApiIds = new Set(
+      const newApiIds = new (
         icaenStations.map((_, index) => `${index}_CAR`)
       );
       console.log(`API stations: ${newApiIds.size}`);

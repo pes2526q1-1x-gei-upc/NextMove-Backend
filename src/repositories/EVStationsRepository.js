@@ -160,63 +160,63 @@ export default class StationsRepository {
     }
   }
 
-  async size() {
-    const query = `
-      SELECT COUNT(*)
-      FROM ev_stations;
-    `;
+  // async size() {
+  //   const query = `
+  //     SELECT COUNT(*)
+  //     FROM ev_stations;
+  //   `;
 
-    try {
-      const result = await pool.query(query);
-      return parseInt(result.rows[0].count);
-    }
-    catch (error) {
-      console.log(error);
-      return;
-    }
+  //   try {
+  //     const result = await pool.query(query);
+  //     return parseInt(result.rows[0].count);
+  //   }
+  //   catch (error) {
+  //     console.log(error);
+  //     return;
+  //   }
 
-  }
+  // }
 
-  async upsertStation(stationData) {
-    const {
-      id: externalId,
-      name,
-      address,
-      city,
-      longitude,
-      latitude,
-      ccs_power_kw,
-      chademo_power_kw,
-      mennekes_power_kw,
-      schuko_power_kw
-    } = stationData;
+  // async upsertStation(stationData) {
+  //   const {
+  //     id: externalId,
+  //     name,
+  //     address,
+  //     city,
+  //     longitude,
+  //     latitude,
+  //     ccs_power_kw,
+  //     chademo_power_kw,
+  //     mennekes_power_kw,
+  //     schuko_power_kw
+  //   } = stationData;
 
-    // Sin UNIQUE constraint, simplemente insertamos todas las estaciones
-    const query = `
-      INSERT INTO ev_stations (
-        external_id, name, address, city, coordinates,
-        ccs_power_kw, chademo_power_kw, mennekes_power_kw, schuko_power_kw,
-        last_synced_at
-      ) VALUES (
-        $1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5, $6), 4326),
-        $7, $8, $9, $10, NOW()
-      )
-      RETURNING *;
-    `;
+  //   // Sin UNIQUE constraint, simplemente insertamos todas las estaciones
+  //   const query = `
+  //     INSERT INTO ev_stations (
+  //       external_id, name, address, city, coordinates,
+  //       ccs_power_kw, chademo_power_kw, mennekes_power_kw, schuko_power_kw,
+  //       last_synced_at
+  //     ) VALUES (
+  //       $1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5, $6), 4326),
+  //       $7, $8, $9, $10, NOW()
+  //     )
+  //     RETURNING *;
+  //   `;
 
-    const values = [
-      externalId, name, address, city, longitude, latitude,
-      ccs_power_kw, chademo_power_kw, mennekes_power_kw, schuko_power_kw
-    ];
+  //   const values = [
+  //     externalId, name, address, city, longitude, latitude,
+  //     ccs_power_kw, chademo_power_kw, mennekes_power_kw, schuko_power_kw
+  //   ];
 
-    try {
-      const result = await pool.query(query, values);
-      return result.rows[0];
-    } catch (error) {
-      console.error('Error inserting station:', error);
-      throw error;
-    }
-  }
+  //   try {
+  //     const result = await pool.query(query, values);
+  //     return result.rows[0];
+  //   } catch (error) {
+  //     console.error('Error inserting station:', error);
+  //     throw error;
+  //   }
+  // }
 
   async getAllStations() {
     const query = `
@@ -247,37 +247,6 @@ export default class StationsRepository {
       throw error;
     }
   }
-
-  // async getStationById(externalId) {
-  //   const query = `
-  //     SELECT 
-  //       id,
-  //       external_id,
-  //       name,
-  //       address,
-  //       city,
-  //       ST_X(coordinates::geometry) as longitude,
-  //       ST_Y(coordinates::geometry) as latitude,
-  //       ccs_power_kw,
-  //       chademo_power_kw,
-  //       mennekes_power_kw,
-  //       schuko_power_kw,
-  //       created_at,
-  //       updated_at,
-  //       last_synced_at
-  //     FROM ev_stations
-  //     WHERE external_id = $1
-  //     LIMIT 1;
-  //   `;
-
-  //   try {
-  //     const result = await pool.query(query, [externalId]);
-  //     return result.rows[0] || null;
-  //   } catch (error) {
-  //     console.error('Error fetching station by id:', error);
-  //     throw error;
-  //   }
-  // }
 
   async getNearbyStations(latitude, longitude, radiusKm = 5) {
     const query = `
