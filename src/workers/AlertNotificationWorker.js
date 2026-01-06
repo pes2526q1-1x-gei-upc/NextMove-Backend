@@ -13,8 +13,14 @@ class AlertNotificationWorker {
     // Mapa para rastrear alertas enviadas: clave = "alertId:hora", valor = timestamp
     this.sentAlerts = new Map();
     this.CLEANUP_INTERVAL = 60 * 60 * 1000; // Limpiar mapa cada hora
-    this.consecutiveErrors = 0; // Contador de errores consecutivos
+    // Manejo de errores de conexión
+    this.consecutiveErrors = 0;
     this.maxConsecutiveErrors = 5; // Máximo de errores antes de aumentar el intervalo
+    this.baseRetryInterval = 1 * 60 * 1000; // 1 minuto base
+    this.maxRetryInterval = 15 * 60 * 1000; // 15 minutos máximo
+    this.currentRetryInterval = this.baseRetryInterval;
+    this.lastErrorLogTime = null;
+    this.errorLogThrottle = 5 * 60 * 1000; // Solo loguear errores cada 5 minutos
   }
 
   /**
@@ -50,14 +56,26 @@ class AlertNotificationWorker {
     if (!this.isRunning) return;
 
     try {
-      console.log('AlertNotificationWorker: Verificando alertas...');
+      // Solo loguear si no hay errores recientes o si pasó el throttle
+      const shouldLog = this.consecutiveErrors === 0 || 
+                       !this.lastErrorLogTime || 
+                       (Date.now() - this.lastErrorLogTime) >= this.errorLogThrottle;
+      
+      if (shouldLog) {
+        console.log('AlertNotificationWorker: Verificando alertas...');
+      }
+      
       this.lastCheckTime = new Date();
 
       // Obtener todas las alertas activas
       const allAlerts = await this.getAllActiveAlerts();
       
-      // Si la consulta fue exitosa, resetear el contador de errores
-      this.consecutiveErrors = 0;
+      // Si llegamos aquí, la conexión fue exitosa, resetear contadores
+      if (this.consecutiveErrors > 0) {
+        console.log(`AlertNotificationWorker: Conexión restaurada después de ${this.consecutiveErrors} errores.`);
+        this.consecutiveErrors = 0;
+        this.currentRetryInterval = this.baseRetryInterval;
+      }
       
       if (allAlerts.length === 0) {
         console.log('AlertNotificationWorker: No hay alertas activas.');
@@ -90,11 +108,30 @@ class AlertNotificationWorker {
           continue;
         }
 
-        // Verificar si alguna hora coincide (solo en el minuto exacto)
+        // Verificar si alguna hora coincide (con margen de tiempo para asegurar que no se pierdan)
         const matchedHour = alert.horas.find(hora => {
           const [hour, minute] = hora.split(':').map(Number);
-          // Verificar si estamos en la hora y minuto exactos (sin margen)
-          return hour === currentHour && minute === currentMinute;
+          
+          // Verificar si estamos en la hora correcta
+          if (hour === currentHour) {
+            // Verificar si estamos en el minuto programado o en el siguiente minuto
+            // Esto permite que las alertas se envíen incluso si hay un pequeño retraso en la ejecución del worker
+            // Solo verificamos el siguiente minuto si el minuto programado no es 59 (para evitar problemas con cambio de hora)
+            if (minute === currentMinute) {
+              return true; // Minuto exacto
+            }
+            if (minute <= 58 && minute + 1 === currentMinute) {
+              return true; // Minuto siguiente (solo para minutos 0-58)
+            }
+          }
+          
+          // Si la hora programada es la anterior y el minuto programado es 59, verificar el minuto 0 de la hora actual
+          // Esto maneja el caso especial de alertas programadas para las XX:59
+          if (hour === currentHour - 1 && minute === 59 && currentMinute === 0) {
+            return true;
+          }
+          
+          return false;
         });
 
         if (matchedHour) {
@@ -111,15 +148,14 @@ class AlertNotificationWorker {
             // Buscar la estación en el cache
             const estacion = estaciones.find(e => e.id === alert.station_id);
             
-            if (estacion) {
-              alertsToSend.push({
-                alert,
-                estacion,
-                alertKey,
-              });
-              // Marcar como enviada
-              this.sentAlerts.set(alertKey, nowTime);
-            }
+            // Enviar alerta incluso si la estación no está en el cache (usar datos de la BD)
+            alertsToSend.push({
+              alert,
+              estacion: estacion || null,
+              alertKey,
+            });
+            // Marcar como enviada
+            this.sentAlerts.set(alertKey, nowTime);
           }
         }
       }
@@ -147,14 +183,16 @@ class AlertNotificationWorker {
           continue;
         }
 
-        const espaciosDisponibles = estacion.anclajesDisponibles || 0;
+        // Usar datos de la estación del cache si están disponibles, sino usar datos de la BD
+        const espaciosDisponibles = estacion?.anclajesDisponibles || 0;
+        const stationNombre = estacion?.nombre || alert.station_nombre || `Estación ${alert.station_id}`;
 
         for (const token of tokens) {
           notificationsToSend.push({
             fcmToken: token.fcm_token,
             stationData: {
               stationId: alert.station_id,
-              stationNombre: estacion.nombre || alert.station_nombre || `Estación ${alert.station_id}`,
+              stationNombre: stationNombre,
               espaciosDisponibles,
             },
           });
@@ -184,16 +222,39 @@ class AlertNotificationWorker {
 
     } catch (error) {
       this.consecutiveErrors++;
-      console.error('AlertNotificationWorker: Error verificando alertas:', error.message);
       
-      // Si hay muchos errores consecutivos, aumentar el intervalo de verificación
-      if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
-        const extendedInterval = this.checkInterval * 3; // 3 minutos en lugar de 1
-        console.warn(`AlertNotificationWorker: ${this.consecutiveErrors} errores consecutivos. Aumentando intervalo a ${extendedInterval / 1000}s`);
-        this.scheduleNextCheck(extendedInterval);
-      } else {
-        this.scheduleNextCheck();
+      // Detectar si es un error de conexión/timeout
+      const isConnectionError = error.message?.includes('timeout') || 
+                                error.message?.includes('connect') ||
+                                error.code === 'ETIMEDOUT' ||
+                                error.code === 'ECONNREFUSED';
+      
+      // Solo loguear errores si pasó el throttle o es el primer error
+      const shouldLogError = this.consecutiveErrors === 1 || 
+                            !this.lastErrorLogTime || 
+                            (Date.now() - this.lastErrorLogTime) >= this.errorLogThrottle;
+      
+      if (shouldLogError) {
+        if (isConnectionError) {
+          console.error(`AlertNotificationWorker: Error de conexión a la base de datos (${this.consecutiveErrors} errores consecutivos):`, error.message);
+        } else {
+          console.error(`AlertNotificationWorker: Error verificando alertas (${this.consecutiveErrors} errores consecutivos):`, error);
+        }
+        this.lastErrorLogTime = Date.now();
       }
+      
+      // Si hay muchos errores consecutivos, aumentar el intervalo de retry con backoff exponencial
+      if (this.consecutiveErrors >= this.maxConsecutiveErrors && isConnectionError) {
+        this.currentRetryInterval = Math.min(
+          this.currentRetryInterval * 2,
+          this.maxRetryInterval
+        );
+        if (shouldLogError) {
+          console.warn(`AlertNotificationWorker: Aumentando intervalo de retry a ${this.currentRetryInterval / 1000 / 60} minutos debido a errores de conexión.`);
+        }
+      }
+    } finally {
+      this.scheduleNextCheck();
     }
   }
 
@@ -201,7 +262,10 @@ class AlertNotificationWorker {
    * Obtiene todas las alertas activas agrupadas por usuario
    */
   async getAllActiveAlerts() {
-    const result = await pool.query(`
+    // Agregar timeout a la query para evitar esperas indefinidas
+    const queryTimeout = 10000; // 10 segundos
+    
+    const queryPromise = pool.query(`
       SELECT 
         sa.id,
         sa.user_email,
@@ -212,10 +276,16 @@ class AlertNotificationWorker {
         eb.nombre as station_nombre,
         eb.direccion as station_direccion
       FROM station_alerts sa
-      JOIN estacionbicing eb ON sa.station_id = eb.id
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
       WHERE sa.activa = true
       ORDER BY sa.user_email, sa.station_id
     `);
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Query timeout exceeded')), queryTimeout)
+    );
+    
+    const result = await Promise.race([queryPromise, timeoutPromise]);
     return result.rows;
   }
 
@@ -270,8 +340,11 @@ class AlertNotificationWorker {
    */
   scheduleNextCheck(customInterval = null) {
     if (!this.isRunning) return;
-    const interval = customInterval || this.checkInterval;
-    this.intervalId = setTimeout(() => this.checkAlerts(), interval);
+    
+    // Usar el intervalo de retry actual si hay errores, sino usar el intervalo normal
+    const nextInterval = this.consecutiveErrors > 0 ? this.currentRetryInterval : this.checkInterval;
+    
+    this.intervalId = setTimeout(() => this.checkAlerts(), nextInterval);
     
     // Limpiar mapa de alertas enviadas periódicamente
     // Mantener solo las de la última hora

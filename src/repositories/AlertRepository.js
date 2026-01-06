@@ -16,7 +16,7 @@ class AlertRepository {
         eb.nombre as station_nombre,
         eb.direccion as station_direccion
       FROM station_alerts sa
-      JOIN estacionbicing eb ON sa.station_id = eb.id
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
       WHERE sa.user_email = $1
       ORDER BY sa.created_at DESC
     `, [email]);
@@ -38,7 +38,7 @@ class AlertRepository {
         eb.nombre as station_nombre,
         eb.direccion as station_direccion
       FROM station_alerts sa
-      JOIN estacionbicing eb ON sa.station_id = eb.id
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
       WHERE sa.id = $1 AND sa.user_email = $2
     `, [id, email]);
     return result.rows[0] || null;
@@ -46,23 +46,69 @@ class AlertRepository {
 
   // Crear una nueva alerta
   async createAlert(email, stationId, horas, diasSemana) {
-    const result = await pool.query(`
+    // Primero insertar la alerta
+    const insertResult = await pool.query(`
       INSERT INTO station_alerts (user_email, station_id, horas, dias_semana)
       VALUES ($1, $2, $3, $4)
-      RETURNING id, user_email, station_id, horas, dias_semana, activa, created_at, updated_at
+      RETURNING id
     `, [email, stationId, horas, diasSemana]);
-    return result.rows[0];
+    
+    const alertId = insertResult.rows[0].id;
+    
+    // Luego obtener la alerta completa con el nombre de la estación
+    const selectResult = await pool.query(`
+      SELECT 
+        sa.id,
+        sa.user_email,
+        sa.station_id,
+        sa.horas,
+        sa.dias_semana,
+        sa.activa,
+        sa.created_at,
+        sa.updated_at,
+        eb.nombre as station_nombre,
+        eb.direccion as station_direccion
+      FROM station_alerts sa
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
+      WHERE sa.id = $1
+    `, [alertId]);
+    
+    return selectResult.rows[0];
   }
 
   // Actualizar una alerta
   async updateAlert(id, email, horas, diasSemana, activa) {
-    const result = await pool.query(`
+    // Primero actualizar la alerta
+    const updateResult = await pool.query(`
       UPDATE station_alerts
       SET horas = $1, dias_semana = $2, activa = $3, updated_at = current_timestamp
       WHERE id = $4 AND user_email = $5
-      RETURNING id, user_email, station_id, horas, dias_semana, activa, created_at, updated_at
+      RETURNING id
     `, [horas, diasSemana, activa, id, email]);
-    return result.rows[0] || null;
+    
+    if (updateResult.rows.length === 0) {
+      return null;
+    }
+    
+    // Luego obtener la alerta completa con el nombre de la estación
+    const selectResult = await pool.query(`
+      SELECT 
+        sa.id,
+        sa.user_email,
+        sa.station_id,
+        sa.horas,
+        sa.dias_semana,
+        sa.activa,
+        sa.created_at,
+        sa.updated_at,
+        eb.nombre as station_nombre,
+        eb.direccion as station_direccion
+      FROM station_alerts sa
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
+      WHERE sa.id = $1
+    `, [id]);
+    
+    return selectResult.rows[0] || null;
   }
 
   // Eliminar una alerta
@@ -76,13 +122,37 @@ class AlertRepository {
 
   // Activar/desactivar una alerta
   async toggleAlert(id, email, activa) {
-    const result = await pool.query(`
+    // Primero actualizar la alerta
+    const updateResult = await pool.query(`
       UPDATE station_alerts
       SET activa = $1, updated_at = current_timestamp
       WHERE id = $2 AND user_email = $3
-      RETURNING id, user_email, station_id, horas, dias_semana, activa, created_at, updated_at
+      RETURNING id
     `, [activa, id, email]);
-    return result.rows[0] || null;
+    
+    if (updateResult.rows.length === 0) {
+      return null;
+    }
+    
+    // Luego obtener la alerta completa con el nombre de la estación
+    const selectResult = await pool.query(`
+      SELECT 
+        sa.id,
+        sa.user_email,
+        sa.station_id,
+        sa.horas,
+        sa.dias_semana,
+        sa.activa,
+        sa.created_at,
+        sa.updated_at,
+        eb.nombre as station_nombre,
+        eb.direccion as station_direccion
+      FROM station_alerts sa
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
+      WHERE sa.id = $1
+    `, [id]);
+    
+    return selectResult.rows[0] || null;
   }
 }
 
