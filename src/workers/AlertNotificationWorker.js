@@ -85,11 +85,30 @@ class AlertNotificationWorker {
           continue;
         }
 
-        // Verificar si alguna hora coincide (solo en el minuto exacto)
+        // Verificar si alguna hora coincide (con margen de tiempo para asegurar que no se pierdan)
         const matchedHour = alert.horas.find(hora => {
           const [hour, minute] = hora.split(':').map(Number);
-          // Verificar si estamos en la hora y minuto exactos (sin margen)
-          return hour === currentHour && minute === currentMinute;
+          
+          // Verificar si estamos en la hora correcta
+          if (hour === currentHour) {
+            // Verificar si estamos en el minuto programado o en el siguiente minuto
+            // Esto permite que las alertas se envíen incluso si hay un pequeño retraso en la ejecución del worker
+            // Solo verificamos el siguiente minuto si el minuto programado no es 59 (para evitar problemas con cambio de hora)
+            if (minute === currentMinute) {
+              return true; // Minuto exacto
+            }
+            if (minute <= 58 && minute + 1 === currentMinute) {
+              return true; // Minuto siguiente (solo para minutos 0-58)
+            }
+          }
+          
+          // Si la hora programada es la anterior y el minuto programado es 59, verificar el minuto 0 de la hora actual
+          // Esto maneja el caso especial de alertas programadas para las XX:59
+          if (hour === currentHour - 1 && minute === 59 && currentMinute === 0) {
+            return true;
+          }
+          
+          return false;
         });
 
         if (matchedHour) {
@@ -106,15 +125,14 @@ class AlertNotificationWorker {
             // Buscar la estación en el cache
             const estacion = estaciones.find(e => e.id === alert.station_id);
             
-            if (estacion) {
-              alertsToSend.push({
-                alert,
-                estacion,
-                alertKey,
-              });
-              // Marcar como enviada
-              this.sentAlerts.set(alertKey, nowTime);
-            }
+            // Enviar alerta incluso si la estación no está en el cache (usar datos de la BD)
+            alertsToSend.push({
+              alert,
+              estacion: estacion || null,
+              alertKey,
+            });
+            // Marcar como enviada
+            this.sentAlerts.set(alertKey, nowTime);
           }
         }
       }
@@ -142,14 +160,16 @@ class AlertNotificationWorker {
           continue;
         }
 
-        const espaciosDisponibles = estacion.anclajesDisponibles || 0;
+        // Usar datos de la estación del cache si están disponibles, sino usar datos de la BD
+        const espaciosDisponibles = estacion?.anclajesDisponibles || 0;
+        const stationNombre = estacion?.nombre || alert.station_nombre || `Estación ${alert.station_id}`;
 
         for (const token of tokens) {
           notificationsToSend.push({
             fcmToken: token.fcm_token,
             stationData: {
               stationId: alert.station_id,
-              stationNombre: estacion.nombre || alert.station_nombre || `Estación ${alert.station_id}`,
+              stationNombre: stationNombre,
               espaciosDisponibles,
             },
           });
@@ -199,7 +219,7 @@ class AlertNotificationWorker {
         eb.nombre as station_nombre,
         eb.direccion as station_direccion
       FROM station_alerts sa
-      JOIN estacionbicing eb ON sa.station_id = eb.id
+      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
       WHERE sa.activa = true
       ORDER BY sa.user_email, sa.station_id
     `);
