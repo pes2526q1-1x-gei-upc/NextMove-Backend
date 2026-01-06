@@ -338,7 +338,7 @@ class AlertNotificationWorker {
   /**
    * Programa la siguiente verificación
    */
-  scheduleNextCheck() {
+  scheduleNextCheck(customInterval = null) {
     if (!this.isRunning) return;
     
     // Usar el intervalo de retry actual si hay errores, sino usar el intervalo normal

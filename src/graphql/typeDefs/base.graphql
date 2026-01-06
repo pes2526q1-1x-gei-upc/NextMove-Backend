@@ -1,6 +1,11 @@
 type Query {
   hello: String
   _empty: String
+  """
+  Valida si un texto contiene palabras ofensivas.
+  Devuelve true si el texto es ofensivo, false en caso contrario.
+  """
+  checkOffensiveText(text: String!): Boolean!
 }
 
 type Mutation {

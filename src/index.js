@@ -10,10 +10,13 @@ import schema from './graphql/schema.js';
 import syncWorker from './workers/EVstationsSyncWorker.js';
 import bicingSyncWorker from './workers/EstacionDeBicingSyncWorker.js';
 import alertNotificationWorker from './workers/AlertNotificationWorker.js';
+import banExpirationWorker from './workers/BanExpirationWorker.js';
 import { createContext } from './graphql/context.js';
 import routingRoutes from './routes/routingRoutes.js';
 import uploadProfilePhotoRouter from './routes/uploadProfilePhoto.js';
+import banRoutes from './routes/banRoutes.js';
 import { setupSocketHandlers } from './sockets/chatHandler.js';
+import cors from 'cors';
 
 const app = express();
 const httpServer = createServer(app);
@@ -33,10 +36,21 @@ const io = new Server(httpServer, {
 // Exportar io para uso en otros módulos
 export { io };
 
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'X-API-Key'],
+  credentials: true
+}));
+
 app.use('/api', uploadProfilePhotoRouter);
+app.use('/api/ban', banRoutes);
 
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  // Filtrar peticiones GraphQL para no saturar los logs
+  if (req.url !== '/graphql') {
+    console.log(`${req.method} ${req.url}`);
+  }
   next();
 });
 
@@ -74,6 +88,7 @@ httpServer.listen(PORT, () => {
   syncWorker.start();
   bicingSyncWorker.start();
   alertNotificationWorker.start();
+  banExpirationWorker.start();
 });
 
 // Graceful shutdown
@@ -85,6 +100,7 @@ process.on('SIGTERM', () => {
   syncWorker.stop();
   bicingSyncWorker.stop();
   alertNotificationWorker.stop();
+  banExpirationWorker.stop();
   httpServer.close(() => {
     console.log('HTTP server closed');
     process.exit(0);
@@ -99,6 +115,7 @@ process.on('SIGINT', () => {
   syncWorker.stop();
   bicingSyncWorker.stop();
   alertNotificationWorker.stop();
+  banExpirationWorker.stop();
   httpServer.close(() => {
     console.log('HTTP server closed');
     process.exit(0);

@@ -187,6 +187,7 @@ class NotificationService {
       return { success: false, error: error.message };
     }
   }
+
 }
 
 export default new NotificationService();

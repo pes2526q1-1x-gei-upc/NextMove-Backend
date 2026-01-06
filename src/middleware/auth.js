@@ -2,8 +2,12 @@ import authService from '../services/AuthService.js';
 
 export const requireApiKey = async (req, res, next) => {
   try {
-    // console.log('[AUTH MIDDLEWARE] Headers recibidos:', req.headers);
+    console.log('[AUTH MIDDLEWARE] Headers recibidos:', req.headers);
     
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
     const apiKey = req.headers['x-api-key'];
     console.log('[AUTH MIDDLEWARE] API Key recibida:', apiKey);
 
