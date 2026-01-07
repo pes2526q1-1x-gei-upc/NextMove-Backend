@@ -61,14 +61,14 @@ class BicingSyncWorker {
 
   getEstacionesCache() {
     // Log de las estaciones cacheadas (Paso 3)
-    console.log(`EstacionDeBicingSyncWorker: Estaciones actualmente en caché: ${this.estacionesCache.length}`);
+    //console.log(`EstacionDeBicingSyncWorker: Estaciones actualmente en caché: ${this.estacionesCache.length}`);
     return this.estacionesCache;
   }
 
   // MÉTODO CLAVE PARA SINCRONIZACIÓN MASIVA Y GUARDADO EN LA BD
   async syncDatosEstaticosMasivo() {
     try {
-      console.log("EstacionDeBicingSyncWorker: Iniciando sincronización masiva de estaciones estáticas...");
+      //console.log("EstacionDeBicingSyncWorker: Iniciando sincronización masiva de estaciones estáticas...");
       const response = await fetch(INFO_URL, configPeticion);
                        
       const staticDataRaw = await response.json();
@@ -84,10 +84,10 @@ class BicingSyncWorker {
       } 
             
       // Log de las estaciones estáticas (Paso 1)
-      console.log(`EstacionDeBicingSyncWorker (MASIVO): Estaciones estáticas obtenidas de la API: ${rawStations.length}`);
+      //console.log(`EstacionDeBicingSyncWorker (MASIVO): Estaciones estáticas obtenidas de la API: ${rawStations.length}`);
 
       if (rawStations.length === 0) {
-        console.log("EstacionDeBicingSyncWorker (MASIVO): No se encontraron estaciones válidas para sincronizar. Saltando inserción en BD.");
+        //console.log("EstacionDeBicingSyncWorker (MASIVO): No se encontraron estaciones válidas para sincronizar. Saltando inserción en BD.");
         return;
       }
 
@@ -108,7 +108,7 @@ class BicingSyncWorker {
             
       // 5. Refrescar la caché interna después de la BD
       await this.refrescarCacheFusionada();
-      console.log(`EstacionDeBicingSyncWorker (MASIVO): Sincronización masiva completada. ${staticData.length} estaciones sincronizadas.`);
+      //console.log(`EstacionDeBicingSyncWorker (MASIVO): Sincronización masiva completada. ${staticData.length} estaciones sincronizadas.`);
     } catch (error) {
       console.error("EstacionDeBicingSyncWorker (MASIVO): Error en sincronización masiva:", error.message);
     }
@@ -117,9 +117,9 @@ class BicingSyncWorker {
   // Refresco dinámico solo cache con datos dinámicos de la API
   async syncDatosDinamicos() {
     try {
-      console.log("EstacionDeBicingSyncWorker (Dinámico): Actualizando datos dinámicos...");
+      //console.log("EstacionDeBicingSyncWorker (Dinámico): Actualizando datos dinámicos...");
       await this.refrescarCacheFusionada();
-      console.log("EstacionDeBicingSyncWorker (Dinámico): Refresco dinámico completado.");
+      //console.log("EstacionDeBicingSyncWorker (Dinámico): Refresco dinámico completado.");
     } catch (error) {
       console.error("EstacionDeBicingSyncWorker (Dinámico): Error en refresco dinámico:", error.message);
     }
@@ -130,7 +130,7 @@ class BicingSyncWorker {
     try {
       // Obtener datos estáticos de la BD
       const datosEstaticos = await this.repo.getAllEstacionesDeBicing();
-      console.log(`EstacionDeBicingSyncWorker (Fusión): Estaciones estáticas cargadas de la BD (base para la fusión): ${datosEstaticos.length}`);
+      //console.log(`EstacionDeBicingSyncWorker (Fusión): Estaciones estáticas cargadas de la BD (base para la fusión): ${datosEstaticos.length}`);
             
       // Obtener datos dinámicos de la API
       const response = await fetch(ESTADO_URL, configPeticion);
@@ -146,7 +146,7 @@ class BicingSyncWorker {
       }
             
       // Log de las estaciones dinámicas (Paso 2)
-      console.log(`EstacionDeBicingSyncWorker (Dinámico): Estaciones dinámicas obtenidas de la API: ${datosDinamicos.length}`);
+      //console.log(`EstacionDeBicingSyncWorker (Dinámico): Estaciones dinámicas obtenidas de la API: ${datosDinamicos.length}`);
             
       // Fusión de estaciones (datos estáticos de BD + datos dinámicos de la API)
       this.estacionesCache = datosEstaticos.map(estacion => {
@@ -171,7 +171,7 @@ class BicingSyncWorker {
       });
             
       // Log de las estaciones cacheadas después de la fusión
-      console.log(`EstacionDeBicingSyncWorker (Fusión) Caché interna actualizada: ${this.estacionesCache.length} estaciones fusionadas y listas.`);
+      //console.log(`EstacionDeBicingSyncWorker (Fusión) Caché interna actualizada: ${this.estacionesCache.length} estaciones fusionadas y listas.`);
             
       this.stats.totalSyncs++;
       this.stats.lastSyncTime = new Date();
