@@ -6,7 +6,7 @@ import EstacionDeBicingSyncWorker from './EstacionDeBicingSyncWorker.js';
 class AlertNotificationWorker {
   constructor() {
     this.isRunning = false;
-    this.checkInterval = 1 * 60 * 1000; // Verificar cada 1 minuto
+    this.checkInterval = 2 * 60 * 1000; // Verificar cada 2 minutos (reducido de 1 minuto)
     this.intervalId = null;
     this.fcmTokenRepo = new FCMTokenRepository();
     this.lastCheckTime = null;
@@ -16,11 +16,18 @@ class AlertNotificationWorker {
     // Manejo de errores de conexión
     this.consecutiveErrors = 0;
     this.maxConsecutiveErrors = 5; // Máximo de errores antes de aumentar el intervalo
-    this.baseRetryInterval = 1 * 60 * 1000; // 1 minuto base
+    this.baseRetryInterval = 2 * 60 * 1000; // 2 minutos base
     this.maxRetryInterval = 15 * 60 * 1000; // 15 minutos máximo
     this.currentRetryInterval = this.baseRetryInterval;
     this.lastErrorLogTime = null;
     this.errorLogThrottle = 5 * 60 * 1000; // Solo loguear errores cada 5 minutos
+    
+    // Cache de alertas activas para reducir consultas a la BD
+    this.cachedAlerts = null;
+    this.cacheTimestamp = null;
+    this.CACHE_TTL = 10 * 60 * 1000; // Cache válido por 10 minutos
+    this.cachedTokens = new Map(); // Cache de tokens FCM por usuario
+    this.TOKEN_CACHE_TTL = 30 * 60 * 1000; // Cache de tokens válido por 30 minutos
   }
 
   /**
@@ -67,8 +74,8 @@ class AlertNotificationWorker {
       
       this.lastCheckTime = new Date();
 
-      // Obtener todas las alertas activas
-      const allAlerts = await this.getAllActiveAlerts();
+      // Obtener alertas activas (usando cache si está disponible)
+      const allAlerts = await this.getCachedActiveAlerts();
       
       // Si llegamos aquí, la conexión fue exitosa, resetear contadores
       if (this.consecutiveErrors > 0) {
@@ -168,9 +175,9 @@ class AlertNotificationWorker {
 
       console.log(`AlertNotificationWorker: ${alertsToSend.length} alertas a enviar.`);
 
-      // Obtener tokens FCM de los usuarios
+      // Obtener tokens FCM de los usuarios (usando cache)
       const userEmails = [...new Set(alertsToSend.map(a => a.alert.user_email))];
-      const tokensMap = await this.getTokensForUsers(userEmails);
+      const tokensMap = await this.getCachedTokensForUsers(userEmails);
 
       // Preparar notificaciones
       const notificationsToSend = [];
@@ -244,14 +251,27 @@ class AlertNotificationWorker {
       }
       
       // Si hay muchos errores consecutivos, aumentar el intervalo de retry con backoff exponencial
+      // También invalidar el cache para forzar una consulta fresca en el siguiente intento
       if (this.consecutiveErrors >= this.maxConsecutiveErrors && isConnectionError) {
+        // Invalidar cache para que el siguiente intento use datos frescos
+        this.invalidateAlertsCache();
+        
         this.currentRetryInterval = Math.min(
           this.currentRetryInterval * 2,
           this.maxRetryInterval
         );
         if (shouldLogError) {
-          console.warn(`AlertNotificationWorker: Aumentando intervalo de retry a ${this.currentRetryInterval / 1000 / 60} minutos debido a errores de conexión.`);
+          console.warn(`AlertNotificationWorker: Aumentando intervalo de retry a ${this.currentRetryInterval / 1000 / 60} minutos debido a errores de conexión. Cache invalidado.`);
         }
+      }
+      
+      // Si hay demasiados errores consecutivos (más de 50), resetear el contador periódicamente
+      // para evitar que se acumule indefinidamente
+      if (this.consecutiveErrors > 50) {
+        console.warn(`AlertNotificationWorker: Demasiados errores consecutivos (${this.consecutiveErrors}), reseteando contador para evitar acumulación excesiva.`);
+        this.consecutiveErrors = 0;
+        this.currentRetryInterval = this.baseRetryInterval;
+        this.invalidateAlertsCache();
       }
     } finally {
       this.scheduleNextCheck();
@@ -259,38 +279,164 @@ class AlertNotificationWorker {
   }
 
   /**
-   * Obtiene todas las alertas activas agrupadas por usuario
+   * Obtiene todas las alertas activas usando cache para reducir consultas a la BD
+   */
+  async getCachedActiveAlerts() {
+    const now = Date.now();
+    
+    // Si el cache es válido, devolverlo
+    if (this.cachedAlerts && this.cacheTimestamp && 
+        (now - this.cacheTimestamp) < this.CACHE_TTL) {
+      return this.cachedAlerts;
+    }
+    
+    // Cache expirado o no existe, consultar BD
+    const alerts = await this.getAllActiveAlerts();
+    
+    // Actualizar cache
+    this.cachedAlerts = alerts;
+    this.cacheTimestamp = now;
+    
+    return alerts;
+  }
+
+  /**
+   * Invalida el cache de alertas (llamar cuando se crean/modifican/eliminan alertas)
+   */
+  invalidateAlertsCache() {
+    this.cachedAlerts = null;
+    this.cacheTimestamp = null;
+  }
+
+  /**
+   * Ejecuta una query con cancelación real vía AbortController.
+   * Evita el problema de Promise.race que no cancela la query en el servidor.
+   */
+  async queryWithTimeout(queryText, params = [], timeoutMs = 10000) {
+    const client = await pool.connect();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const result = await client.query({
+        text: queryText,
+        values: params,
+        // node-postgres soporta AbortSignal (pg >= 8.11), esto envía CANCEL al backend
+        signal: controller.signal
+      });
+      return result;
+    } finally {
+      clearTimeout(timeoutId);
+      client.release();
+    }
+  }
+
+  /**
+   * Obtiene todas las alertas activas (filtradas por día) para reducir volumen.
+   * Optimizado con cancelación real y sin JOIN para evitar timeouts y conexiones atascadas.
    */
   async getAllActiveAlerts() {
-    // Agregar timeout a la query para evitar esperas indefinidas
-    const queryTimeout = 10000; // 10 segundos
-    
-    const queryPromise = pool.query(`
+    // Calcular día de la semana (0 = Lunes ... 6 = Domingo) como en la BD
+    const jsDay = new Date().getDay(); // 0=Domingo..6=Sábado
+    const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+
+    // Consulta sin JOIN y filtrada por día para reducir el set de resultados.
+    // El nombre/dirección de estación se obtienen del cache en memoria.
+    const sql = `
       SELECT 
-        sa.id,
-        sa.user_email,
-        sa.station_id,
-        sa.horas,
-        sa.dias_semana,
-        sa.activa,
-        eb.nombre as station_nombre,
-        eb.direccion as station_direccion
-      FROM station_alerts sa
-      LEFT JOIN estacionbicing eb ON sa.station_id = eb.id
-      WHERE sa.activa = true
-      ORDER BY sa.user_email, sa.station_id
-    `);
-    
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout exceeded')), queryTimeout)
-    );
-    
-    const result = await Promise.race([queryPromise, timeoutPromise]);
+        id,
+        user_email,
+        station_id,
+        horas,
+        dias_semana,
+        activa
+      FROM station_alerts
+      WHERE activa = true
+        AND $1 = ANY(dias_semana)
+    `;
+
+    const result = await this.queryWithTimeout(sql, [dayIndex], 12000); // 12s
+    // Añadimos placeholders de nombre/dirección para mantener compatibilidad con el resto del flujo
+    return result.rows.map(r => ({
+      ...r,
+      station_nombre: r.station_nombre ?? null,
+      station_direccion: r.station_direccion ?? null
+    }));
+  }
+
+  /**
+   * Versión alternativa (mantener por compatibilidad si hiciera falta).
+   * También cancelable y filtrada por día.
+   */
+  async getAllActiveAlertsSimple() {
+    const jsDay = new Date().getDay();
+    const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    const sql = `
+      SELECT 
+        id,
+        user_email,
+        station_id,
+        horas,
+        dias_semana,
+        activa
+      FROM station_alerts
+      WHERE activa = true
+        AND $1 = ANY(dias_semana)
+    `;
+    const result = await this.queryWithTimeout(sql, [dayIndex], 8000); // 8s
     return result.rows;
   }
 
   /**
-   * Obtiene tokens FCM agrupados por usuario
+   * Obtiene tokens FCM agrupados por usuario usando cache
+   */
+  async getCachedTokensForUsers(userEmails) {
+    const now = Date.now();
+    const tokensMap = {};
+    const emailsToFetch = [];
+
+    // Verificar cache para cada usuario
+    for (const email of userEmails) {
+      const cached = this.cachedTokens.get(email);
+      if (cached && (now - cached.timestamp) < this.TOKEN_CACHE_TTL) {
+        tokensMap[email] = cached.tokens;
+      } else {
+        emailsToFetch.push(email);
+      }
+    }
+
+    // Si hay usuarios sin cache, consultar BD
+    if (emailsToFetch.length > 0) {
+      const tokens = await this.fcmTokenRepo.getTokensByUsers(emailsToFetch);
+      
+      // Agrupar tokens por usuario
+      for (const token of tokens) {
+        if (!tokensMap[token.user_email]) {
+          tokensMap[token.user_email] = [];
+        }
+        tokensMap[token.user_email].push(token);
+      }
+
+      // Actualizar cache para los usuarios consultados
+      for (const email of emailsToFetch) {
+        this.cachedTokens.set(email, {
+          tokens: tokensMap[email] || [],
+          timestamp: now
+        });
+      }
+    }
+
+    return tokensMap;
+  }
+
+  /**
+   * Invalida el cache de tokens para un usuario específico
+   */
+  invalidateTokenCache(userEmail) {
+    this.cachedTokens.delete(userEmail);
+  }
+
+  /**
+   * Obtiene tokens FCM agrupados por usuario (método directo sin cache)
    */
   async getTokensForUsers(userEmails) {
     const tokens = await this.fcmTokenRepo.getTokensByUsers(userEmails);

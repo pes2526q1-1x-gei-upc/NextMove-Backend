@@ -1,5 +1,6 @@
 import AlertRepository from '../../repositories/AlertRepository.js';
 import FavStationRepository from '../../repositories/FavStationRepository.js';
+import alertNotificationWorker from '../../workers/AlertNotificationWorker.js';
 
 const alertRepo = new AlertRepository();
 const favStationRepo = new FavStationRepository();
@@ -75,6 +76,8 @@ const alertResolver = {
           horas,
           diasSemana
         );
+        // Invalidar cache de alertas para que el worker use datos actualizados
+        alertNotificationWorker.invalidateAlertsCache();
         return mapAlertToGraphQL(alert);
       } catch (error) {
         console.error('Error creating station alert:', error);
@@ -105,6 +108,8 @@ const alertResolver = {
         if (!updated) {
           throw new Error('Alerta no encontrada');
         }
+        // Invalidar cache de alertas para que el worker use datos actualizados
+        alertNotificationWorker.invalidateAlertsCache();
         return mapAlertToGraphQL(updated);
       } catch (error) {
         console.error('Error updating station alert:', error);
@@ -118,7 +123,10 @@ const alertResolver = {
       }
 
       try {
-        return await alertRepo.deleteAlert(id, context.user.email);
+        const deleted = await alertRepo.deleteAlert(id, context.user.email);
+        // Invalidar cache de alertas para que el worker use datos actualizados
+        alertNotificationWorker.invalidateAlertsCache();
+        return deleted;
       } catch (error) {
         console.error('Error deleting station alert:', error);
         throw new Error('Error al eliminar la alerta de estación.');
@@ -135,6 +143,8 @@ const alertResolver = {
         if (!updated) {
           throw new Error('Alerta no encontrada');
         }
+        // Invalidar cache de alertas para que el worker use datos actualizados
+        alertNotificationWorker.invalidateAlertsCache();
         return mapAlertToGraphQL(updated);
       } catch (error) {
         console.error('Error toggling station alert:', error);
