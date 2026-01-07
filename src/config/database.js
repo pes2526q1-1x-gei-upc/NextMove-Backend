@@ -13,11 +13,26 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   },
-  max: 20,
-  idleTimeoutMillis: 30000,
+  max: 50,
+  min:2,
+  idleTimeoutMillis: 10000,
   connectionTimeoutMillis: 10000, // Aumentado a 10 segundos
   statement_timeout: 30000, // Timeout para queries individuales
+  allowExitOnIdle: true
 });
+
+// Gracefully erase idle connections. 
+setInterval(() => {
+  const idleCount = pool.idleCount;
+  const totalCount = pool.totalCount;
+  const waitingCount = pool.waitingCount;
+  
+  console.log(`[Pool Status] Total: ${totalCount}, Idle: ${idleCount}, Waiting: ${waitingCount}`);
+  
+  if (idleCount > 10) {
+    console.warn(`[Pool Warning] Too much idle connections (${idleCount}). Possible memory leak.`);
+  }
+}, 60000); 
 
 pool.on('connect', () => {
   console.log('Conectado a la base de datos PostgreSQL pool');

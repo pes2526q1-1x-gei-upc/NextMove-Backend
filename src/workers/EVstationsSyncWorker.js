@@ -10,7 +10,7 @@ class StationsSyncWorker {
     this.repository = new StationsRepository();
     this.intervalId = null;
     this.isRunning = false;
-    this.syncInterval = 5 * 60 * 1000;
+    this.syncInterval = 10 * 60 * 1000;
     this.dbSyncInterval = 24 * 60 * 60 * 1000;
     this.lastDbSync = null;
     this.stats = {

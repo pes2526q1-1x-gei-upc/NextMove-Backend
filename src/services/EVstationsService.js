@@ -5,7 +5,7 @@ import FavStationRepository from '../repositories/FavStationRepository.js';
 let dynamicCache = new Map();
 let lastFetch = null;
 
-const CACHE_DURATION = 5 * 60 * 1000;
+const CACHE_DURATION = 10 * 60 * 1000;
 
 export default class StationsService {
   constructor() {
