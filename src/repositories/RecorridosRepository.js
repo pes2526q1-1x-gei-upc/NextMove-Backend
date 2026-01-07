@@ -109,6 +109,7 @@ class RecorridosRepository {
             SELECT *
             FROM recorridos
             WHERE(user_email = $1)
+            ORDER BY fecha_recorrido DESC
         `, [user_email]); 
     return result.rows.map(recorrido => this._transformRecorrido(recorrido));    //map lo que hace es para elemento del array nos permite aplicar un metodo. 
   }
@@ -117,7 +118,8 @@ class RecorridosRepository {
   /** En este caso podemos tener un error de constraint al insertar algún dato que nos viole algunta RI */
   async saveRecorrido(recorridoData) {
     const pointOrigen = formatToPgPoint(recorridoData.origen); 
-    const  pointDestino = formatToPgPoint(recorridoData.destino); 
+    const  pointDestino = formatToPgPoint(recorridoData.destino);
+    const bike_photo = recorridoData.bike_photo;
     // eslint-disable-next-line no-useless-catch 
     try {
       // Normalizar fechas a ISO (acepta epoch en s o ms, o strings)
@@ -151,6 +153,7 @@ class RecorridosRepository {
         tiempoIni,
         tiempoFin
       ]); 
+      if (bike_photo) await pool.query(`UPDATE users SET points = points + 50 WHERE email = $1`, [recorridoData.user_email]);
       return this._transformRecorrido(result.rows[0]); 
     } catch (error) {
       throw error; 

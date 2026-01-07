@@ -1,0 +1,38 @@
+type StationAlert {
+    id: ID!
+    userEmail: String!
+    stationId: String!
+    horas: [String!]!
+    diasSemana: [Int!]!
+    activa: Boolean!
+    createdAt: String!
+    updatedAt: String!
+    stationNombre: String
+    stationDireccion: String
+}
+
+input CreateAlertInput {
+    stationId: String!
+    horas: [String!]!
+    diasSemana: [Int!]!
+}
+
+input UpdateAlertInput {
+    id: ID!
+    horas: [String!]!
+    diasSemana: [Int!]!
+    activa: Boolean
+}
+
+extend type Query {
+    getStationAlerts: [StationAlert!]!
+    getStationAlert(id: ID!): StationAlert
+}
+
+extend type Mutation {
+    createStationAlert(input: CreateAlertInput!): StationAlert!
+    updateStationAlert(input: UpdateAlertInput!): StationAlert!
+    deleteStationAlert(id: ID!): Boolean!
+    toggleStationAlert(id: ID!, activa: Boolean!): StationAlert!
+}
+

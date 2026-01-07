@@ -6,11 +6,17 @@ import { recorridosResolver } from './RecorridoResolver.js';
 import { assessmentResolver } from './AssessmentResolvers.js';
 import routingResolvers  from './routingResolvers.js';
 import favStationResolver from './FavStationResolver.js';
-
+import ChatResolver from './ChatResolver.js';
+import { challengesResolver } from './challengesResolver.js';
+import  { rankingResolver }  from './RankingResolver.js';
+import { IsOffensive } from '../../services/BadWordsService.js';
+import alertResolver from './AlertResolver.js';
+import fcmTokenResolver from './FCMTokenResolver.js';
 
 export const resolvers = {
   Query: {
     hello: () => 'Hello world!',
+    checkOffensiveText: (_, { text }) => IsOffensive(text),
     me: userResolvers.Query.me,
     User: userResolvers.Query.User,
     Users: userResolvers.Query.Users,
@@ -43,6 +49,21 @@ export const resolvers = {
     
     getFavBikeStations: favStationResolver.Query.getFavBikeStations,
     getFavCarStations: favStationResolver.Query.getFavCarStations,
+
+    getAllChallenges: challengesResolver.Query.getAllChallenges,
+    getEnrolledChallenges: challengesResolver.Query.getEnrolledChallenges,
+    getTrophies: challengesResolver.Query.getTrophies,
+    getPromotedCompanies: challengesResolver.Query.getPromotedCompanies,
+
+    ranking: rankingResolver.Query.ranking, 
+    userStats: rankingResolver.Query.userStats, 
+    globalStats: rankingResolver.Query.globalStats, 
+    topUsers: rankingResolver.Query.topUsers,
+
+    getStationAlerts: alertResolver.Query.getStationAlerts,
+    getStationAlert: alertResolver.Query.getStationAlert,
+
+    ...ChatResolver.Query
   },
   Mutation: {
     createUser: userResolvers.Mutation.createUser,
@@ -71,5 +92,20 @@ export const resolvers = {
 
     addFavStation: favStationResolver.Mutation.addFavStation,
     deleteFavStation: favStationResolver.Mutation.deleteFavStation,
-  }
+
+    enrollChallenge: challengesResolver.Mutation.enrollChallenge,
+
+    createStationAlert: alertResolver.Mutation.createStationAlert,
+    updateStationAlert: alertResolver.Mutation.updateStationAlert,
+    deleteStationAlert: alertResolver.Mutation.deleteStationAlert,
+    toggleStationAlert: alertResolver.Mutation.toggleStationAlert,
+
+    registerFCMToken: fcmTokenResolver.Mutation.registerFCMToken,
+    deleteFCMToken: fcmTokenResolver.Mutation.deleteFCMToken,
+  
+    ...ChatResolver.Mutation
+  },
+  Chat: ChatResolver.Chat,
+  Message: ChatResolver.Message,
+  ChatParticipant: ChatResolver.ChatParticipant
 };

@@ -66,6 +66,7 @@ export const assessmentResolver = {
         if (error.code === '23505'){
           throw new Error('Assessment already exists for this user and station.');
         }
+        throw error;
       }
     },
     deleteAssessment: async (_, {  station_id }, context) => {

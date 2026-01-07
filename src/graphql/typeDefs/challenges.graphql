@@ -1,0 +1,64 @@
+
+
+type trophy {
+  name: String!
+}
+
+type Company{
+    name: String!
+    email: String
+    url: String
+    description: String
+    logo_url: String
+    location: Coordinates
+}
+
+interface ChallengeInterface {
+    id: String!
+    name: String!
+    distance: Int!
+    description: String!
+    points: Int!
+    starting_date: String!
+    ending_date: String!
+    photo: String
+    company: Company
+}
+
+type Challenge implements ChallengeInterface {
+    id: String!
+    name: String!
+    distance: Int!
+    description: String!
+    points: Int!
+    starting_date: String!
+    ending_date: String!
+    photo: String
+    company: Company
+}
+
+type EnrolledChallenge implements ChallengeInterface {
+    id: String!
+    name: String!
+    distance: Int!
+    description: String!
+    points: Int!
+    starting_date: String!
+    ending_date: String!
+    photo: String
+    company: Company
+    completed: Int!
+    total_distance: Float!
+    current_distance: Float!
+}
+
+extend type Query{
+    getAllChallenges: [Challenge]!
+    getEnrolledChallenges: [EnrolledChallenge]!
+    getTrophies: [trophy]!
+    getPromotedCompanies: [Company]!
+}
+
+extend type Mutation{
+    enrollChallenge(challenge_id: String!): Boolean!
+}

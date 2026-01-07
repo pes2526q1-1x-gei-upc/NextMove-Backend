@@ -5,7 +5,7 @@ class GoogleMapsService {
     this.apiKey = process.env.GOOGLE_MAPS_API_KEY;
     this.routesBaseUrl = 'https://routes.googleapis.com/directions/v2:computeRoutes';
     this.geocodingBaseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
-    
+
     if (!this.apiKey) {
       console.warn('GOOGLE_MAPS_API_KEY is not defined in environment variables');
     }
@@ -36,7 +36,7 @@ class GoogleMapsService {
           avoidHighways: options.avoidHighways || false,
           avoidFerries: options.avoidFerries || false
         },
-        languageCode: 'es',
+        languageCode: options.languageCode,
         units: 'METRIC'
       };
 
@@ -96,7 +96,7 @@ class GoogleMapsService {
 
     return data.routes.map(route => {
       const leg = route.legs?.[0];
-      
+
       return {
         distance: `${(route.distanceMeters / 1000).toFixed(1)} km`,
         distanceMeters: route.distanceMeters,
@@ -111,8 +111,8 @@ class GoogleMapsService {
         isEcoFriendly: route.routeLabels?.includes('ECO_FRIENDLY') || false,
         travelAdvisory: this.formatTravelAdvisory(route.travelAdvisory),
         steps: leg?.steps?.map(step => ({
-          instruction: step.navigationInstruction?.instructions || 
-                      this.extractTextFromHtml(step.navigationInstruction?.maneuver || ''),
+          instruction: step.navigationInstruction?.instructions ||
+            this.extractTextFromHtml(step.navigationInstruction?.maneuver || ''),
           distance: `${(step.distanceMeters / 1000).toFixed(2)} km`,
           distanceMeters: step.distanceMeters,
           duration: this.formatDuration(step.staticDuration),
@@ -143,7 +143,7 @@ class GoogleMapsService {
     return {
       hasTollRoads: advisory.tollInfo ? true : false,
       estimatedTollPrice: advisory.tollInfo?.estimatedPrice?.[0]?.text || null,
-      fuelConsumption: advisory.fuelConsumptionMicroliters 
+      fuelConsumption: advisory.fuelConsumptionMicroliters
         ? `${(advisory.fuelConsumptionMicroliters / 1000000).toFixed(2)} L`
         : null
     };
@@ -151,11 +151,11 @@ class GoogleMapsService {
 
   formatDuration(duration) {
     if (!duration) return 'Desconocido';
-    
+
     const seconds = this.parseDuration(duration);
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}min`;
     }
