@@ -21,6 +21,7 @@ const companyRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS'
 });
 
 // Aplicar autenticación con API Key a todas las rutas

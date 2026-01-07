@@ -1,22 +1,32 @@
 import UsersRepository from "../../repositories/UsersRepository.js";
 import FriendshipRepository from "../../repositories/FriendshipRepository.js";
+import RankingService from "../../services/RankingService.js";
 
 const usersRepo = new UsersRepository();
 const friendshipRepo = new FriendshipRepository();
+const rankingService = new RankingService();
 
 export const userResolvers = {
   Query: {
     me: async (_, __, context) => {
       try {
         if (!context.user) {
-          throw new Error('No autenticado');
+          throw new Error("No autenticado");
         }
 
         const dbUser = await usersRepo.getUserByEmail(context.user.email);
+        
+        try {
+          const userStats = await rankingService.getUserStats(context.user.email, 'km_recorridos');
+          dbUser.statistics = userStats || null;
+        } catch (statsError) {
+          console.warn('Warning: No se pudieron obtener estadísticas para el usuario:', statsError.message);
+          dbUser.statistics = null;
+        }
+        
         return dbUser;
-
       } catch (err) {
-        console.error('Error en me():', err.message);
+        console.error("Error en me():", err.message);
         throw err;
       }
     },
@@ -24,21 +34,21 @@ export const userResolvers = {
     User: async (_, { email }) => {
       const user = await usersRepo.getUserByEmail(email);
       if (!user) {
-        throw new Error('Usuario no encontrado');
+        throw new Error("Usuario no encontrado");
       }
       return user;
     },
 
     ExistsUser: async (_, { email }) => {
       try {
-        const user = await usersRepo.getUserByEmail(email); 
+        const user = await usersRepo.getUserByEmail(email);
         if (user) {
           return { exists: true, isRegWithGoogle: user.regWithGoogle };
         }
-        
+
         return { exists: false, isRegWithGoogle: null };
       } catch (error) {
-        console.error('Error en ExistsUser:', error.message);
+        console.error("Error en ExistsUser:", error.message);
         throw error;
       }
     },
@@ -49,7 +59,7 @@ export const userResolvers = {
 
     UsersByNickname: async (_, { nickname }, context) => {
       console.log(`\n--- [DEBUG] Buscando usuarios por: "${nickname}" ---`);
-      
+
       const users = await usersRepo.getUsersByNickname(nickname);
       console.log(`[DEBUG] Candidatos iniciales encontrados: ${users.length}`);
 
@@ -57,84 +67,113 @@ export const userResolvers = {
 
       try {
         const myEmail = context.user.email;
-        const myProfile = await usersRepo.getUserByEmail(myEmail); 
-        const myNickname = myProfile.nickname; 
+        const myProfile = await usersRepo.getUserByEmail(myEmail);
+        const myNickname = myProfile.nickname;
 
         if (!myNickname) {
-          console.warn('[WARN] No se pudo determinar mi nickname, devuelvo lista sin filtrar.');
+          console.warn(
+            "[WARN] No se pudo determinar mi nickname, devuelvo lista sin filtrar."
+          );
           return users;
         }
 
         const myBlocks = await friendshipRepo.getBlockList(myEmail);
-        const usersIBlocked = new Set(myBlocks.map(b => b.blocked));
-        
-        const finalResults = await Promise.all(users.map(async (candidateUser) => {
-          if (usersIBlocked.has(candidateUser.nickname)) {
-            return null;
-          }
+        const usersIBlocked = new Set(myBlocks.map((b) => b.blocked));
 
-          try {
-            const candidateBlockList = await friendshipRepo.getBlockList(candidateUser.email);
-            const isMeBlocked = candidateBlockList.some(b => b.blocked === myNickname);
-
-            if (isMeBlocked) {
-              console.log(`[DEBUG] Ocultando a ${candidateUser.nickname} -> Me tiene bloqueado en su lista:`, candidateBlockList);
-              return null; 
+        const finalResults = await Promise.all(
+          users.map(async (candidateUser) => {
+            if (usersIBlocked.has(candidateUser.nickname)) {
+              return null;
             }
 
-            return candidateUser;
+            try {
+              const candidateBlockList = await friendshipRepo.getBlockList(
+                candidateUser.email
+              );
+              const isMeBlocked = candidateBlockList.some(
+                (b) => b.blocked === myNickname
+              );
 
-          } catch (err) {
-            console.error(`[ERROR] Fallo verificando bloqueos de ${candidateUser.nickname}`, err);
-            return candidateUser; 
-          }
-        }));
+              if (isMeBlocked) {
+                console.log(
+                  `[DEBUG] Ocultando a ${candidateUser.nickname} -> Me tiene bloqueado en su lista:`,
+                  candidateBlockList
+                );
+                return null;
+              }
 
-        const filteredUsers = finalResults.filter(u => u !== null);
-        console.log(`[DEBUG] Usuarios devueltos tras filtros: ${filteredUsers.length}`);
+              return candidateUser;
+            } catch (err) {
+              console.error(
+                `[ERROR] Fallo verificando bloqueos de ${candidateUser.nickname}`,
+                err
+              );
+              return candidateUser;
+            }
+          })
+        );
+
+        const filteredUsers = finalResults.filter((u) => u !== null);
+        console.log(
+          `[DEBUG] Usuarios devueltos tras filtros: ${filteredUsers.length}`
+        );
         return filteredUsers;
-
       } catch (error) {
-        console.error('[ERROR] Error general filtrando usuarios:', error);
+        console.error("[ERROR] Error general filtrando usuarios:", error);
         return users;
       }
     },
 
     UsersSearchHistory: async (_, __, context) => {
-
       if (!context.user) {
-        throw new Error('No autenticado');
+        throw new Error("No autenticado");
       }
-      // context.user = { email: 'aaaa@gmail.com'};
 
       try {
         return await usersRepo.getUserSearchHistory(context.user.email);
+      } catch (error) {
+        throw new Error("Error retrieving user search history.", error);
       }
-      catch (error){
-        throw new Error('Error retrieving user search history.', error);
-      }
-    }
+    },
+  },
+
+  // Resolvers de campos para el tipo User
+  User: {
+    isBanned: (parent) => parent.isBanned ?? false,
+    banInfo: (parent) => parent.banInfo ?? null,
   },
 
   Mutation: {
     createUser: async (_, { createInfo }) => {
       try {
-        const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle } = createInfo;
-        console.log('Entramos en createUser. Esto es usuario: ', createInfo);
+        const {
+          email,
+          photo,
+          name,
+          nickname,
+          phoneNumber,
+          preferredMode,
+          preferredLanguage,
+          bioDescription,
+          birthDate,
+          regWithGoogle,
+        } = createInfo;
+        console.log("Entramos en createUser. Esto es usuario: ", createInfo);
 
         const existingUserByEmail = await usersRepo.getUserByEmail(email);
-        console.log('Existing user by email check: ', existingUserByEmail);
+        console.log("Existing user by email check: ", existingUserByEmail);
         if (existingUserByEmail) {
           throw new Error(`Ya existe un usuario con el email: ${email}`);
         }
 
-        const existingUserByNickname = await usersRepo.existsUserByNickname(nickname);
-        console.log('Existing user by nickname check: ', existingUserByNickname);
+        const existingUserByNickname =
+          await usersRepo.existsUserByNickname(nickname);
+        console.log("Existing user by nickname check: ", existingUserByNickname);
         if (existingUserByNickname) {
           throw new Error(`Ya existe un usuario con el nickname: ${nickname}`);
         }
 
-        const newUser = await usersRepo.createUser({
+        await usersRepo.createUser({
           email,
           photo,
           name,
@@ -144,15 +183,16 @@ export const userResolvers = {
           preferredLanguage: preferredLanguage || "ESP",
           bioDescription: bioDescription || null,
           birthDate: birthDate || null,
-          regWithGoogle
+          regWithGoogle,
         });
 
         console.log(`Usuario creado exitosamente: ${email}`);
-        return newUser;
 
+        // Recargar usando getUserByEmail, que añade isBanned y banInfo
+        return await usersRepo.getUserByEmail(email);
       } catch (error) {
-        console.error('Error creando usuario:', error.message);
-        console.log('Error details: ', error.code);
+        console.error("Error creando usuario:", error.message);
+        console.log("Error details: ", error.code);
         throw error;
       }
     },
@@ -173,14 +213,14 @@ export const userResolvers = {
     ) => {
       try {
         if (!context.user) {
-          throw new Error('No autenticado');
+          throw new Error("No autenticado");
         }
 
         const userEmail = context.user.email;
 
         const user = await usersRepo.getUserByEmail(userEmail);
         if (!user) {
-          throw new Error('Usuario no encontrado');
+          throw new Error("Usuario no encontrado");
         }
 
         const changingData = {};
@@ -196,9 +236,12 @@ export const userResolvers = {
           changingData.nickname = nickname;
         }
         if (phoneNumber !== undefined) changingData.phoneNumber = phoneNumber;
-        if (bioDescription !== undefined) changingData.bioDescription = bioDescription;
-        if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
-        if (preferredLanguage !== undefined) changingData.preferredLanguage = preferredLanguage;
+        if (bioDescription !== undefined)
+          changingData.bioDescription = bioDescription;
+        if (preferredMode !== undefined)
+          changingData.preferredMode = preferredMode;
+        if (preferredLanguage !== undefined)
+          changingData.preferredLanguage = preferredLanguage;
         if (birthDate !== undefined) changingData.birthDate = birthDate;
         if (photo !== undefined) changingData.photo = photo;
 
@@ -206,46 +249,48 @@ export const userResolvers = {
           return user;
         }
 
-        const updatedUser = await usersRepo.updateUser(userEmail, changingData);
+        const updatedUser = await usersRepo.updateUser(
+          userEmail,
+          changingData
+        );
 
         if (!updatedUser) {
-          throw new Error('Error al actualizar el usuario');
+          throw new Error("Error al actualizar el usuario");
         }
 
         console.log(`Usuario ${userEmail} actualizado`);
         return updatedUser;
-
       } catch (error) {
-        console.error('Error en updateMe:', error.message);
+        console.error("Error en updateMe:", error.message);
         throw error;
       }
     },
 
-    // NUEVO: eliminar foto de perfil (pone photo a null)
     deleteProfilePhoto: async (_, __, context) => {
       try {
         if (!context.user) {
-          throw new Error('No autenticado');
+          throw new Error("No autenticado");
         }
 
         const userEmail = context.user.email;
 
         const user = await usersRepo.getUserByEmail(userEmail);
         if (!user) {
-          throw new Error('Usuario no encontrado');
+          throw new Error("Usuario no encontrado");
         }
 
-        const updatedUser = await usersRepo.updateUser(userEmail, { photo: null });
+        const updatedUser = await usersRepo.updateUser(userEmail, {
+          photo: null,
+        });
 
         if (!updatedUser) {
-          throw new Error('Error al actualizar el usuario');
+          throw new Error("Error al actualizar el usuario");
         }
 
         console.log(`Foto de perfil eliminada para ${userEmail}`);
         return updatedUser;
-
       } catch (error) {
-        console.error('Error en deleteProfilePhoto:', error.message);
+        console.error("Error en deleteProfilePhoto:", error.message);
         throw error;
       }
     },
@@ -253,7 +298,7 @@ export const userResolvers = {
     deleteMe: async (_, __, context) => {
       try {
         if (!context.user) {
-          throw new Error('No autenticado');
+          throw new Error("No autenticado");
         }
 
         const userEmail = context.user.email;
@@ -261,7 +306,7 @@ export const userResolvers = {
 
         return deleted;
       } catch (error) {
-        console.error('Error eliminando usuario:', error.message);
+        console.error("Error eliminando usuario:", error.message);
         return false;
       }
     },
@@ -270,18 +315,19 @@ export const userResolvers = {
       try {
         const user = await usersRepo.getUserByEmail(email);
         if (!user) {
-          throw new Error('Usuario no encontrado');
+          throw new Error("Usuario no encontrado");
         }
 
         const changingData = {};
         if (name !== undefined) changingData.name = name;
-        if (preferredMode !== undefined) changingData.preferredMode = preferredMode;
+        if (preferredMode !== undefined)
+          changingData.preferredMode = preferredMode;
 
         const updatedUser = await usersRepo.updateUser(email, changingData);
 
         return updatedUser;
       } catch (error) {
-        console.error('Error actualizando usuario:', error.message);
+        console.error("Error actualizando usuario:", error.message);
         throw error;
       }
     },
@@ -291,10 +337,10 @@ export const userResolvers = {
         const deleted = await usersRepo.deleteUser(email);
         return deleted;
       } catch (error) {
-        console.error('Error eliminando usuario:', error.message);
+        console.error("Error eliminando usuario:", error.message);
         return false;
       }
     },
+
   },
 };
-

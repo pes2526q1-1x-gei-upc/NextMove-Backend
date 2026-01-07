@@ -13,12 +13,14 @@ const StationsResolvers = {
       }
       
       try {
+
         const stations = await stationsService.getAllStations(context.user.email);
 
         return {
           stations,
           total: stations.length
         };
+      
       } catch (error) {
         console.error('Error in stations resolver:', error);
         throw new GraphQLError('Failed to fetch stations', {

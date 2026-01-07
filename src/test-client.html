@@ -1,0 +1,100 @@
+<!-- test-client.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.IO Test Client</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Socket.IO Test Client</h1>
+  
+  <div>
+    <input type="text" id="token" placeholder="Firebase Token" style="width: 400px">
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+  </div>
+
+  <div>
+    <input type="text" id="roomId" placeholder="Room ID" value="test-room-1">
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+
+  <div>
+    <input type="text" id="message" placeholder="Message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <div>
+    <h3>Status: <span id="status">Disconnected</span></h3>
+    <h3>Messages:</h3>
+    <div id="messages" style="border: 1px solid #ccc; padding: 10px; min-height: 200px;"></div>
+  </div>
+
+  <script>
+    let socket;
+
+    function connect() {
+      const token = document.getElementById('token').value;
+      
+      socket = io('http://localhost:3000', {
+        auth: { token },
+        transports: ['websocket', 'polling']
+      });
+
+      socket.on('connect', () => {
+        document.getElementById('status').textContent = 'Connected';
+        console.log('Connected to server');
+      });
+
+      socket.on('connect_error', (error) => {
+        document.getElementById('status').textContent = 'Error: ' + error.message;
+        console.error('Connection error:', error);
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('status').textContent = 'Disconnected';
+        console.log('Disconnected from server');
+      });
+
+      socket.on('message:new', (data) => {
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML += `<p><strong>${data.senderId}:</strong> ${data.content}</p>`;
+        console.log('New message:', data);
+      });
+
+      socket.on('user:joined', (data) => {
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML += `<p><em>User ${data.userId} joined</em></p>`;
+      });
+
+      socket.on('typing:user', (data) => {
+        console.log('User typing:', data);
+      });
+    }
+
+    function disconnect() {
+      if (socket) {
+        socket.disconnect();
+      }
+    }
+
+    function joinRoom() {
+      const roomId = document.getElementById('roomId').value;
+      if (socket && socket.connected) {
+        socket.emit('join:room', roomId);
+        console.log('Joined room:', roomId);
+      }
+    }
+
+    function sendMessage() {
+      const roomId = document.getElementById('roomId').value;
+      const content = document.getElementById('message').value;
+      
+      if (socket && socket.connected) {
+        socket.emit('message:send', { roomId, content });
+        document.getElementById('message').value = '';
+      }
+    }
+  </script>
+</body>
+</html>

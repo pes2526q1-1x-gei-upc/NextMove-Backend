@@ -28,6 +28,9 @@ type User {
   bioDescription: String
   createdAt: String
   regWithGoogle: Boolean!
+  isBanned: Boolean!
+  banInfo: BanInfo
+  statistics: RankingStats
 }
 
 type ExistsUser {
@@ -143,4 +146,12 @@ extend type Mutation {
   Borrar foto de perfil
   """
   deleteProfilePhoto: User!
+}
+
+type BanInfo {
+  reason: String!
+  description: String
+  bannedUntil: String
+  isPermanent: Boolean!
+  createdAt: String!
 }

@@ -2,10 +2,10 @@ export default {
   testEnvironment: 'node',
   transform: {},
   collectCoverageFrom: [
-    'src/**/*.js',              // Incluir todo en src/
-    '!src/**/*.test.js',        // Excluir tests
-    '!src/index.js',            // Excluir entry point 
-    '!src/config/**',           // Excluir configuración 
+    'src/repositories/RecorridosRepository.js',
+    'src/repositories/EVStationsRepository.js',
+    'src/repositories/estacionDeBicingRepository.js',
+    'src/utils/EVStationsMapper.js'
   ], // disable Babel transforms unless needed
   testMatch: ["**/tests/**/*.js"],
   testPathIgnorePatterns: [

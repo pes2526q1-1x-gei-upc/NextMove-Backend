@@ -15,7 +15,8 @@ const pool = new Pool({
   },
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // Aumentado a 10 segundos
+  statement_timeout: 30000, // Timeout para queries individuales
 });
 
 pool.on('connect', () => {

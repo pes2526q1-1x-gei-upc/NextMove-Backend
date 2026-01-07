@@ -1,4 +1,7 @@
-import  pool  from '../config/database.js';
+import pool from '../config/database.js';
+
+console.log('POOL EN UsersRepository ES UN OBJETO?', !!pool);
+console.log('TIPO DE POOL:', typeof pool);
 
 class UsersRepository {
   /**
@@ -28,23 +31,41 @@ class UsersRepository {
    * Obtener usuario por email
    */
   async getUserByEmail(email) {
-    const result = await pool.query(`
-      SELECT 
-        email,
-        name AS "name",
-        nickname,
-        photo,
-        TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate", 
-        phone_number AS "phoneNumber",
-        preferred_mode AS "preferredMode",
-        preferred_language AS "preferredLanguage",
-        bio_description AS "bioDescription",
-        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
-        reg_with_google AS "regWithGoogle"
-      FROM users
-      WHERE email = $1
-    `, [email]);
-    return result.rows[0];
+    const result = await pool.query(
+      `SELECT
+         email,
+         name AS "name",
+         nickname,
+         photo,
+         TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
+         phone_number AS "phoneNumber",
+         preferred_mode AS "preferredMode",
+         preferred_language AS "preferredLanguage",
+         bio_description AS "bioDescription",
+         TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+         reg_with_google AS "regWithGoogle"
+       FROM users
+       WHERE email = $1`,
+      [email]
+    );
+
+    const user = result.rows[0];
+    if (!user) return null;
+
+    // Comprobar si está baneado
+    const banned = await this.isUserBanned(email);
+
+    return {
+      ...user,
+      isBanned: !!banned,
+      banInfo: banned ? {
+        reason: banned.reason,
+        description: banned.description,
+        bannedUntil: banned.banned_until ? banned.banned_until.toISOString() : null,
+        isPermanent: banned.is_permanent,
+        createdAt: banned.created_at.toISOString(),
+      } : null,
+    };
   }
 
   /**
@@ -67,9 +88,9 @@ class UsersRepository {
       WHERE nickname ILIKE $1
       ORDER BY nickname
     `, [`${nickname}%`]);
-    
+
     // console.log("Datos:", result.rows);
-    
+
     return result.rows;
   }
 
@@ -86,7 +107,19 @@ class UsersRepository {
    * Crear nuevo usuario
    */
   async createUser(userData) {
-    const { email, photo, name, nickname, phoneNumber, preferredMode, preferredLanguage, bioDescription, birthDate, regWithGoogle } = userData;
+    const {
+      email,
+      photo,
+      name,
+      nickname,
+      phoneNumber,
+      preferredMode,
+      preferredLanguage,
+      bioDescription,
+      birthDate,
+      regWithGoogle,
+    } = userData;
+
     console.log('Creating user with data:', userData);
 
     if (!email || !name || !nickname || !preferredMode || regWithGoogle === undefined) {
@@ -95,58 +128,62 @@ class UsersRepository {
 
     try {
       console.log('Birth date: ', birthDate);
-      const result = await pool.query(`
-        INSERT INTO users (
-          email,                -- $1
-          name,                 -- $2
-          nickname,             -- $3
-          photo,                -- $4
-          phone_number,         -- $5
-          preferred_mode,       -- $6 
-          preferred_language,   -- $7
-          bio_description,      -- $8
-          birth_date,           -- $9
-          reg_with_google       -- $10
-        )
-        VALUES (
-          $1, 
-          $2, 
-          $3, 
-          $4, 
-          $5,            
-          $6::"MODE",     
-          $7, 
-          $8, 
-          $9::date,
-          $10        
-        )
-        RETURNING 
-          email,
-          name AS "name",
-          nickname,
-          photo,
-          phone_number AS "phoneNumber",
-          preferred_mode AS "preferredMode",
-          preferred_language AS "preferredLanguage",
-          bio_description AS "bioDescription",
-          TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
-          TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
-          reg_with_google AS "regWithGoogle"
-      `, [
+      const result = await pool.query(
+        `
+      INSERT INTO users (
         email,
         name,
         nickname,
-        photo || null,          
-        phoneNumber || null,
-        preferredMode,
-        preferredLanguage || "ESP",
-        bioDescription || null,
-        birthDate || null,
-        regWithGoogle
-      ]); 
+        photo,
+        phone_number,
+        preferred_mode,
+        preferred_language,
+        bio_description,
+        birth_date,
+        reg_with_google
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6::"MODE",
+        $7,
+        $8,
+        $9::date,
+        $10
+      )
+      RETURNING
+        email,
+        name AS "name",
+        nickname,
+        photo,
+        phone_number AS "phoneNumber",
+        preferred_mode AS "preferredMode",
+        preferred_language AS "preferredLanguage",
+        bio_description AS "bioDescription",
+        TO_CHAR(birth_date::date, 'YYYY-MM-DD') AS "birthDate",
+        TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt",
+        reg_with_google AS "regWithGoogle"
+      `,
+        [
+          email,
+          name,
+          nickname,
+          photo || null,
+          phoneNumber || null,
+          preferredMode,
+          preferredLanguage || 'ESP',
+          bioDescription || null,
+          birthDate || null,
+          regWithGoogle,
+        ]
+      );
 
       return result.rows[0];
     } catch (error) {
+      console.error('Error en createUser (DB):', error);
       if (error.code === '23505') {
         if (error.constraint === 'users_pkey') {
           throw new Error(`Ya existe un usuario con el email: ${email}`);
@@ -158,6 +195,7 @@ class UsersRepository {
       throw error;
     }
   }
+
 
   /**
    * Actualizar usuario
@@ -205,7 +243,7 @@ class UsersRepository {
     }
 
     values.push(email);
-    
+
     const query = `
       UPDATE users 
       SET ${fields.join(', ')}
@@ -234,7 +272,7 @@ class UsersRepository {
     const result = await pool.query(`
       DELETE FROM users WHERE email = $1 RETURNING email
     `, [email]);
-    
+
     return result.rows.length > 0;
   }
 
@@ -255,7 +293,64 @@ class UsersRepository {
       VALUES ($1, $2)
     `, [email, texto]);
   }
-  
+
+  async isUserBanned(email) {
+    const result = await pool.query(
+      `SELECT email, reason, description, banned_until, is_permanent, created_at
+     FROM "usersBanned"
+     WHERE email = $1`,
+      [email]
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    const banInfo = result.rows[0];
+    
+    // Si es permanente, siempre está baneado
+    if (banInfo.is_permanent) {
+      return banInfo;
+    }
+    
+    // Si tiene fecha de expiración, verificar si ya expiró
+    if (banInfo.banned_until) {
+      const now = new Date();
+      const bannedUntil = new Date(banInfo.banned_until);
+      
+      // Si ya expiró, no está baneado
+      if (now >= bannedUntil) {
+        // Eliminar el baneo expirado
+        await this.unbanUser(email);
+        return null;
+      }
+    }
+    
+    return banInfo;
+  }
+
+  async banUser(email, { reason, description, bannedUntil, isPermanent }) {
+    await pool.query(
+      `INSERT INTO "usersBanned" (email, reason, description, banned_until, is_permanent)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (email) DO UPDATE
+     SET reason = EXCLUDED.reason,
+         description = EXCLUDED.description,
+         banned_until = EXCLUDED.banned_until,
+         is_permanent = EXCLUDED.is_permanent`,
+      [email, reason, description || null, bannedUntil || null, isPermanent || false]
+    );
+  }
+
+  async unbanUser(email) {
+    await pool.query(
+      `DELETE FROM "usersBanned" WHERE email = $1`,
+      [email]
+    );
+  }
+
+
+
 
 }
 

@@ -6,6 +6,7 @@ type friendship{
 type friend{
     name: String!
     photo: String
+    email: String!
 }
 
 type blockedUser{
