@@ -21,9 +21,9 @@ export async function getEstaciones(email) {
     isFavoriteStation: favStationIds.has(estacion.id)
   }));
 
-  console.log("Atributos clave de cada estación:");
+  //console.log("Atributos clave de cada estación:");
   result.forEach((e, i) => {
-    console.log(`Estación ${i + 1} (id: ${e.id}):\n` + JSON.stringify(e, null, 2));
+    //console.log(`Estación ${i + 1} (id: ${e.id}):\n` + JSON.stringify(e, null, 2));
   });
   console.log(`Bicing Service: El  número de estaciones que vamos a retornar es: ${estaciones.length}!`);
   return result;

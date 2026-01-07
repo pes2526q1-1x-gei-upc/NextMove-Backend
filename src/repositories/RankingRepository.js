@@ -44,7 +44,7 @@ class RankingRepository {
             WHERE(urs.num_rutas >= 0)
             ORDER BY ${metric} DESC
         `); 
-      console.log("REPO RANKING: Ranking completo obtenido correctamente") ; 
+      //console.log("REPO RANKING: Ranking completo obtenido correctamente") ; 
       return result.rows; 
     } catch (error) {
       console.error('RankingRepository: Error obtenido al intentar obtener el Ranking de forma completa');
@@ -80,11 +80,11 @@ class RankingRepository {
             WHERE urs.email = $1`, [email]); 
       //verificamos que realmente ese user es existente en el ranking
       if (!result.rows[0]) {
-        console.warn(`RankingRepository: Usuario ${email} no existe en el sistema de Ranking!`); 
+        //console.warn(`RankingRepository: Usuario ${email} no existe en el sistema de Ranking!`); 
         return null; 
       }
       else {
-        console.log(`RankingRepository: Usuario ${email} existe en el sistema de Ranking!`); 
+        //console.log(`RankingRepository: Usuario ${email} existe en el sistema de Ranking!`); 
         return result.rows[0]; 
       }
     } catch (error) {
