@@ -40,7 +40,7 @@ class BanExpirationWorker {
     if (!this.isRunning) return;
 
     try {
-      console.log('BanExpirationWorker: Verificando baneos expirados...');
+      //console.log('BanExpirationWorker: Verificando baneos expirados...');
       const result = await BanService.processExpiredBans();
       
       if (result.processed > 0) {
