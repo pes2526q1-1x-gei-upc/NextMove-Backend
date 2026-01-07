@@ -16,7 +16,7 @@ class FriendshipRepository {
         FROM amigos a, users u
         WHERE (a.nickname1 = $1 and a.nickname2 = u.nickname) OR (a.nickname2 = $1 and a.nickname1 = u.nickname)
         `, [nickname]);
-    console.log("resultados de la query de amistades", result.rows);
+    //console.log("resultados de la query de amistades", result.rows);
     return result.rows;
   }
 
