@@ -21,6 +21,19 @@ const pool = new Pool({
   allowExitOnIdle: true
 });
 
+// Gracefully erase idle connections. 
+setInterval(() => {
+  const idleCount = pool.idleCount;
+  const totalCount = pool.totalCount;
+  const waitingCount = pool.waitingCount;
+  
+  console.log(`[Pool Status] Total: ${totalCount}, Idle: ${idleCount}, Waiting: ${waitingCount}`);
+  
+  if (idleCount > 10) {
+    console.warn(`[Pool Warning] Too much idle connections (${idleCount}). Possible memory leak.`);
+  }
+}, 60000); 
+
 pool.on('connect', () => {
   console.log('Conectado a la base de datos PostgreSQL pool');
 });
