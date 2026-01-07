@@ -62,7 +62,7 @@ class AlertNotificationWorker {
                        (Date.now() - this.lastErrorLogTime) >= this.errorLogThrottle;
       
       if (shouldLog) {
-        console.log('AlertNotificationWorker: Verificando alertas...');
+        //console.log('AlertNotificationWorker: Verificando alertas...');
       }
       
       this.lastCheckTime = new Date();
@@ -78,7 +78,7 @@ class AlertNotificationWorker {
       }
       
       if (allAlerts.length === 0) {
-        console.log('AlertNotificationWorker: No hay alertas activas.');
+        //console.log('AlertNotificationWorker: No hay alertas activas.');
         this.scheduleNextCheck();
         return;
       }
@@ -87,7 +87,7 @@ class AlertNotificationWorker {
       const estaciones = EstacionDeBicingSyncWorker.getEstacionesCache();
       
       if (!estaciones || estaciones.length === 0) {
-        console.log('AlertNotificationWorker: No hay estaciones en cache.');
+        //console.log('AlertNotificationWorker: No hay estaciones en cache.');
         this.scheduleNextCheck();
         return;
       }
@@ -161,7 +161,7 @@ class AlertNotificationWorker {
       }
 
       if (alertsToSend.length === 0) {
-        console.log('AlertNotificationWorker: No hay alertas que ejecutar en este momento.');
+        //console.log('AlertNotificationWorker: No hay alertas que ejecutar en este momento.');
         this.scheduleNextCheck();
         return;
       }
@@ -200,7 +200,7 @@ class AlertNotificationWorker {
       }
 
       if (notificationsToSend.length === 0) {
-        console.log('AlertNotificationWorker: No hay notificaciones para enviar.');
+        //console.log('AlertNotificationWorker: No hay notificaciones para enviar.');
         this.scheduleNextCheck();
         return;
       }

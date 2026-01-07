@@ -29,9 +29,9 @@ class StationsSyncWorker {
       return;
     }
 
-    console.log('Starting stations sync worker');
-    console.log(`Cache sync interval: ${this.syncInterval / 1000} seconds`);
-    console.log(`Database sync interval: ${this.dbSyncInterval / (1000 * 60 * 60)} hours`);
+    //console.log('Starting stations sync worker');
+    //console.log(`Cache sync interval: ${this.syncInterval / 1000} seconds`);
+    //console.log(`Database sync interval: ${this.dbSyncInterval / (1000 * 60 * 60)} hours`);
 
     this.syncStations();
 
@@ -40,12 +40,12 @@ class StationsSyncWorker {
     }, this.syncInterval);
 
     this.isRunning = true;
-    console.log('Sync worker started successfully');
+    //console.log('Sync worker started successfully');
   }
 
   stop() {
     if (!this.isRunning) {
-      console.log('Sync worker is not running');
+      //console.log('Sync worker is not running');
       return;
     }
 
@@ -55,11 +55,11 @@ class StationsSyncWorker {
     }
 
     this.isRunning = false;
-    console.log('Sync worker stopped');
+    //console.log('Sync worker stopped');
   }
 
   async fetchAllStations() {
-    console.log('Fetching all stations from ICAEN WFS...');
+    //console.log('Fetching all stations from ICAEN WFS...');
     
     const params = new URLSearchParams({
       service: 'WFS',
@@ -80,18 +80,18 @@ class StationsSyncWorker {
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('xml')) {
         const errorText = await response.text();
-        console.error('WFS Error Response:', errorText);
+        //console.error('WFS Error Response:', errorText);
         throw new Error('WFS service returned an error');
       }
       
       const data = await response.json();
       
-      console.log(`Fetched ${data.features.length} stations at ${new Date().toISOString()}`);
+      //console.log(`Fetched ${data.features.length} stations at ${new Date().toISOString()}`);
       
       return data.features;
       
     } catch (error) {
-      console.error('Error fetching stations from WFS:', error);
+      //console.error('Error fetching stations from WFS:', error);
       throw error;
     }
   }
@@ -99,7 +99,7 @@ class StationsSyncWorker {
 
   async syncStations() {
     const startTime = Date.now();
-    console.log(`\n[${new Date().toISOString()}] Starting station sync`);
+    //console.log(`\n[${new Date().toISOString()}] Starting station sync`);
 
     try {
       const icaenFeatures = await this.fetchAllStations();
@@ -112,7 +112,7 @@ class StationsSyncWorker {
         dynamicDataMap.set(index + "_CAR", dynamicData);
       });
       // console.log(dynamicDataMap);
-      console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
+      //console.log(`Cache entries created: ${dynamicDataMap.size}\n`);
 
 
       await this.stationsService.forceRefresh(dynamicDataMap);
@@ -135,7 +135,7 @@ class StationsSyncWorker {
         const dbIdsChecksum = await this.repository.getExternalIdsChecksum();
       
         forceRefresh = newIdsChecksum != dbIdsChecksum;
-        if (forceRefresh) console.log(`EV Stations: database checksum (${dbIdsChecksum}) differ from API checksum (${newIdsChecksum}), forcing refresh...`);
+        if (forceRefresh) {}//console.log(`EV Stations: database checksum (${dbIdsChecksum}) differ from API checksum (${newIdsChecksum}), forcing refresh...`);
       }
       else console.log(`Current database EV stations count (${currentDbCount}) do not match API stations count (${newStationsCount}), forcing refresh...`);
 
@@ -149,17 +149,17 @@ class StationsSyncWorker {
       // if (!forceRefresh) console.log("NOT FORCED TO REFRESH!!!");
 
       if (shouldSyncDb) {
-        console.log('\nStarting database synchronization for ev stations...');
+        //console.log('\nStarting database synchronization for ev stations...');
         await this.syncToDatabase(icaenFeatures);
         this.lastDbSync = Date.now();
         this.stats.lastDbSyncTime = new Date();
         this.stats.lastDbSyncSuccess = true;
-        console.log('Database sync completed');
+        //console.log('Database sync completed');
       } else {
         const nextDbSync = this.lastDbSync 
           ? new Date(this.lastDbSync + this.dbSyncInterval)
           : new Date(Date.now() + this.dbSyncInterval);
-        console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
+        //console.log(`Next database sync scheduled at: ${nextDbSync.toISOString()}`);
       }
 
       const duration = Date.now() - startTime;
@@ -168,10 +168,10 @@ class StationsSyncWorker {
       this.stats.lastSyncSuccess = true;
       this.stats.consecutiveFailures = 0;
 
-      console.log(`\nSync completed successfully`);
-      console.log(`  Stations fetched: ${icaenFeatures.length}`);
-      console.log(`  Cache size: ${dynamicDataMap.size}`);
-      console.log(`  Duration: ${duration}ms\n`);
+      //console.log(`\nSync completed successfully`);
+      //console.log(`  Stations fetched: ${icaenFeatures.length}`);
+      //console.log(`  Cache size: ${dynamicDataMap.size}`);
+      //console.log(`  Duration: ${duration}ms\n`);
 
       return {
         success: true,
@@ -208,32 +208,32 @@ class StationsSyncWorker {
 
     try {
       const currentDbIds = new Set(await this.repository.getAllStationIds());
-      console.log(`Current DB stations: ${currentDbIds.size}`);
+      //console.log(`Current DB stations: ${currentDbIds.size}`);
 
       const newApiIds = new (
         icaenStations.map((_, index) => `${index}_CAR`)
       );
-      console.log(`API stations: ${newApiIds.size}`);
+      //console.log(`API stations: ${newApiIds.size}`);
 
       const idsToDelete = [...currentDbIds].filter(id => !newApiIds.has(id));
       const idsToInsert = [...newApiIds].filter(id => !currentDbIds.has(id));
 
-      console.log(`\nChanges detected:`);
-      console.log(`  To delete: ${idsToDelete.length}`);
-      console.log(`  To insert: ${idsToInsert.length}`);
-      console.log(`  Unchanged: ${currentDbIds.size - idsToDelete.length}`);
+      //console.log(`\nChanges detected:`);
+      //console.log(`  To delete: ${idsToDelete.length}`);
+      //console.log(`  To insert: ${idsToInsert.length}`);
+      //console.log(`  Unchanged: ${currentDbIds.size - idsToDelete.length}`);
 
       let deletedCount = 0;
       let insertedCount = 0;
 
       if (idsToDelete.length > 0) {
-        console.log(`\nDeleting ${idsToDelete.length} removed stations...`);
+        //console.log(`\nDeleting ${idsToDelete.length} removed stations...`);
         deletedCount = await this.repository.deleteStationsByIds(idsToDelete);
-        console.log(`Deleted: ${deletedCount}`);
+        //console.log(`Deleted: ${deletedCount}`);
       }
 
       if (idsToInsert.length > 0) {
-        console.log(`\nInserting ${idsToInsert.length} new stations...`);
+        //console.log(`\nInserting ${idsToInsert.length} new stations...`);
       
         const stationsToInsert = icaenStations
           .map((feature, index) => ({
@@ -243,7 +243,7 @@ class StationsSyncWorker {
           .filter(station => idsToInsert.includes(`${station.arrayIndex}_CAR`));
 
         insertedCount = await this.repository.batchInsertStations(stationsToInsert);
-        console.log(`Inserted: ${insertedCount}`);
+        //console.log(`Inserted: ${insertedCount}`);
       }
 
       const duration = Date.now() - startTime;
@@ -294,7 +294,7 @@ class StationsSyncWorker {
     }
 
     this.syncInterval = milliseconds;
-    console.log(`Sync interval updated to ${milliseconds / 1000} seconds`);
+    //console.log(`Sync interval updated to ${milliseconds / 1000} seconds`);
 
     if (wasRunning) {
       this.start();
@@ -303,7 +303,7 @@ class StationsSyncWorker {
 
   setDbSyncInterval(milliseconds) {
     this.dbSyncInterval = milliseconds;
-    console.log(`Database sync interval updated to ${milliseconds / (1000 * 60 * 60)} hours`);
+    //console.log(`Database sync interval updated to ${milliseconds / (1000 * 60 * 60)} hours`);
   }
 }
 
